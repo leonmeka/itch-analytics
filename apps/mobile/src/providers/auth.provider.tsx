@@ -1,10 +1,10 @@
 import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import {
   createContext,
   type ReactNode,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -16,13 +16,13 @@ import { useCompleteLogin, useLogout, useMe } from '../api/queries';
  * Handles the entire client-side auth logic, mirroring the ahegao setup.
  *
  * Flow (itch.io implicit OAuth on mobile):
- *   1. `login()` opens the API's `/auth/login` endpoint in the system
- *      browser; the strategy 302s to the itch.io authorization URL with
- *      a signed `state`.
- *   2. itch.io redirects to the registered callback; that page forwards
- *      the hash contents to this app via the `itch-dashboard://oauth?...`
- *      deep link.
- *   3. The deep-link handler feeds `access_token` + `state` into the
+ *   1. `login()` opens the API's `/auth/login` endpoint in an OS auth
+ *      session (`ASWebAuthenticationSession` on iOS); the strategy 302s to
+ *      the itch.io authorization URL with a signed `state`.
+ *   2. itch.io redirects to the registered callback; that page forwards the
+ *      hash contents via this app's `itch-dashboard://oauth?...` deep link,
+ *      which closes the auth session and returns the URL to the app.
+ *   3. The returned URL feeds `access_token` + `state` into the
  *      `POST /auth/token` mutation, which sets the app-side auth cookies
  *      and provisions the session.
  *
@@ -69,43 +69,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = useCallback(async () => {
     setRedirecting(true);
     try {
+      // A stale session (e.g. cancelled previously) blocks opening another
+      // one; dismissing when none is open is a no-op.
+      await WebBrowser.dismissBrowser().catch(() => undefined);
+
       // /auth/login itself redirects (302) to itch.io with the signed state.
-      await Linking.openURL(loginURL);
+      // The OS auth session (ASWebAuthenticationSession on iOS) hands the
+      // final redirect URL — the app's own deep link with the OAuth params —
+      // back to this app, no system-browser custom-scheme handoff needed.
+      const result = await WebBrowser.openAuthSessionAsync(
+        loginURL,
+        Linking.createURL(`/${OAUTH_RETURN_PATH}`),
+      );
+
+      if (result.type === 'success') {
+        const params = parseNestedQuery(result.url);
+
+        if (params) {
+          completeLogin({ accessToken: params.accessToken, state: params.state });
+        }
+      }
+
+      if (!WebBrowser.maybeCompleteAuthSession()) {
+        setRedirecting(false);
+      }
     } catch (error) {
       console.warn('Failed to start itch OAuth flow', error);
       setRedirecting(false);
     }
-  }, []);
+  }, [completeLogin]);
 
   const logout = useCallback(() => {
     setItchToken(null);
     logoutMutation.mutate();
   }, [logoutMutation]);
-
-  useEffect(() => {
-    const handleUrl = (url: string | null) => {
-      if (!url) return;
-
-      const parsed = Linking.parse(url);
-
-      if (!parsed.path?.includes(OAUTH_RETURN_PATH)) return;
-
-      const params = parseNestedQuery(url);
-
-      if (!params) return;
-
-      setRedirecting(false);
-      completeLogin({ accessToken: params.accessToken, state: params.state });
-    };
-
-    void Linking.getInitialURL().then((url) => handleUrl(url));
-
-    const subscription = Linking.addEventListener('url', (event) => handleUrl(event.url));
-
-    return () => {
-      subscription.remove();
-    };
-  }, [completeLogin]);
 
   const value = useMemo(
     () => ({
@@ -134,16 +131,17 @@ export const useAuth = (): AuthContextValue => {
 };
 
 /**
- * The itch callback page forwards the OAuth hash via a deep link that keeps
- * the params in query-string form:
+ * itch.io redirects with the params in the URL part (either `?query` or
+ * `#hash` — see itch.io's implicit-flow docs), so accept both forms:
  *   itch-dashboard://oauth?access_token=…&state=…
+ *   itch-dashboard://oauth#access_token=…&state=…
  */
 function parseNestedQuery(deepLink: string): {
   accessToken: string;
   state: string;
 } | null {
-  const rawQuery = deepLink.split('?')[1] ?? '';
-  const params = new URLSearchParams(rawQuery.split('#')[0]);
+  const rawQuery = deepLink.split('?')[1] ?? deepLink.split('#')[1] ?? '';
+  const params = new URLSearchParams(rawQuery.split('?')[0]);
 
   const accessToken = params.get('access_token');
   const state = params.get('state');

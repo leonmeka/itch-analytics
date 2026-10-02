@@ -5,6 +5,9 @@ packages:
 
 minimumReleaseAge: 1440
 
+publicHoistPattern:
+  - '*'
+
 overrides:
   esbuild: 0.28.1
   multer@<2.3.0: 2.3.0

@@ -1,3 +1,10 @@
 {
-  "name": "@itch/auth"
+  "name": "@itch/auth",
+  "dependencies": {
+    "@nestjs/axios": "^4.0.1",
+    "@nestjs/common": "^11.2.5",
+    "@nestjs/jwt": "^11.0.2",
+    "drizzle-orm": "^0.45.2",
+    "rxjs": "^7.8.2"
+  }
 }

@@ -1,6 +1,5 @@
 {
   "name": "@itch/mobile",
-  "version": "1.0.0",
   "main": "App.tsx",
   "scripts": {
     "start": "expo start",
@@ -15,6 +14,7 @@
     "expo": "~57.0.26",
     "expo-linking": "^57.0.11",
     "expo-status-bar": "~57.0.1",
+    "expo-web-browser": "^57.0.3",
     "heroui-native": "^1.0.10",
     "react": "19.2.3",
     "react-native": "0.86.3",
@@ -31,6 +31,5 @@
   "devDependencies": {
     "@types/react": "~19.2.0",
     "typescript": "~5.9.2"
-  },
-  "private": true
+  }
 }

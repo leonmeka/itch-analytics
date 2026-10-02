@@ -2,10 +2,11 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
-import type { Request } from 'express';
+import { PassportStrategy } from '@nestjs/passport';
 import { Strategy as AbstractStrategy } from 'passport-strategy';
+import { and, eq } from 'drizzle-orm';
 import { firstValueFrom } from 'rxjs';
+import type { Request } from 'express';
 import { OAuthIdentitiesService, OAuthProvider, schema, User, UsersService } from '@/libs/shared';
 
 import { AUTH_CONFIG_KEY } from '../auth.constants';
@@ -19,26 +20,13 @@ const OAUTH_STATE_TTL_MS = 10 * 60_000;
  * itch.io redirects to the registered Authorization Callback URL with the
  * access token — and the state passed at login — in the URL hash part.
  *
- * The strategy owns the entire itch.io auth logic:
- *
- * 1. `GET /auth/login` → 302 redirect to itch.io (`client_id`, `scope`,
- *    `redirect_uri`, `response_type=token`, signed `state`).
- * 2. `GET /auth/callback` → serves the callback page registered at itch.io;
- *    it forwards the hash contents to the app, which posts `access_token` +
- *    `state` back to the API.
- * 3. `POST /auth/token` → verifies the state, resolves the profile via
- *    `https://api.itch.io/profile`, provisions the user + oauth identity.
+ * The strategy owns the itch.io flow, following the passport provider
+ * pattern: `authenticate()` performs the transport (redirect to itch.io, or
+ * consume the token the app posts back), and the app-specific provisioning
+ * lives in the passport `validate()` hook.
  */
 @Injectable()
 export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuthProvider.Itch) {
-
-  private readonly jwtSecret: string;
-  private readonly itchClientID: string;
-  private readonly itchCallbackURL: string;
-  private readonly itchScope: string[];
-  private readonly itchAuthorizationURL: string;
-  private readonly itchUserinfoURL: string;
-
   constructor(
     @Inject(AUTH_CONFIG_KEY)
     private readonly authConfig: AuthConfig,
@@ -47,80 +35,27 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
     private readonly httpService: HttpService,
   ) {
     super();
-
-    this.jwtSecret = authConfig.jwtSecret;
-    this.itchClientID = authConfig.itchClientID;
-    this.itchCallbackURL = authConfig.itchCallbackURL;
-    this.itchScope = authConfig.itchScope;
-    this.itchAuthorizationURL = authConfig.itchAuthorizationURL;
-    this.itchUserinfoURL = authConfig.itchUserinfoURL;
   }
 
   authenticate(request: Request): void {
     if (request.method === 'GET') {
-      this.beginStep();
+      this.begin(request);
       return;
     }
 
-    this.completeStep(request);
+    this.complete(request);
   }
 
-  /** Login step: issue a signed state param and redirect to itch.io. */
-  private beginStep(): void {
-    const state = this.createState();
-    const url = new URL(this.itchAuthorizationURL);
-
-    url.searchParams.set('client_id', this.itchClientID);
-    url.searchParams.set('scope', this.itchScope.join(' '));
-    url.searchParams.set('redirect_uri', this.itchCallbackURL);
-    url.searchParams.set('response_type', 'token');
-    url.searchParams.set('state', state);
-
-    this.redirect(url.toString());
-  }
-
-  /** Token step: the app posted the callback page's params; provision. */
-  private async completeStep(request: Request): Promise<void> {
-    try {
-      const { access_token, state } = (request.body ?? {}) as {
-        access_token?: string;
-        state?: string;
-      };
-
-      if (!access_token) {
-        this.fail({ message: 'Missing access token' }, 401);
-        return;
-      }
-
-      if (!this.verifyState(state)) {
-        this.fail({ message: 'Invalid OAuth state' }, 401);
-        return;
-      }
-
-      const user = await this.loadUser(access_token);
-
-      this.success(user);
-    } catch (error) {
-      this.error(error instanceof Error ? error : new Error('OAuth token step failed'));
-    }
-  }
-
-  async loadProfile(accessToken: string): Promise<Record<string, unknown>> {
-    const { data } = await firstValueFrom(
-      this.httpService.get<Record<string, unknown>>(this.itchUserinfoURL, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: 'application/json',
-        },
-      }),
-    );
-
-    return data;
-  }
-
-  /** Provisions (or links) the user + itch oauth identity. */
-  async createUser(raw: Record<string, unknown>): Promise<User> {
-    const rawUser = (raw.user as Record<string, unknown>) ?? raw;
+  /**
+   * App-specific provisioning, mirroring the standard OAuth2 strategy's
+   * `validate(accessToken, refreshToken, profile)` contract.
+   */
+  async validate(
+    accessToken: string,
+    _refreshToken: string | undefined,
+    profile: Record<string, unknown>,
+  ): Promise<User> {
+    const rawUser: Record<string, unknown> = (profile.user as Record<string, unknown>) ?? profile;
 
     const providerUserId = String(rawUser.id ?? rawUser.uid ?? '');
 
@@ -166,10 +101,59 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
     return user;
   }
 
-  async loadUser(accessToken: string): Promise<User> {
-    const profile = await this.loadProfile(accessToken);
+  /** Login step: issue a signed state param and redirect to itch.io. */
+  private begin(_request: Request): void {
+    const state = this.createState();
+    const config = this.authConfig;
+    const url = new URL(config.itchAuthorizationURL);
 
-    return this.createUser(profile);
+    url.searchParams.set('client_id', config.itchClientID);
+    url.searchParams.set('scope', config.itchScope.join(' '));
+    url.searchParams.set('redirect_uri', config.itchCallbackURL);
+    url.searchParams.set('response_type', 'token');
+    url.searchParams.set('state', state);
+
+    this.redirect(url.toString());
+  }
+
+  /** Token step: the app posted the callback page's params; provision. */
+  private async complete(request: Request): Promise<void> {
+    try {
+      const { access_token, state } = (request.body ?? {}) as {
+        access_token?: string;
+        state?: string;
+      };
+
+      if (!access_token) {
+        this.fail({ message: 'Missing access token' }, 401);
+        return;
+      }
+
+      if (!this.verifyState(state)) {
+        this.fail({ message: 'Invalid OAuth state' }, 401);
+        return;
+      }
+
+      const profile = await this.loadProfile(access_token);
+      const user = await this.validate(access_token, undefined, profile);
+
+      this.success(user);
+    } catch (error) {
+      this.error(error instanceof Error ? error : new Error('OAuth token step failed'));
+    }
+  }
+
+  async loadProfile(accessToken: string): Promise<Record<string, unknown>> {
+    const { data } = await firstValueFrom(
+      this.httpService.get<Record<string, unknown>>(this.authConfig.itchUserinfoURL, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/json',
+        },
+      }),
+    );
+
+    return data;
   }
 
   /** itch.io returns the state in the hash; verify signature + expiry. */
@@ -200,6 +184,6 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
   }
 
   private sign(payload: string): string {
-    return createHmac('sha256', this.jwtSecret).update(payload).digest('base64url');
+    return createHmac('sha256', this.authConfig.jwtSecret).update(payload).digest('base64url');
   }
 }

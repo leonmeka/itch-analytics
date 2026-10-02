@@ -24,10 +24,6 @@ import {
 } from '@/libs/auth';
 import { RefreshTokensService, schema, type User, UsersService } from '@/libs/shared';
 
-/** Deep link back into the mobile app after the itch.io callback. */
-const OAUTH_RETURN_SCHEME = 'itch-dashboard';
-const OAUTH_RETURN_PATH = 'oauth';
-
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -206,17 +202,6 @@ export class AuthController {
   login(): void {}
 
   /**
-   * The Authorization Callback URL registered at itch.io. itch.io redirects
-   * here with the access token in the URL hash; the server never sees it,
-   * so this page hands the hash to the mobile app via deep link, which in
-   * turn posts `access_token` + `state` to the token endpoint.
-   */
-  @Get('callback')
-  callback(@Res() response: Response): void {
-    response.contentType('html').send(renderCallbackPage(this.authConfig));
-  }
-
-  /**
    * Completes the OAuth flow; the strategy verifies state, resolves the
    * profile and provisions the user, then we set the auth cookies.
    */
@@ -255,39 +240,3 @@ export class AuthController {
   }
 }
 
-const escapeHtml = (value: string): string =>
-  value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
-
-/**
- * HTML document that clears the URL hash first (per itch.io's security
- * guidance), then forwards the hash params to the mobile app through the
- * itch-dashboard:// deep link (query-string form). The app completes the
- * flow by POSTing `access_token` + `state` to the token endpoint, which
- * sets the auth cookies on the app's cookie jar.
- */
-const renderCallbackPage = (authConfig: AuthConfig): string => {
-  const successUrl = escapeHtml(authConfig.oauthSuccessRedirectUrl);
-  const deepLinkPrefix = `${OAUTH_RETURN_SCHEME}://${OAUTH_RETURN_PATH}`;
-
-  return `<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Signing in…</title></head>
-<body style="font-family:system-ui;background:#0b0b0d;color:#fff;display:grid;place-items:center;height:100vh">
-<p>Finishing sign-in…</p>
-<script>
-  var hash = window.location.hash.slice(1);
-  window.location.hash = '';
-  var params = new URLSearchParams(hash);
-  var access_token = params.get('access_token');
-  var state = params.get('state');
-  if (window.history && window.history.replaceState) {
-    window.history.replaceState(null, '', window.location.pathname);
-  }
-  var deepLink = '${deepLinkPrefix}?access_token=' + encodeURIComponent(access_token) +
-    '&state=' + encodeURIComponent(state) +
-    '&success=' + encodeURIComponent('${successUrl}');
-  window.location.replace(deepLink);
-</script>
-</body>
-</html>`;
-};

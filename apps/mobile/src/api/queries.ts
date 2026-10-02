@@ -52,6 +52,7 @@ export function useCompleteLogin() {
 
   return useMutation({
     mutationFn: (input: CompleteLoginInput) => apiClient.completeLogin(input),
+    onError: (error) => console.warn('itch sign-in failed', error),
     onSuccess: (result) => {
       if (result.user) {
         queryClient.setQueryData(queryKeys.me, { id: result.user.id, role: 'user' });
