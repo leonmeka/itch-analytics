@@ -82,15 +82,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         Linking.createURL(`/${OAUTH_RETURN_PATH}`),
       );
 
-      if (result.type === 'success') {
-        const params = parseNestedQuery(result.url);
+      if (__DEV__) console.log('auth session returned:', JSON.stringify(result));
 
-        if (params) {
-          completeLogin({ accessToken: params.accessToken, state: params.state });
-        }
+      let params = null;
+
+      if (result.type === 'success') {
+        params = parseNestedQuery(result.url);
       }
 
-      if (!WebBrowser.maybeCompleteAuthSession()) {
+      if (params) {
+        completeLogin({ accessToken: params.accessToken, state: params.state });
+      } else {
+        // Auth sheet closed without the app receiving the OAuth params
+        console.warn(`auth session closed without params (type=${result.type})`);
         setRedirecting(false);
       }
     } catch (error) {
