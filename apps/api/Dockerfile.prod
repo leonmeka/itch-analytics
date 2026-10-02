@@ -1,0 +1,38 @@
+FROM node:22-alpine AS build
+RUN corepack enable
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json apps/api/
+COPY libs/protocol/package.json libs/protocol/
+COPY libs/auth/package.json libs/auth/
+COPY libs/itch/package.json libs/itch/
+COPY libs/shared/package.json libs/shared/
+
+RUN pnpm install --frozen-lockfile
+
+COPY tsconfig.json nest-cli.json ./
+COPY apps/api apps/api
+COPY libs libs
+
+RUN pnpm --filter @itch/api run build
+
+FROM node:22-alpine
+WORKDIR /app
+
+ARG API_PORT=8000
+ENV API_PORT=${API_PORT}
+
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/apps/api/package.json apps/api/
+COPY libs/shared/src/db ./libs/shared/src/db
+
+EXPOSE ${API_PORT}
+
+# Env vars (API_DATABASE_URL, API_JWT_SECRET, API_OAUTH_ITCH_*, ...) are
+# injected at container runtime — never baked into the image.
+#
+# The migrate step runs from libs/shared so drizzle-kit resolves its config
+# relative to the package (matching the ahegao prod layout).
+CMD ["sh", "-c", "cd libs/shared && ../../node_modules/.bin/drizzle-kit migrate --config=./src/db/drizzle.config.ts && exec node --enable-source-maps ../../dist/apps/api/src/main"]

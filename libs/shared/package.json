@@ -1,0 +1,8 @@
+{
+  "name": "@itch/shared",
+  "scripts": {
+    "migrate": "drizzle-kit generate --config=./src/db/drizzle.config.ts",
+    "apply": "drizzle-kit migrate --config=./src/db/drizzle.config.ts",
+    "studio": "drizzle-kit studio --config=./src/db/drizzle.config.ts"
+  }
+}

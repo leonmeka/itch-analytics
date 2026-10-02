@@ -1,0 +1,26 @@
+packages:
+  - '.'
+  - 'apps/*'
+  - 'libs/*'
+
+minimumReleaseAge: 1440
+
+overrides:
+  esbuild: 0.28.1
+  multer@<2.3.0: 2.3.0
+  '@nestjs/microservices': ">=11.2.5"
+  multer: ">=2.4.0"
+  js-yaml: 5.4.1
+
+allowBuilds:
+  '@scarf/scarf': true
+  bufferutil: true
+  core-js: true
+  esbuild: true
+  msgpackr-extract: true
+  protobufjs: true
+  sharp: true
+  utf-8-validate: true
+
+onlyBuiltDependencies:
+  - sharp

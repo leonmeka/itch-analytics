@@ -1,0 +1,44 @@
+name: itch
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: itch-db
+    environment:
+      POSTGRES_USER: itch
+      POSTGRES_PASSWORD: itch
+      POSTGRES_DB: itch
+    ports:
+      - "5432:5432"
+    volumes:
+      - itch_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U itch -d itch"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    container_name: itch-api
+    ports:
+      - "8000:8000"
+    environment:
+      API_PORT: 8000
+      API_DATABASE_URL: postgres://itch:itch@db:5432/itch
+    env_file:
+      - .env
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+      - ./apps/api/tsconfig.app.json:/app/apps/api/tsconfig.app.json
+      - ./libs:/app/libs
+    command: sh -c "pnpm --filter @itch/shared run apply && exec pnpm --filter @itch/api run dev"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  itch_db_data:
+    name: itch_pg

@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "target": "ES2022",
+    "sourceMap": true,
+    "incremental": false,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "resolveJsonModule": true,
+    "paths": {
+      "@/api/*": ["./apps/api/src/*"],
+      "@itch/protocol": ["./libs/protocol/src"],
+      "@/libs/auth": ["./libs/auth/src"],
+      "@/libs/auth/*": ["./libs/auth/src/*"],
+      "@/libs/itch": ["./libs/itch/src"],
+      "@/libs/itch/*": ["./libs/itch/src/*"],
+      "@/libs/shared": ["./libs/shared/src"],
+      "@/libs/shared/*": ["./libs/shared/src/*"]
+    }
+  },
+  "include": ["apps/**/*.ts", "libs/**/*.ts"]
+}
