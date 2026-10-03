@@ -69,7 +69,7 @@ export class UsersController {
 
     return this.paymentsService.findMany({
       where: eq(schema.paymentsTable.user_id, userId),
-      orderBy: desc(schema.paymentsTable.purchased_at),
+      orderBy: [desc(schema.paymentsTable.purchased_at), desc(schema.paymentsTable.external_id)],
       limit: pagination.limit,
       offset: pagination.offset,
     });

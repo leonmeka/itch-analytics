@@ -16,7 +16,7 @@ export class PaymentsService extends BaseService<
   constructor(protected readonly paymentsRepository: PaymentsRepository) {
     super(paymentsRepository);
   }
-  
+
   async getRevenueByCurrency(userId: string): Promise<PaymentRevenueRow[]> {
     return this.paymentsRepository.getRevenueByCurrency(userId);
   }
