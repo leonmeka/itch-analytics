@@ -1,7 +1,11 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "types": ["uniwind/types", "node"]
+    "experimentalDecorators": true,
+    "types": ["uniwind/types", "node"],
+    "paths": {
+      "@itch/protocol": ["../../libs/protocol/src"]
+    }
   },
   "include": ["**/*.ts", "**/*.tsx", "uniwind-types.d.ts"]
 }

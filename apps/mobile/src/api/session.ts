@@ -1,5 +1,5 @@
+import type { UserDto } from '@itch/protocol';
 import * as SecureStore from 'expo-secure-store';
-
 import { API_URL_BASE } from './client';
 import { ApiError, fetchBase } from './fetch-base';
 
@@ -11,38 +11,24 @@ export type StoredSession = {
   itchToken: string | null;
 };
 
-let cached: StoredSession | null = null;
-let loaded = false;
-
-/** Device-only persistence (SecureStore): the RN cookie jar does not survive
- * app restarts, so the token pair lives here instead. */
 export async function loadSession(): Promise<StoredSession | null> {
-  if (loaded) return cached;
-
   try {
     const raw = await SecureStore.getItemAsync(SESSION_KEY);
-    cached = raw ? (JSON.parse(raw) as StoredSession) : null;
-  } catch {
-    cached = null;
-  }
 
-  loaded = true;
-  return cached;
+    return raw ? (JSON.parse(raw) as StoredSession) : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function saveSession(session: StoredSession): Promise<void> {
-  cached = session;
-  loaded = true;
   await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(session));
 }
 
 export async function clearSession(): Promise<void> {
-  cached = null;
-  loaded = true;
   await SecureStore.deleteItemAsync(SESSION_KEY);
 }
 
-/** Rotates the pair via /auth/refresh; returns the new session or null. */
 async function refreshSession(refreshToken: string): Promise<StoredSession | null> {
   try {
     const result = await fetchBase<{
@@ -63,7 +49,7 @@ async function refreshSession(refreshToken: string): Promise<StoredSession | nul
     const next: StoredSession = {
       accessToken: result.access_token,
       refreshToken: result.refresh_token,
-      itchToken: cached?.itchToken ?? null,
+      itchToken: (await loadSession())?.itchToken ?? null,
     };
 
     await saveSession(next);
@@ -73,11 +59,6 @@ async function refreshSession(refreshToken: string): Promise<StoredSession | nul
   }
 }
 
-/**
- * Authenticated request: attaches the session Bearer (and optionally the
- * itch.io token under its dedicated header), transparently refreshing the
- * pair once on 401.
- */
 export async function authedFetch<TResponse>(
   path: string,
   init: RequestInit & { itchToken?: string } = {},
@@ -116,13 +97,12 @@ export async function authedFetch<TResponse>(
   return (await response.json()) as TResponse;
 }
 
-/** GET /auth/me against the stored session (null when signed out). */
-export async function me(): Promise<{ id: string; role: 'user' | 'admin' } | null> {
+export async function me(): Promise<UserDto | null> {
   const session = await loadSession();
 
   if (!session) return null;
 
-  return authedFetch<{ id: string; role: 'user' | 'admin' } | null>('/auth/me');
+  return authedFetch<UserDto | null>('/auth/me');
 }
 
 export async function logout(): Promise<void> {

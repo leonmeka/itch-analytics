@@ -1,3 +1,4 @@
+import type { UserDto } from '@itch/protocol';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
@@ -10,7 +11,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { type CompleteLoginInput, type CurrentUser, loginURL } from '../api/client';
+import { type CompleteLoginInput, loginURL } from '../api/client';
 import { queryKeys, useCompleteLogin, useLogout, useMe } from '../api/queries';
 import { loadSession, saveSession } from '../api/session';
 
@@ -39,7 +40,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   isRedirecting: boolean;
-  user: CurrentUser;
+  user: UserDto | null;
   /** itch.io access token (in-memory only, full-profile scope). */
   itchToken: string | null;
   login: () => Promise<void>;
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const completeLoginMutation = useCompleteLogin();
   const logoutMutation = useLogout();
 
-  const user: CurrentUser = meData ?? null;
+  const user: UserDto | null = meData ?? null;
   const isLoading = isPending || !sessionReady;
   const isAuthenticated = !redirecting && !isLoading && user !== null;
 

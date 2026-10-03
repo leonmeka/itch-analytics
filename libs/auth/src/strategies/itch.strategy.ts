@@ -51,7 +51,7 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
    * `validate(accessToken, refreshToken, profile)` contract.
    */
   async validate(
-    accessToken: string,
+    _accessToken: string,
     _refreshToken: string | undefined,
     profile: Record<string, unknown>,
   ): Promise<User> {

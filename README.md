@@ -1,6 +1,6 @@
 # itch
 
-Analytics dashboard for itch.io game purchases.
+The analytics dashboard for itch.io creators.
 
 ## Layout
 

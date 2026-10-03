@@ -1,8 +1,8 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
-import { ActivityIndicator, Pressable, View } from 'react-native';
 import { Typography } from 'heroui-native/text';
 import { useState } from 'react';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 
 export type PickedFile = {
   name: string;

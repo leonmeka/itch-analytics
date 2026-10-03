@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, Max, Min } from 'class-validator';
 
 /**
  * Wire DTOs shared between the NestJS API and the mobile app.
@@ -16,18 +17,6 @@ import { IsOptional, IsString } from 'class-validator';
  */
 
 /* ── request DTOs (validated + documented) ─────────────────────────── */
-
-export class MetricRangeDto {
-  @ApiPropertyOptional({ type: String, format: 'date-time' })
-  @IsOptional()
-  @IsString()
-  from?: string;
-
-  @ApiPropertyOptional({ type: String, format: 'date-time' })
-  @IsOptional()
-  @IsString()
-  to?: string;
-}
 
 /* ── entity-backed response DTOs (mirrors of the drizzle entities) ── */
 
@@ -52,49 +41,6 @@ export class HealthDto {
   status!: string;
 }
 
-export class MetricPointDto {
-  @ApiProperty({ example: '2026-10-02' })
-  date!: string;
-
-  @ApiProperty({ example: 1234 })
-  value!: number;
-}
-
-export class MetricsOverviewDto {
-  @ApiProperty({ type: [MetricPointDto] })
-  views_series!: MetricPointDto[];
-
-  @ApiProperty({ type: [MetricPointDto] })
-  downloads_series!: MetricPointDto[];
-
-  @ApiProperty({ type: [MetricPointDto] })
-  purchases_series!: MetricPointDto[];
-}
-
-/** GET /itch/games — games the OAuth'd user develops. */
-export class ItchGameDto {
-  @ApiProperty()
-  id!: string;
-
-  @ApiProperty({ type: String, nullable: true, format: 'url' })
-  url!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
-  title!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
-  cover_url!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
-  published_at!: string | null;
-
-  @ApiProperty({ type: Number, nullable: true })
-  views_count!: number | null;
-
-  @ApiProperty({ type: Number, nullable: true })
-  downloads_count!: number | null;
-}
-
 /* ── external itch.io data (third-party, no entity) ────────────────── */
 
 /** GET /itch/me */
@@ -112,117 +58,37 @@ export class ItchProfileDto {
   avatar_url!: string | null;
 }
 
-/** Revenue entry for one currency (amount in minor units, e.g. cents). */
-export class ItchEarningDto {
-  @ApiProperty({ example: 'USD' })
-  currency!: string;
+/** POST /auth/token response — our session pair plus the provisioning user. */
+export class AuthTokenResponseDto {
+  @ApiProperty({ format: 'url' })
+  redirect_url!: string;
 
-  @ApiProperty({ example: 5047 })
-  amount!: number;
-
-  @ApiProperty({ example: '$50.47' })
-  amount_formatted!: string;
-}
-
-/** GET /itch/games — full analytics payload per game. */
-export class ItchGameAnalyticsDto {
-  @ApiProperty()
-  id!: string;
-
-  @ApiProperty({ type: String, nullable: true, format: 'url' })
-  url!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
-  title!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
-  short_text!: string | null;
-
-  @ApiProperty({ type: String, nullable: true, format: 'url' })
-  cover_url!: string | null;
+  @ApiProperty({ type: UserDto })
+  user!: UserDto;
 
   @ApiProperty()
-  published!: boolean;
-
-  @ApiProperty({ type: String, nullable: true })
-  published_at!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
-  created_at!: string | null;
-
-  @ApiProperty({ type: Number, nullable: true, description: 'Minimum price in cents.' })
-  min_price!: number | null;
-
-  @ApiProperty({ type: Number, nullable: true })
-  views_count!: number | null;
-
-  @ApiProperty({ type: Number, nullable: true })
-  downloads_count!: number | null;
-
-  @ApiProperty({ type: Number, nullable: true })
-  purchases_count!: number | null;
-
-  @ApiProperty({ type: [ItchEarningDto] })
-  earnings!: ItchEarningDto[];
-}
-
-/** GET /itch/credentials — diagnostics for the itch access token. */
-export class ItchCredentialsDto {
-  @ApiProperty({ enum: ['key', 'jwt', null] })
-  type!: 'key' | 'jwt' | null;
-
-  @ApiProperty({ type: [String] })
-  scopes!: string[];
-
-  @ApiProperty({ type: String, nullable: true })
-  expires_at!: string | null;
-}
-
-/** GET /itch/games/:gameId/rewards — claimed rewards for a game. */
-export class ItchClaimedRewardDto {
-  @ApiProperty()
-  id!: string;
-
-  @ApiProperty({ type: String, nullable: true })
-  shortcode!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
-  reward_id!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
-  reward_title!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
-  reward_type!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
-  claimed_at!: string | null;
-}
-
-export class ItchClaimedRewardsDto {
-  @ApiProperty()
-  page!: number;
+  access_token!: string;
 
   @ApiProperty()
-  per_page!: number;
-
-  @ApiProperty({ description: 'Total claimed rewards across all pages.' })
-  total_items!: number;
-
-  @ApiProperty({ type: [ItchClaimedRewardDto] })
-  rewards!: ItchClaimedRewardDto[];
+  refresh_token!: string;
 }
 
-/** GET/PUT/DELETE /me/itch-key — per-user itch.io API key configuration. */
-export class ItchKeyStatusDto {
-  @ApiProperty()
-  configured!: boolean;
-}
-
-/** GET /me/payments — imported itch.io payment (dashboard CSV row). */
+/** Imported itch.io payment — mirrors the payments entity field-for-field. */
 export class PaymentDto {
-  @ApiProperty()
+  @ApiProperty({ format: 'uuid' })
   id!: string;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  created_at!: Date; // ISO string over the wire
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  updated_at!: Date; // ISO string over the wire
+
+  @ApiProperty({ format: 'uuid' })
+  user_id!: string;
+
+  @ApiProperty({ description: 'itch.io purchase id.' })
+  external_id!: string;
 
   @ApiProperty({ type: String, nullable: true, description: 'Sub-product name.' })
   object_name!: string | null;
@@ -230,23 +96,119 @@ export class PaymentDto {
   @ApiProperty({ type: String, nullable: true, example: '25.00' })
   amount!: string | null;
 
-  @ApiProperty({ type: Number, nullable: true, description: 'Gross amount in cents.' })
-  amount_cents!: number | null;
-
-  @ApiProperty({ type: String, nullable: true, example: 'USD' })
-  currency!: string | null;
-
   @ApiProperty({ type: String, nullable: true, example: 'stripe' })
   source!: string | null;
 
-  @ApiProperty({ type: String, nullable: true, format: 'date-time' })
-  purchased_at!: string | null;
+  @ApiProperty({ type: String, nullable: true, example: '2026-08-23 19:45:22 UTC' })
+  created_at_csv!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  email!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  full_name!: string | null;
 
   @ApiProperty({ type: String, nullable: true })
   donation!: string | null;
 
+  @ApiProperty({ type: String, nullable: true })
+  on_sale!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  country_code!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  ip!: string | null;
+
+  @ApiProperty({ type: String, nullable: true, description: 'Unit price in cents.' })
+  product_price!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  tax_added!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  tip!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  marketplace_fee!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  source_fee!: string | null;
+
   @ApiProperty({ type: String, nullable: true, example: 'payout_pending' })
   payout!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  amount_delivered!: string | null;
+
+  @ApiProperty({ type: String, nullable: true, example: 'USD' })
+  currency!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  source_id!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  billing_name!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  billing_street_1!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  billing_street_2!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  billing_city!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  billing_state!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  billing_zip!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  billing_country!: string | null;
+
+  @ApiProperty({ type: Date, nullable: true, format: 'date-time' })
+  purchased_at!: Date | null; // ISO string over the wire
+
+  @ApiProperty({ type: Number, nullable: true, description: 'Gross amount in cents.' })
+  amount_cents!: number | null;
+}
+
+/** Gross revenue grouped per currency (headline aggregate). */
+export class PaymentRevenueDto {
+  @ApiProperty({ example: 'USD' })
+  currency!: string;
+
+  @ApiProperty({ example: 500500, description: 'Gross amount in cents.' })
+  amount_cents!: number;
+}
+
+/**
+ * Isolated computed resource (not an entity mirror): overview metrics of a
+ * user's imported payments.
+ */
+export class PaymentsSummaryDto {
+  @ApiProperty({ description: 'Total imported payments.' })
+  total!: number;
+
+  @ApiProperty({ type: [PaymentRevenueDto] })
+  revenue!: PaymentRevenueDto[];
+}
+
+export class PaginationDto {
+  @ApiPropertyOptional({ type: Number, minimum: 1, maximum: 100, default: 20 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit: number = 20;
+
+  @ApiPropertyOptional({ type: Number, minimum: 0, default: 0 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  offset: number = 0;
 }
 
 /** POST /me/payments/import */

@@ -8,7 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import { eq } from 'drizzle-orm';
 import { schema, UsersService } from '@/libs/shared';
 
-import { ACCESS_TOKEN_COOKIE } from '../auth.constants';
 import type { AuthenticatedRequest } from '../auth.types';
 
 @Injectable()
@@ -20,13 +19,9 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-
-    // Cookie sessions for web-style clients; Bearer for native apps whose
-    // cookie jars don't survive app restarts.
-    const bearer = request.headers.authorization?.startsWith('Bearer ')
+    const token = request.headers.authorization?.startsWith('Bearer ')
       ? request.headers.authorization.slice('Bearer '.length)
       : null;
-    const token = request.cookies?.[ACCESS_TOKEN_COOKIE] ?? bearer ?? null;
 
     if (!token) {
       throw new UnauthorizedException('Missing access token');
@@ -53,6 +48,9 @@ export class AuthGuard implements CanActivate {
     }
 
     request.user = user;
+    const itchToken = request.headers['x-itch-token'];
+
+    request.itchAccessToken = typeof itchToken === 'string' ? itchToken : null;
 
     return true;
   }

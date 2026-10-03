@@ -8,9 +8,6 @@ import type { Request, Response } from 'express';
 import passport from 'passport';
 import { OAuthProvider } from '@/libs/shared';
 
-/**
- * itch.io is the only provider: the guard always hands off to its strategy.
- */
 @Injectable()
 export class ItchAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {

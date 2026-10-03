@@ -23,7 +23,7 @@ async function bootstrap(): Promise<void> {
 
   // CSV imports can be large; the generous limit only applies to the
   // payments import path (the global pipe stays tight below it).
-  app.use('/me/payments/import', json({ limit: '10mb' }));
+  app.use('/users/:user_id/payments', json({ limit: '10mb' }));
   app.use(json({ limit: '100kb' }));
   app.use(urlencoded({ extended: true, limit: '100kb' }));
   app.use(cookieParser());
@@ -45,7 +45,7 @@ async function bootstrap(): Promise<void> {
     '/auth/login',
     rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-7' }),
   );
-  for (const route of ['/auth', '/itch']) {
+  for (const route of ['/auth', '/users']) {
     app.use(route, rateLimit({ windowMs: 60 * 1000, limit: 300, standardHeaders: 'draft-7' }));
   }
 

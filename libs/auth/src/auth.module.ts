@@ -53,12 +53,6 @@ import { ItchOAuth2Strategy } from './strategies/itch.strategy';
         itchScope: ['profile:me', 'profile:games', 'game:view:rewards'],
         itchAuthorizationURL: 'https://itch.io/user/oauth',
         itchUserinfoURL: 'https://api.itch.io/profile',
-        cookie: {
-          httpOnly: true,
-          secure: configService.get<string>('NODE_ENV') === 'production',
-          sameSite: configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
-          path: '/',
-        },
       }),
     },
     ItchOAuth2Strategy,

@@ -1,17 +1,19 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-
+import type {
+  ItchProfileDto,
+  PaymentDto,
+  PaymentsImportResultDto,
+  PaymentsSummaryDto,
+} from '@itch/protocol';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type { CompleteLoginInput } from './client';
 import { apiClient } from './client';
 import { logout, me } from './session';
-import type {
-  ItchClaimedRewards,
-  ItchCredentials,
-  ItchGame,
-  ItchProfile,
-  MetricsOverview,
-  Payment,
-  PaymentsImportResult,
-} from './types';
 
 export const queryKeys = {
   health: ['health'] as const,
@@ -22,7 +24,10 @@ export const queryKeys = {
   itchCredentials: ['itch-credentials'] as const,
   itchGraphs: ['itch-graphs'] as const,
   payments: ['payments'] as const,
+  paymentsSummary: ['payments-summary'] as const,
 };
+
+export const PAYMENTS_PAGE_SIZE = 20;
 
 export function useHealth() {
   return useQuery({
@@ -41,63 +46,41 @@ export function useMe() {
   });
 }
 
-export function useItchProfile(itchAccessToken: string | null) {
+export function useItchProfile(userId: string | null, itchAccessToken: string | null) {
   return useQuery({
-    queryKey: queryKeys.itchProfile,
-    queryFn: () => apiClient.itchProfile(itchAccessToken as string) as Promise<ItchProfile>,
-    enabled: itchAccessToken != null,
-    staleTime: 60_000,
-    retry: false,
-  });
-}
-
-export function useItchGames(itchAccessToken: string | null) {
-  return useQuery({
-    queryKey: queryKeys.itchGames,
-    queryFn: () => apiClient.itchGames(itchAccessToken as string) as Promise<ItchGame[]>,
-    enabled: itchAccessToken != null,
-    staleTime: 60_000,
-    retry: false,
-  });
-}
-
-export function useItchClaimedRewards(itchAccessToken: string | null, gameId: string | null) {
-  return useQuery({
-    queryKey: [...queryKeys.itchRewards, gameId] as const,
+    queryKey: [...queryKeys.itchProfile, userId] as const,
     queryFn: () =>
-      apiClient.itchClaimedRewards(
-        itchAccessToken as string,
-        gameId as string,
-      ) as Promise<ItchClaimedRewards>,
-    enabled: itchAccessToken != null && gameId != null,
-    staleTime: 60_000,
-    retry: false,
-  });
-}
-export function useItchCredentials(itchAccessToken: string | null) {
-  return useQuery({
-    queryKey: queryKeys.itchCredentials,
-    queryFn: () => apiClient.itchCredentials(itchAccessToken as string) as Promise<ItchCredentials>,
-    enabled: itchAccessToken != null,
+      apiClient.itchProfile(userId as string, itchAccessToken as string) as Promise<ItchProfileDto>,
+    enabled: userId != null && itchAccessToken != null,
     staleTime: 60_000,
     retry: false,
   });
 }
 
-export function useItchGraphs(itchAccessToken: string | null) {
+export function usePaymentsSummary(userId: string | null) {
   return useQuery({
-    queryKey: queryKeys.itchGraphs,
-    queryFn: () => apiClient.itchGraphs(itchAccessToken as string) as Promise<MetricsOverview>,
-    enabled: itchAccessToken != null,
+    queryKey: queryKeys.paymentsSummary,
+    queryFn: () => apiClient.paymentsSummary(userId as string) as Promise<PaymentsSummaryDto>,
+    enabled: userId != null,
     staleTime: 60_000,
     retry: false,
   });
 }
 
-export function usePayments() {
-  return useQuery({
-    queryKey: queryKeys.payments,
-    queryFn: () => apiClient.payments() as Promise<Payment[]>,
+export function usePayments(userId: string | null) {
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.payments, userId, PAYMENTS_PAGE_SIZE] as const,
+    queryFn: ({ pageParam }) =>
+      apiClient.payments(userId as string, PAYMENTS_PAGE_SIZE, pageParam as number) as Promise<
+        PaymentDto[]
+      >,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.length < PAYMENTS_PAGE_SIZE) return undefined;
+
+      return lastPage.length;
+    },
+    enabled: userId != null,
     staleTime: 60_000,
     retry: false,
   });
@@ -107,7 +90,8 @@ export function useImportPayments() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (csv: string) => apiClient.importPayments(csv),
+    mutationFn: ({ userId, csv }: { userId: string; csv: string }) =>
+      apiClient.importPayments(userId, csv),
     onError: (error) => console.warn('payments import failed', error),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.payments });

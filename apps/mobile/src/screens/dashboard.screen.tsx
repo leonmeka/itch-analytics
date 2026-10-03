@@ -1,122 +1,159 @@
 import '../../global.css';
 
+import type { PaymentDto, PaymentsSummaryDto } from '@itch/protocol';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Card } from 'heroui-native/card';
 import { Typography } from 'heroui-native/text';
-import { ActivityIndicator, View } from 'react-native';
+import { useMemo } from 'react';
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import {
-  useHealth,
+  queryKeys,
   useImportPayments,
-  useItchClaimedRewards,
-  useItchGames,
-  useItchGraphs,
   useItchProfile,
   usePayments,
+  usePaymentsSummary,
 } from '../api/queries';
-import type { ItchGame, MetricPoint, MetricsOverview } from '../api/types';
 import { Button } from '../components/ui/button';
 import { FileInput } from '../components/ui/file-input';
 import { useAuth } from '../providers/auth.provider';
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function HeroBackground() {
   return (
-    <Card className="flex-1">
-      <Card.Body>
-        <Typography type="body-xs" className="text-muted">
-          {label}
-        </Typography>
-        <Typography type="h6" className="text-foreground">
-          {value}
-        </Typography>
-      </Card.Body>
-    </Card>
+    <Svg height="100%" style={StyleSheet.absoluteFill} viewBox="0 0 400 260" width="100%">
+      <Defs>
+        <LinearGradient id="hero" x1="0" x2="1" y1="0" y2="1">
+          <Stop offset="0" stopColor="#ff8a7a" />
+          <Stop offset="1" stopColor="#fa5c5c" />
+        </LinearGradient>
+      </Defs>
+      <Rect fill="url(#hero)" height="260" rx="0" width="400" x="0" y="0" />
+    </Svg>
   );
 }
 
-function StatCardLoading({ label }: { label: string }) {
+function Avatar({ uri, name }: { uri: string | null; name: string }) {
+  if (uri) {
+    return <Image source={{ uri }} style={styles.avatar} />;
+  }
+
   return (
-    <Card className="flex-1">
-      <Card.Body>
-        <Typography type="body-xs" className="text-muted">
-          {label}
-        </Typography>
-        <ActivityIndicator size="small" color="#8f8f99" />
-      </Card.Body>
-    </Card>
+    <View style={[styles.avatar, styles.avatarFallback]}>
+      <Typography.Heading type="h4" className="text-white">
+        {name.charAt(0).toUpperCase()}
+      </Typography.Heading>
+    </View>
   );
 }
 
-/** One game with its analytics + claimed-rewards count (game:view:rewards). */
-function GameCard({ game }: { game: ItchGame }) {
+function Hero({ userId }: { userId: string | null }) {
   const { itchToken } = useAuth();
-  const rewards = useItchClaimedRewards(itchToken, game.id);
-
-  const revenue =
-    game.earnings.find((earning) => earning.currency === 'USD')?.amount_formatted ?? null;
+  const itchProfile = useItchProfile(userId, itchToken);
+  const name = itchProfile.data?.display_name ?? itchProfile.data?.username ?? 'itch';
 
   return (
-    <Card>
-      <Card.Body>
-        <View className="flex-row items-center justify-between">
-          <Typography className="text-foreground">{game.title ?? `Game ${game.id}`}</Typography>
-          {game.published ? null : (
-            <Typography type="body-xs" className="text-muted">
-              unpublished
+    <View className="h-52">
+      <HeroBackground />
+
+      <View className="flex-row items-start justify-between px-6 pt-16">
+        <View className="flex-row items-center gap-3">
+          <Avatar uri={itchProfile.data?.avatar_url ?? null} name={name} />
+          <View>
+            <Typography.Heading type="h3" className="text-white">
+              {name}
+            </Typography.Heading>
+            <Typography type="body-xs" className="text-white/80">
+              itch.io developer
             </Typography>
-          )}
+          </View>
         </View>
 
-        <Typography type="body-xs" className="mt-1 text-muted">
-          {game.views_count ?? 0} views · {game.downloads_count ?? 0} downloads ·{' '}
-          {game.purchases_count ?? 0} purchases
-        </Typography>
-
-        <View className="mt-1 flex-row items-center justify-between">
-          <Typography type="body-xs" className="text-foreground">
-            {game.earnings[0] ? `${game.earnings[0].amount_formatted} revenue` : 'no revenue data'}
-          </Typography>
-          <Typography type="body-xs" className="text-muted">
-            {rewards.isPending ? '…' : `${rewards.data?.total_items ?? 0} rewards claimed`}
-          </Typography>
-        </View>
-      </Card.Body>
-    </Card>
+        <Pressable accessibilityRole="button" className="rounded-full bg-white/20 p-2">
+          <Typography className="text-white">⚙︎</Typography>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
-/** Account-wide activity over the recent window, from itch's graph series. */
-function ActivityCard({ graphs }: { graphs: MetricsOverview | undefined }) {
-  const sumLastDays = (series: MetricPoint[] | undefined, days: number): number => {
-    if (!series) return 0;
+function HeadlineMetrics({ summary }: { summary: PaymentsSummaryDto | undefined }) {
+  const primaryRevenue = summary?.revenue[0] ?? null;
 
-    const cutoff = Date.now() - days * 86_400_000;
-
-    return series
-      .filter((point) => new Date(point.date).getTime() >= cutoff)
-      .reduce((sum, point) => sum + point.value, 0);
+  const formatRevenue = (currency: string, amountCents: number): string => {
+    try {
+      return new Intl.NumberFormat('en', { style: 'currency', currency }).format(amountCents / 100);
+    } catch {
+      return `${(amountCents / 100).toFixed(2)} ${currency}`;
+    }
   };
 
-  const window = 14;
+  return (
+    <View className="flex-row flex-wrap gap-3 px-6">
+      <Card className="min-w-[45%] flex-1">
+        <Card.Body>
+          <Typography type="body-xs" className="text-muted">
+            Gross revenue
+          </Typography>
+          {primaryRevenue ? (
+            <Typography.Heading type="h3" className="text-foreground">
+              {formatRevenue(primaryRevenue.currency, primaryRevenue.amount_cents)}
+            </Typography.Heading>
+          ) : (
+            <Typography.Heading type="h3" className="text-foreground">
+              —
+            </Typography.Heading>
+          )}
+        </Card.Body>
+      </Card>
+
+      <Card className="min-w-[45%] flex-1">
+        <Card.Body>
+          <Typography type="body-xs" className="text-muted">
+            Payments
+          </Typography>
+          <Typography.Heading type="h3" className="text-foreground">
+            {summary?.total ?? '—'}
+          </Typography.Heading>
+        </Card.Body>
+      </Card>
+    </View>
+  );
+}
+
+function PaymentRow({ payment }: { payment: PaymentDto }) {
+  const date = payment.purchased_at
+    ? new Date(payment.purchased_at).toLocaleDateString('en', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+    : null;
 
   return (
-    <Card>
-      <Card.Body>
-        <Typography className="text-foreground">Last {window} days</Typography>
-        <Typography type="body-xs" className="mt-1 text-muted">
-          {sumLastDays(graphs?.views_series, window)} views ·{' '}
-          {sumLastDays(graphs?.downloads_series, window)} downloads ·{' '}
-          {sumLastDays(graphs?.purchases_series, window)} purchases
+    <View className="flex-row items-center justify-between border-b border-border px-6 py-3">
+      <View className="flex-1">
+        <Typography type="body-sm" className="text-foreground">
+          {payment.object_name ?? 'Payment'}
         </Typography>
-      </Card.Body>
-    </Card>
+        <Typography type="body-xs" className="text-muted">
+          {date ?? ''} · {payment.source ?? ''}
+        </Typography>
+      </View>
+
+      <Typography.Heading type="h6" className="text-foreground">
+        {payment.amount != null ? `$${payment.amount}` : '—'}
+      </Typography.Heading>
+    </View>
   );
 }
 
 /** itch.io's API hides revenue; users pick the dashboard CSV export. */
-function PaymentsSyncCard() {
+function PaymentsSyncCard({ userId }: { userId: string }) {
   const importMutation = useImportPayments();
 
   return (
-    <Card>
+    <Card className="mx-6 my-3">
       <Card.Body className="gap-2">
         <Typography className="text-foreground">Sync purchases</Typography>
         <Typography type="body-xs" className="text-muted">
@@ -125,12 +162,12 @@ function PaymentsSyncCard() {
         </Typography>
         <FileInput
           isDisabled={importMutation.isPending}
-          onFile={(file) => importMutation.mutate(file.text)}
+          onFile={(file) => importMutation.mutate({ userId, csv: file.text })}
         />
         {importMutation.isSuccess ? (
           <Typography type="body-xs" className="text-muted">
-            Imported {importMutation.data?.imported ?? 0} new · {importMutation.data?.skipped ?? 0}{' '}
-            already known
+            Imported {importMutation.data?.imported ?? 0} new · {importMutation.data?.updated ?? 0}{' '}
+            updated · {importMutation.data?.skipped ?? 0} unchanged
           </Typography>
         ) : null}
         {importMutation.isError ? (
@@ -144,119 +181,74 @@ function PaymentsSyncCard() {
 }
 
 export function DashboardScreen() {
-  const { itchToken, isAuthenticated, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const userId = user?.id ?? null;
+  const insets = useSafeAreaInsets();
+  const payments = usePayments(userId);
+  const summary = usePaymentsSummary(userId);
 
-  const health = useHealth();
-  const itchProfile = useItchProfile(itchToken);
-  const games = useItchGames(itchToken);
-  const graphs = useItchGraphs(itchToken);
-  const payments = usePayments();
+  const items = useMemo(() => payments.data?.pages.flatMap((page) => page) ?? [], [payments.data]);
 
-  if (health.isPending) {
-    return null;
-  }
+  const listFooter = (
+    <View className="gap-4 pb-8">
+      {userId ? <PaymentsSyncCard userId={userId} /> : null}
 
-  if (health.isError) {
-    return (
-      <View className="flex-1 gap-4 bg-background px-6 pt-24">
-        <Typography.Heading type="h1" className="text-foreground">
-          itch
-        </Typography.Heading>
-        <Typography.Paragraph type="body-sm" className="text-danger">
-          API unreachable — {String(health.error.message)}
-        </Typography.Paragraph>
-        <Button variant="secondary" onPress={() => void health.refetch()}>
-          Retry
+      <View className="px-6">
+        <Button variant="secondary" onPress={logout}>
+          Sign out
         </Button>
       </View>
-    );
-  }
-
-  const totalViews = games.data?.reduce((sum, game) => sum + (game.views_count ?? 0), 0) ?? 0;
-  const totalDownloads =
-    games.data?.reduce((sum, game) => sum + (game.downloads_count ?? 0), 0) ?? 0;
-  const totalPurchases =
-    games.data?.reduce((sum, game) => sum + (game.purchases_count ?? 0), 0) ?? 0;
-
-  // Revenue grouped per currency from imported itch payments (the API
-  // exposes no revenue; this is the manual CSV sync). Minor units.
-  const revenueByCurrency = new Map<string, number>();
-
-  for (const payment of payments.data ?? []) {
-    if (payment.amount_cents == null) continue;
-
-    revenueByCurrency.set(
-      payment.currency ?? '',
-      (revenueByCurrency.get(payment.currency ?? '') ?? 0) + payment.amount_cents,
-    );
-  }
-
-  const primaryRevenue = [...revenueByCurrency.entries()][0] ?? null;
-
-  const formatRevenue = (currency: string, amount: number): string => {
-    try {
-      return new Intl.NumberFormat('en', { style: 'currency', currency }).format(amount / 100);
-    } catch {
-      return `${(amount / 100).toFixed(2)} ${currency}`;
-    }
-  };
-
-  return (
-    <View className="flex-1 gap-6 bg-background px-6 pt-24">
-      <Typography.Heading type="h1" className="text-foreground">
-        {itchProfile.data?.display_name ?? itchProfile.data?.username ?? 'itch'}
-      </Typography.Heading>
-
-      <View className="flex-row flex-wrap gap-3">
-        {games.isPending ? (
-          <StatCardLoading label="Games" />
-        ) : (
-          <StatCard label="Games" value={String(games.data?.length ?? 0)} />
-        )}
-        {games.isPending ? (
-          <StatCardLoading label="Total views" />
-        ) : (
-          <StatCard label="Total views" value={String(totalViews)} />
-        )}
-        {games.isPending ? (
-          <StatCardLoading label="Total downloads" />
-        ) : (
-          <StatCard label="Total downloads" value={String(totalDownloads)} />
-        )}
-        {games.isPending ? (
-          <StatCardLoading label="Total purchases" />
-        ) : (
-          <StatCard label="Total purchases" value={String(totalPurchases)} />
-        )}
-        {games.isPending ? (
-          <StatCardLoading label="Revenue" />
-        ) : (
-          <StatCard
-            label="Revenue"
-            value={primaryRevenue ? formatRevenue(primaryRevenue[0], primaryRevenue[1]) : '—'}
-          />
-        )}
-      </View>
-
-      <View className="gap-2">
-        {(games.data ?? []).map((game) => (
-          <GameCard key={game.id} game={game} />
-        ))}
-      </View>
-
-      <ActivityCard graphs={graphs.data} />
-
-      <PaymentsSyncCard />
-
-      {games.isError ? (
-        <Typography.Paragraph type="body-sm" className="text-danger">
-          {String(games.error.message)}
-        </Typography.Paragraph>
-      ) : null}
-
-      <Button variant="secondary" onPress={logout}>
-        Sign out
-      </Button>
     </View>
   );
+
+  return (
+    <FlatList
+      className="flex-1 bg-background"
+      contentContainerStyle={{ paddingBottom: insets.bottom }}
+      data={items}
+      keyExtractor={(payment) => payment.id}
+      ListEmptyComponent={
+        payments.isPending ? (
+          <ActivityIndicator className="py-10" size="large" color="#8f8f99" />
+        ) : (
+          <Typography.Paragraph type="body-sm" className="py-10 text-center text-muted">
+            No payments yet — sync your CSV below.
+          </Typography.Paragraph>
+        )
+      }
+      ListFooterComponent={listFooter}
+      ListHeaderComponent={
+        <View className="gap-6">
+          <Hero userId={userId} />
+          <HeadlineMetrics summary={summary.data} />
+
+          <Typography.Heading type="h4" className="px-6 text-foreground">
+            Payments
+          </Typography.Heading>
+        </View>
+      }
+      onEndReachedThreshold={0.4}
+      onEndReached={() => {
+        if (payments.hasNextPage && !payments.isFetchingNextPage) {
+          void payments.fetchNextPage();
+        }
+      }}
+      refreshing={payments.isRefetching}
+      renderItem={({ item }) => <PaymentRow payment={item} />}
+      onRefresh={() => void payments.refetch()}
+    />
+  );
 }
+
+const styles = StyleSheet.create({
+  avatar: {
+    backgroundColor: '#ffffff33',
+    borderRadius: 999,
+    height: 56,
+    width: 56,
+  },
+  avatarFallback: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+});
