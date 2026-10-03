@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
-import { schema } from '../db/db.inference';
 import { PaymentRevenueRow, PaymentsRepository } from '../repositories/payments.repository';
 import type { CreatePayment, Payment, UpdatePayment } from '../types/payments.types';
 import { BaseService } from './base.service';

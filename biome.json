@@ -12,7 +12,9 @@
       "!!**/coverage/**",
       "!!**/node_modules/**",
       "!!apps/api/src/@generated/**",
-      "!!libs/shared/src/db/migrations/**"
+      "!!libs/shared/src/db/migrations/**",
+      "!!apps/mobile/global.css",
+      "!!apps/mobile/assets/**/*.svg"
     ]
   },
   "formatter": {
@@ -47,6 +49,13 @@
       "semicolons": "always"
     }
   },
+  "overrides": [
+    {
+      "includes": ["apps/mobile/global.css", "apps/mobile/**/*.svg"],
+      "linter": { "enabled": false },
+      "formatter": { "enabled": false }
+    }
+  ],
   "css": {
     "parser": {
       "tailwindDirectives": true

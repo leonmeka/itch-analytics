@@ -1,20 +1,13 @@
 import '../../global.css';
 
 import type { PaymentDto, PaymentsSummaryDto } from '@itch/protocol';
-import { useInfiniteQuery } from '@tanstack/react-query';
 import { Card } from 'heroui-native/card';
 import { Typography } from 'heroui-native/text';
 import { useMemo } from 'react';
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import {
-  queryKeys,
-  useImportPayments,
-  useItchProfile,
-  usePayments,
-  usePaymentsSummary,
-} from '../api/queries';
+import { useImportPayments, useItchProfile, usePayments, usePaymentsSummary } from '../api/queries';
 import { Button } from '../components/ui/button';
 import { FileInput } from '../components/ui/file-input';
 import { useAuth } from '../providers/auth.provider';
@@ -194,9 +187,7 @@ export function DashboardScreen() {
   const userId = user?.id ?? null;
   const payments = usePayments(userId);
   const summary = usePaymentsSummary(userId);
-  void summary;
-
-  const items = useMemo(() => payments.data?.pages.flatMap((page) => page) ?? [], [payments.data]);
+  const items = useMemo(() => payments.data?.pages.flat() ?? [], [payments.data]);
 
   const listFooter = (
     <View className="gap-4 pb-8">

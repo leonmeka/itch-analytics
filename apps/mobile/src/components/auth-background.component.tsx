@@ -1,4 +1,4 @@
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 
 const LOGO_PATH =
@@ -8,7 +8,7 @@ const SHAPE = (x: number, y: number, scale: number, rotate: number) =>
   `translate(${x} ${y}) scale(${scale}) rotate(${rotate})`;
 
 export function AuthBackground() {
-  const [accent, accentForeground, accentLift, accentDeep] = useCSSVariable([
+  const [accent, accentForeground, _accentLift, accentDeep] = useCSSVariable([
     '--color-accent',
     '--color-accent-foreground',
     '--color-accent-lift',
