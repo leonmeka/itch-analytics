@@ -9,22 +9,66 @@ export type ItchProfile = {
   avatar_url: string | null;
 };
 
+export type ItchEarning = {
+  currency: string;
+  amount: number;
+  amount_formatted: string;
+};
+
 export type ItchGame = {
   id: string;
   url: string | null;
   title: string | null;
+  short_text: string | null;
   cover_url: string | null;
+  published: boolean;
   published_at: string | null;
+  created_at: string | null;
+  min_price: number | null;
   views_count: number | null;
   downloads_count: number | null;
+  purchases_count: number | null;
+  earnings: ItchEarning[];
+};
+
+export type ItchCredentials = {
+  type: 'key' | 'jwt' | null;
+  scopes: string[];
+  expires_at: string | null;
+};
+
+export type ItchClaimedReward = {
+  id: string;
+  shortcode: string | null;
+  reward_id: string | null;
+  reward_title: string | null;
+  reward_type: string | null;
+  claimed_at: string | null;
+};
+
+export type ItchClaimedRewards = {
+  page: number;
+  per_page: number;
+  total_items: number;
+  rewards: ItchClaimedReward[];
+};
+
+export type ItchKeyStatus = {
+  configured: boolean;
 };
 
 export type MetricPoint = { date: string; value: number };
 
+export type ItchGraphPoint = { date: string; count: number };
+
+export type ItchGraphs = {
+  views: ItchGraphPoint[];
+  downloads: ItchGraphPoint[];
+  purchases: ItchGraphPoint[];
+};
+
 export type MetricsOverview = {
-  total_views: number;
-  total_downloads: number;
-  conversion_rate: number;
   views_series: MetricPoint[];
   downloads_series: MetricPoint[];
+  purchases_series: MetricPoint[];
 };

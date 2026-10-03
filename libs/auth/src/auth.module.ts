@@ -7,7 +7,9 @@ import { OAuthIdentitiesModule, UsersModule } from '@/libs/shared';
 
 import { AUTH_CONFIG_KEY } from './auth.constants';
 import type { AuthConfig } from './auth.types';
+import { CryptoService, ENCRYPTION_KEY } from './crypto/crypto.service';
 import { ItchAuthGuard } from './guards/itch.guard';
+import { ItchKeysService } from './itch-keys/itch-keys.service';
 import { ItchOAuth2Strategy } from './strategies/itch.strategy';
 
 @Module({
@@ -45,7 +47,12 @@ import { ItchOAuth2Strategy } from './strategies/itch.strategy';
         ),
         itchClientID: configService.getOrThrow<string>('API_OAUTH_ITCH_CLIENT_ID'),
         itchCallbackURL: configService.getOrThrow<string>('API_OAUTH_ITCH_CALLBACK_URL'),
-        itchScope: ['profile:me', 'profile:games'],
+        // profile:games lists the games the user develops — the dashboard's
+        // core data (views/downloads/purchases); profile:me identifies the
+        // user; game:view:rewards covers claimed rewards. Revenue (earnings)
+        // is not exposed to any OAuth scope — it comes from the user's own
+        // stored API key instead.
+        itchScope: ['profile:me', 'profile:games', 'game:view:rewards'],
         itchAuthorizationURL: 'https://itch.io/user/oauth',
         itchUserinfoURL: 'https://api.itch.io/profile',
         cookie: {
@@ -56,9 +63,17 @@ import { ItchOAuth2Strategy } from './strategies/itch.strategy';
         },
       }),
     },
+    {
+      provide: ENCRYPTION_KEY,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): string =>
+        configService.getOrThrow<string>('APP_ENCRYPTION_KEY'),
+    },
+    CryptoService,
+    ItchKeysService,
     ItchOAuth2Strategy,
     ItchAuthGuard,
   ],
-  exports: [AUTH_CONFIG_KEY, JwtModule, ItchOAuth2Strategy],
+  exports: [AUTH_CONFIG_KEY, JwtModule, ItchOAuth2Strategy, ItchKeysService],
 })
 export class AuthModule {}

@@ -1,7 +1,7 @@
-import { ActivityIndicator } from 'react-native';
-import { Button as HeroButton } from 'heroui-native/button';
 import type { ButtonRootProps } from 'heroui-native/button';
-import { useThemeColor, type ThemeColor } from 'heroui-native/hooks';
+import { Button as HeroButton } from 'heroui-native/button';
+import { type ThemeColor, useThemeColor } from 'heroui-native/hooks';
+import { ActivityIndicator } from 'react-native';
 
 type ButtonProps = ButtonRootProps & {
   /** Replaces the label with a spinner and disables the button. */
@@ -19,7 +19,13 @@ const VARIANT_SPINNER_TOKEN: Record<NonNullable<ButtonRootProps['variant']>, The
   'danger-soft': 'danger-soft-foreground',
 };
 
-function ButtonImpl({ variant = 'primary', isLoading, children, isDisabled, ...props }: ButtonProps) {
+function ButtonImpl({
+  variant = 'primary',
+  isLoading,
+  children,
+  isDisabled,
+  ...props
+}: ButtonProps) {
   const spinnerColor = useThemeColor(VARIANT_SPINNER_TOKEN[variant]);
 
   return (

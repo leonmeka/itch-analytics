@@ -3,10 +3,10 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy as AbstractStrategy } from 'passport-strategy';
 import { and, eq } from 'drizzle-orm';
-import { firstValueFrom } from 'rxjs';
 import type { Request } from 'express';
+import { Strategy as AbstractStrategy } from 'passport-strategy';
+import { firstValueFrom } from 'rxjs';
 import { OAuthIdentitiesService, OAuthProvider, schema, User, UsersService } from '@/libs/shared';
 
 import { AUTH_CONFIG_KEY } from '../auth.constants';

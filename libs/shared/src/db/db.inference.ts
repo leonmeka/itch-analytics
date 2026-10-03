@@ -6,11 +6,13 @@ import type {
   SQL,
   Table,
 } from 'drizzle-orm';
+import * as apiKeys from './schemas/api-keys.sql';
 import * as oauthIdentities from './schemas/oauth-identities.sql';
 import * as refreshTokens from './schemas/refresh-tokens.sql';
 import * as users from './schemas/users.sql';
 
 export const schema = {
+  ...apiKeys,
   ...oauthIdentities,
   ...refreshTokens,
   ...users,

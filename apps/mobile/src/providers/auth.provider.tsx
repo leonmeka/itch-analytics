@@ -1,9 +1,18 @@
+import { useQueryClient } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
-
-import { apiClient, type CompleteLoginInput, type CurrentUser, loginURL } from '../api/client';
-import { useCompleteLogin, useLogout, useMe } from '../api/queries';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { type CompleteLoginInput, type CurrentUser, loginURL } from '../api/client';
+import { queryKeys, useCompleteLogin, useLogout, useMe } from '../api/queries';
+import { loadSession, saveSession } from '../api/session';
 
 /**
  * Handles the entire client-side auth logic, mirroring the ahegao setup.
@@ -42,21 +51,48 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [redirecting, setRedirecting] = useState(false);
   const [itchToken, setItchToken] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
 
   const { data: meData, isPending } = useMe();
   const completeLoginMutation = useCompleteLogin();
   const logoutMutation = useLogout();
 
   const user: CurrentUser = meData ?? null;
-  const isLoading = isPending;
+  const isLoading = isPending || !sessionReady;
   const isAuthenticated = !redirecting && !isLoading && user !== null;
 
+  // Hydrate the persisted session before the first me probe decides the
+  // signed-in state (the me query waits on itchToken-bearing session load).
+  useEffect(() => {
+    void loadSession().then((session) => {
+      setItchToken(session?.itchToken ?? null);
+      setSessionReady(true);
+    });
+  }, []);
+
+  const queryClient = useQueryClient();
+
   const completeLogin = useCallback(
-    (input: CompleteLoginInput) => {
+    async (input: CompleteLoginInput) => {
       setItchToken(input.accessToken);
-      completeLoginMutation.mutate(input);
+
+      const result = await completeLoginMutation.mutateAsync(input);
+
+      // Persist the session BEFORE refreshing session-dependent queries —
+      // otherwise they probe /auth/me without a token (the race that kept
+      // users stranded on the auth screen).
+      await saveSession({
+        accessToken: result.access_token,
+        refreshToken: result.refresh_token,
+        itchToken: input.accessToken,
+      });
+
+      queryClient.setQueryData(queryKeys.me, result.user);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.itchProfile });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.itchGames });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.itchRewards });
     },
-    [completeLoginMutation],
+    [completeLoginMutation, queryClient],
   );
 
   const login = useCallback(async () => {

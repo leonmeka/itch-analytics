@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { UserDto } from '@itch/protocol';
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
@@ -40,7 +41,10 @@ export class AuthController {
    * auth cookies. Returns the user on success; throws 401 on a present but
    * invalid token (no-op `null` when the cookie is absent).
    */
-  private async rotateTokenPair(response: Response, refresh_token?: string): Promise<User | null> {
+  private async rotateTokenPair(
+    response: Response,
+    refresh_token?: string,
+  ): Promise<{ user: User; access_token: string; refresh_token: string } | null> {
     if (!refresh_token) {
       return null;
     }
@@ -100,7 +104,7 @@ export class AuthController {
 
     this.setAuthCookies(response, access_token, access_max_age, next_refresh_token, next_max_age);
 
-    return user;
+    return { user, access_token, refresh_token: next_refresh_token };
   }
 
   private setAuthCookies(
@@ -127,7 +131,11 @@ export class AuthController {
    */
   @Get('me')
   async me(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
-    const token = request.cookies?.[ACCESS_TOKEN_COOKIE] ?? null;
+    // Cookie or Bearer — see the guard note on native clients.
+    const bearer = request.headers.authorization?.startsWith('Bearer ')
+      ? request.headers.authorization.slice('Bearer '.length)
+      : null;
+    const token = request.cookies?.[ACCESS_TOKEN_COOKIE] ?? bearer ?? null;
 
     if (token) {
       try {
@@ -146,27 +154,49 @@ export class AuthController {
     }
 
     try {
-      return await this.rotateTokenPair(response, request.cookies?.[REFRESH_TOKEN_COOKIE]);
+      const rotated = await this.rotateTokenPair(response, request.cookies?.[REFRESH_TOKEN_COOKIE]);
+
+      return rotated?.user ?? null;
     } catch {
       return null;
     }
   }
 
+  /**
+   * Rotates the token pair. Native clients post their refresh token in the
+   * body (their cookie jar doesn't survive app restarts); the response
+   * carries the fresh pair for SecureStore-side persistence.
+   */
   @Post('refresh')
   @HttpCode(200)
   async refresh(
     @Req() request: Request,
+    @Body() body: { refresh_token?: string },
     @Res({ passthrough: true }) response: Response,
-  ): Promise<UserDto | { refreshed: false }> {
-    const refresh_token = request.cookies?.[REFRESH_TOKEN_COOKIE];
+  ): Promise<
+    | { refreshed: true; access_token: string; refresh_token: string; user: UserDto }
+    | { refreshed: false }
+  > {
+    const refresh_token = request.cookies?.[REFRESH_TOKEN_COOKIE] ?? body?.refresh_token;
 
     if (!refresh_token) {
       // Signed-out caller: a no-op 200 instead of 401 keeps client consoles
-      // clean. Nothing is rotated without a cookie.
+      // clean. Nothing is rotated without a token.
       return { refreshed: false };
     }
 
-    return (await this.rotateTokenPair(response, refresh_token)) ?? { refreshed: false };
+    const rotated = await this.rotateTokenPair(response, refresh_token);
+
+    if (!rotated) {
+      return { refreshed: false };
+    }
+
+    return {
+      refreshed: true,
+      access_token: rotated.access_token,
+      refresh_token: rotated.refresh_token,
+      user: rotated.user as unknown as UserDto,
+    };
   }
 
   @Post('logout')
@@ -233,9 +263,13 @@ export class AuthController {
 
     this.setAuthCookies(response, access_token, access_max_age, refresh_token, refresh_max_age);
 
+    // Native clients persist the pair in SecureStore (their cookie jar does
+    // not survive app restarts); web-style clients keep using the cookies.
     response.json({
       redirect_url: this.authConfig.oauthSuccessRedirectUrl,
       user: user as unknown as UserDto,
+      access_token,
+      refresh_token,
     });
   }
 }

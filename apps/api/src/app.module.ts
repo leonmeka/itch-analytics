@@ -12,6 +12,7 @@ import { PORT_KEY } from './config.constants';
 import { AuthController } from './controllers/auth.controller';
 import { HealthController } from './controllers/health.controller';
 import { ItchController } from './controllers/itch.controller';
+import { MeController } from './controllers/me.controller';
 import { env } from './env';
 
 @Module({
@@ -34,7 +35,7 @@ import { env } from './env';
     AuthModule,
     ItchModule,
   ],
-  controllers: [HealthController, ItchController, AuthController],
+  controllers: [HealthController, ItchController, AuthController, MeController],
   providers: [
     {
       provide: PORT_KEY,

@@ -61,20 +61,38 @@ export class MetricPointDto {
 }
 
 export class MetricsOverviewDto {
-  @ApiProperty({ example: 8123 })
-  total_views!: number;
-
-  @ApiProperty({ example: 512 })
-  total_downloads!: number;
-
-  @ApiProperty({ example: 34.2 })
-  conversion_rate!: number;
-
   @ApiProperty({ type: [MetricPointDto] })
   views_series!: MetricPointDto[];
 
   @ApiProperty({ type: [MetricPointDto] })
   downloads_series!: MetricPointDto[];
+
+  @ApiProperty({ type: [MetricPointDto] })
+  purchases_series!: MetricPointDto[];
+}
+
+/** GET /itch/games — games the OAuth'd user develops. */
+export class ItchGameDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty({ type: String, nullable: true, format: 'url' })
+  url!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  title!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  cover_url!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  published_at!: string | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  views_count!: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  downloads_count!: number | null;
 }
 
 /* ── external itch.io data (third-party, no entity) ────────────────── */
@@ -94,8 +112,20 @@ export class ItchProfileDto {
   avatar_url!: string | null;
 }
 
-/** GET /itch/games — games the OAuth'd user develops. */
-export class ItchGameDto {
+/** Revenue entry for one currency (amount in minor units, e.g. cents). */
+export class ItchEarningDto {
+  @ApiProperty({ example: 'USD' })
+  currency!: string;
+
+  @ApiProperty({ example: 5047 })
+  amount!: number;
+
+  @ApiProperty({ example: '$50.47' })
+  amount_formatted!: string;
+}
+
+/** GET /itch/games — full analytics payload per game. */
+export class ItchGameAnalyticsDto {
   @ApiProperty()
   id!: string;
 
@@ -105,15 +135,86 @@ export class ItchGameDto {
   @ApiProperty({ type: String, nullable: true })
   title!: string | null;
 
+  @ApiProperty({ type: String, nullable: true })
+  short_text!: string | null;
+
   @ApiProperty({ type: String, nullable: true, format: 'url' })
   cover_url!: string | null;
 
+  @ApiProperty()
+  published!: boolean;
+
   @ApiProperty({ type: String, nullable: true })
   published_at!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  created_at!: string | null;
+
+  @ApiProperty({ type: Number, nullable: true, description: 'Minimum price in cents.' })
+  min_price!: number | null;
 
   @ApiProperty({ type: Number, nullable: true })
   views_count!: number | null;
 
   @ApiProperty({ type: Number, nullable: true })
   downloads_count!: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  purchases_count!: number | null;
+
+  @ApiProperty({ type: [ItchEarningDto] })
+  earnings!: ItchEarningDto[];
+}
+
+/** GET /itch/credentials — diagnostics for the itch access token. */
+export class ItchCredentialsDto {
+  @ApiProperty({ enum: ['key', 'jwt', null] })
+  type!: 'key' | 'jwt' | null;
+
+  @ApiProperty({ type: [String] })
+  scopes!: string[];
+
+  @ApiProperty({ type: String, nullable: true })
+  expires_at!: string | null;
+}
+
+/** GET /itch/games/:gameId/rewards — claimed rewards for a game. */
+export class ItchClaimedRewardDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty({ type: String, nullable: true })
+  shortcode!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  reward_id!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  reward_title!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  reward_type!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  claimed_at!: string | null;
+}
+
+export class ItchClaimedRewardsDto {
+  @ApiProperty()
+  page!: number;
+
+  @ApiProperty()
+  per_page!: number;
+
+  @ApiProperty({ description: 'Total claimed rewards across all pages.' })
+  total_items!: number;
+
+  @ApiProperty({ type: [ItchClaimedRewardDto] })
+  rewards!: ItchClaimedRewardDto[];
+}
+
+/** GET/PUT/DELETE /me/itch-key — per-user itch.io API key configuration. */
+export class ItchKeyStatusDto {
+  @ApiProperty()
+  configured!: boolean;
 }

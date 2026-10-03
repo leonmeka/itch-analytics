@@ -14,6 +14,7 @@ if (!process.env.API_DATABASE_URL) {
 const config: Config = defineConfig({
   dialect: 'postgresql',
   schema: [
+    './src/db/schemas/api-keys.sql.ts',
     './src/db/schemas/oauth-identities.sql.ts',
     './src/db/schemas/refresh-tokens.sql.ts',
     './src/db/schemas/users.sql.ts',

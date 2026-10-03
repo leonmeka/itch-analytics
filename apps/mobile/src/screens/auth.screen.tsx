@@ -1,16 +1,15 @@
 import '../../global.css';
 
-import { Typography } from 'heroui-native/text';
 import * as WebBrowser from 'expo-web-browser';
+import { Typography } from 'heroui-native/text';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import { Button } from '../components/ui/button';
-import { AuthBackground } from '../components/auth-background.component';
-import { useAuth } from '../providers/auth.provider';
-import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../constants';
-import WhiteLogo from '../../assets/itch-logo-white.svg';
 import RedLogo from '../../assets/itch-logo-red.svg';
+import WhiteLogo from '../../assets/itch-logo-white.svg';
+import { AuthBackground } from '../components/auth-background.component';
+import { Button } from '../components/ui/button';
+import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../constants';
+import { useAuth } from '../providers/auth.provider';
 
 export function AuthScreen() {
   const { login, isRedirecting } = useAuth();
@@ -31,7 +30,12 @@ export function AuthScreen() {
       </View>
 
       <View className="absolute inset-x-0 px-6" style={{ bottom: insets.bottom }}>
-        <Button variant="secondary" size="md" isLoading={isRedirecting} onPress={() => void login()}>
+        <Button
+          variant="secondary"
+          size="md"
+          isLoading={isRedirecting}
+          onPress={() => void login()}
+        >
           <RedLogo width={18} height={16} />
           <Button.Label>Sign in with itch.io</Button.Label>
         </Button>
