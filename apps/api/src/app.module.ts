@@ -5,6 +5,7 @@ import { ItchModule } from '@/libs/itch';
 import {
   DatabaseModule,
   OAuthIdentitiesModule,
+  PaymentsModule,
   RefreshTokensModule,
   UsersModule,
 } from '@/libs/shared';
@@ -32,6 +33,7 @@ import { env } from './env';
     UsersModule,
     OAuthIdentitiesModule,
     RefreshTokensModule,
+    PaymentsModule,
     AuthModule,
     ItchModule,
   ],

@@ -1,21 +1,20 @@
 import '../../global.css';
 
 import { Card } from 'heroui-native/card';
-import { Input } from 'heroui-native/input';
 import { Typography } from 'heroui-native/text';
-import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import {
   useHealth,
+  useImportPayments,
   useItchClaimedRewards,
   useItchGames,
   useItchGraphs,
-  useItchKeyStatus,
   useItchProfile,
-  useSaveItchKey,
+  usePayments,
 } from '../api/queries';
 import type { ItchGame, MetricPoint, MetricsOverview } from '../api/types';
 import { Button } from '../components/ui/button';
+import { FileInput } from '../components/ui/file-input';
 import { useAuth } from '../providers/auth.provider';
 
 function StatCard({ label, value }: { label: string; value: string }) {
@@ -112,39 +111,33 @@ function ActivityCard({ graphs }: { graphs: MetricsOverview | undefined }) {
   );
 }
 
-/** itch.io hides revenue from OAuth tokens; users add their own API key. */ function RevenueKeyCard() {
-  const { itchToken } = useAuth();
-  const [apiKey, setApiKey] = useState('');
-  const save = useSaveItchKey();
+/** itch.io's API hides revenue; users pick the dashboard CSV export. */
+function PaymentsSyncCard() {
+  const importMutation = useImportPayments();
 
   return (
     <Card>
       <Card.Body className="gap-2">
-        <Typography className="text-foreground">Unlock revenue</Typography>
+        <Typography className="text-foreground">Sync purchases</Typography>
         <Typography type="body-xs" className="text-muted">
-          itch.io hides revenue from OAuth sign-ins. Paste your account API key from
-          itch.io/user/settings/api-keys — stored encrypted, revocable anytime.
+          itch.io's API doesn't expose revenue. Download the CSV from
+          itch.io/dashboard/export-purchases/all, then pick it here (deduplicated automatically).
         </Typography>
-        <Input
-          value={apiKey}
-          onChangeText={setApiKey}
-          placeholder="itch.io API key"
-          autoCapitalize="none"
-          autoCorrect={false}
-          secureTextEntry
+        <FileInput
+          isDisabled={importMutation.isPending}
+          onFile={(file) => importMutation.mutate(file.text)}
         />
-        <Button
-          variant="secondary"
-          isLoading={save.isPending}
-          isDisabled={apiKey.trim().length === 0}
-          onPress={() => {
-            save.mutate(apiKey.trim(), {
-              onSuccess: () => setApiKey(''),
-            });
-          }}
-        >
-          Save key
-        </Button>
+        {importMutation.isSuccess ? (
+          <Typography type="body-xs" className="text-muted">
+            Imported {importMutation.data?.imported ?? 0} new · {importMutation.data?.skipped ?? 0}{' '}
+            already known
+          </Typography>
+        ) : null}
+        {importMutation.isError ? (
+          <Typography type="body-xs" className="text-danger">
+            Import failed — {String(importMutation.error.message)}
+          </Typography>
+        ) : null}
       </Card.Body>
     </Card>
   );
@@ -157,7 +150,7 @@ export function DashboardScreen() {
   const itchProfile = useItchProfile(itchToken);
   const games = useItchGames(itchToken);
   const graphs = useItchGraphs(itchToken);
-  const keyStatus = useItchKeyStatus(itchToken);
+  const payments = usePayments();
 
   if (health.isPending) {
     return null;
@@ -185,17 +178,17 @@ export function DashboardScreen() {
   const totalPurchases =
     games.data?.reduce((sum, game) => sum + (game.purchases_count ?? 0), 0) ?? 0;
 
-  // Revenue grouped per currency (itch pays out in the account's currency —
-  // never assume USD). Amounts are in minor units (cents).
+  // Revenue grouped per currency from imported itch payments (the API
+  // exposes no revenue; this is the manual CSV sync). Minor units.
   const revenueByCurrency = new Map<string, number>();
 
-  for (const game of games.data ?? []) {
-    for (const earning of game.earnings) {
-      revenueByCurrency.set(
-        earning.currency,
-        (revenueByCurrency.get(earning.currency) ?? 0) + earning.amount,
-      );
-    }
+  for (const payment of payments.data ?? []) {
+    if (payment.amount_cents == null) continue;
+
+    revenueByCurrency.set(
+      payment.currency ?? '',
+      (revenueByCurrency.get(payment.currency ?? '') ?? 0) + payment.amount_cents,
+    );
   }
 
   const primaryRevenue = [...revenueByCurrency.entries()][0] ?? null;
@@ -253,7 +246,7 @@ export function DashboardScreen() {
 
       <ActivityCard graphs={graphs.data} />
 
-      {keyStatus.data?.configured === false ? <RevenueKeyCard /> : null}
+      <PaymentsSyncCard />
 
       {games.isError ? (
         <Typography.Paragraph type="body-sm" className="text-danger">

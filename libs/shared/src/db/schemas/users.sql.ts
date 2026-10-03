@@ -1,7 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { pgEnum, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import { apiKeysTable } from './api-keys.sql';
 import { oauthIdentitiesTable } from './oauth-identities.sql';
 import { refreshTokensTable } from './refresh-tokens.sql';
 
@@ -18,8 +17,7 @@ export const usersTable = pgTable('users', {
   role: userRoleEnum().default('user').notNull(),
 });
 
-export const usersRelations = relations(usersTable, ({ many, one }) => ({
-  api_key: one(apiKeysTable),
+export const usersRelations = relations(usersTable, ({ many }) => ({
   oauth_identities: many(oauthIdentitiesTable),
   refresh_tokens: many(refreshTokensTable),
 }));

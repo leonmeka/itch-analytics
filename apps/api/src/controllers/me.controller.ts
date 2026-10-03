@@ -1,59 +1,51 @@
-import { ItchKeyStatusDto } from '@itch/protocol';
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Put,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { MetricsOverviewDto, PaymentDto, PaymentsImportResultDto } from '@itch/protocol';
+import { BadRequestException, Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { type AuthenticatedRequest, AuthGuard, ItchKeysService } from '@/libs/auth';
-import { ItchService } from '@/libs/itch';
+import { eq } from 'drizzle-orm';
+import { type AuthenticatedRequest, AuthGuard } from '@/libs/auth';
+import { PaymentsImporterService } from '@/libs/itch';
+import { PaymentsService, schema } from '@/libs/shared';
 
 @ApiTags('me')
 @Controller('me')
 @UseGuards(AuthGuard)
 export class MeController {
   constructor(
-    private readonly itchKeysService: ItchKeysService,
-    private readonly itchService: ItchService,
+    private readonly paymentsImporterService: PaymentsImporterService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
-  /** Whether the signed-in user has an itch.io API key configured. */
-  @Get('itch-key-status')
-  async itchKeyStatus(@Req() request: AuthenticatedRequest): Promise<ItchKeyStatusDto> {
-    return { configured: await this.itchKeysService.hasKey(request.user.id) };
-  }
-
-  /** Stores the user's itch.io API key (validated against itch, encrypted). */
-  @Put('itch-key')
-  async setItchKey(
+  /** Manual sync: user pastes/uploads an itch.io export-purchases CSV. */
+  @Post('payments/import')
+  async importPayments(
     @Req() request: AuthenticatedRequest,
-    @Body() body: { api_key?: string },
-  ): Promise<ItchKeyStatusDto> {
-    const apiKey = body.api_key?.trim();
-
-    if (!apiKey) {
-      throw new BadRequestException('api_key is required');
+    @Body() body: { csv?: string },
+  ): Promise<PaymentsImportResultDto> {
+    if (!body.csv || body.csv.trim().length === 0) {
+      throw new BadRequestException('csv payload is required');
     }
 
-    if (!(await this.itchService.validateApiKey(apiKey))) {
-      throw new BadRequestException('API key was rejected by itch.io');
-    }
-
-    await this.itchKeysService.setKey(request.user.id, apiKey);
-
-    return { configured: true };
+    return this.paymentsImporterService.import(request.user.id, body.csv);
   }
 
-  /** Removes the stored itch.io API key. */
-  @Delete('itch-key')
-  async deleteItchKey(@Req() request: AuthenticatedRequest): Promise<ItchKeyStatusDto> {
-    await this.itchKeysService.deleteKey(request.user.id);
+  /** Imported itch.io payments (revenue source of truth). */
+  @Get('payments')
+  async listPayments(@Req() request: AuthenticatedRequest): Promise<PaymentDto[]> {
+    const payments = await this.paymentsService.findMany({
+      where: eq(schema.paymentsTable.user_id, request.user.id),
+      orderBy: schema.paymentsTable.purchased_at,
+    });
 
-    return { configured: false };
+    return payments.map((payment) => ({
+      id: payment.external_id,
+      object_name: payment.object_name,
+      amount: payment.amount,
+      amount_cents: payment.amount_cents,
+      currency: payment.currency,
+      source: payment.source,
+      purchased_at: payment.purchased_at?.toISOString() ?? null,
+      donation: payment.donation,
+      payout: payment.payout,
+    }));
   }
 }

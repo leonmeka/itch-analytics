@@ -7,11 +7,6 @@ const LOGO_PATH =
 const SHAPE = (x: number, y: number, scale: number, rotate: number) =>
   `translate(${x} ${y}) scale(${scale}) rotate(${rotate})`;
 
-/**
- * itch.io-branded backdrop in the Mozi reference style: solid brand canvas
- * (the `accent` token) with giant tone-on-tone logo marks. All colors come
- * from theme tokens — nothing hardcoded.
- */
 export function AuthBackground() {
   const [accent, accentForeground, accentLift, accentDeep] = useCSSVariable([
     '--color-accent',

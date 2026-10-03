@@ -53,8 +53,23 @@ export type ItchClaimedRewards = {
   rewards: ItchClaimedReward[];
 };
 
-export type ItchKeyStatus = {
-  configured: boolean;
+export type Payment = {
+  id: string;
+  object_name: string | null;
+  amount: string | null;
+  amount_cents: number | null;
+  currency: string | null;
+  source: string | null;
+  purchased_at: string | null;
+  donation: string | null;
+  payout: string | null;
+};
+
+export type PaymentsImportResult = {
+  total: number;
+  imported: number;
+  updated: number;
+  skipped: number;
 };
 
 export type MetricPoint = { date: string; value: number };

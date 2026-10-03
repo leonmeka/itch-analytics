@@ -1,0 +1,18 @@
+import { Injectable } from '@nestjs/common';
+
+import { PaymentsRepository } from '../repositories/payments.repository';
+import type { CreatePayment, Payment, UpdatePayment } from '../types/payments.types';
+import { BaseService } from './base.service';
+
+@Injectable()
+export class PaymentsService extends BaseService<
+  Payment,
+  CreatePayment,
+  UpdatePayment,
+  Payment,
+  'paymentsTable'
+> {
+  constructor(protected readonly paymentsRepository: PaymentsRepository) {
+    super(paymentsRepository);
+  }
+}

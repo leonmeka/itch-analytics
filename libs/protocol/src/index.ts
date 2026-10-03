@@ -218,3 +218,48 @@ export class ItchKeyStatusDto {
   @ApiProperty()
   configured!: boolean;
 }
+
+/** GET /me/payments — imported itch.io payment (dashboard CSV row). */
+export class PaymentDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty({ type: String, nullable: true, description: 'Sub-product name.' })
+  object_name!: string | null;
+
+  @ApiProperty({ type: String, nullable: true, example: '25.00' })
+  amount!: string | null;
+
+  @ApiProperty({ type: Number, nullable: true, description: 'Gross amount in cents.' })
+  amount_cents!: number | null;
+
+  @ApiProperty({ type: String, nullable: true, example: 'USD' })
+  currency!: string | null;
+
+  @ApiProperty({ type: String, nullable: true, example: 'stripe' })
+  source!: string | null;
+
+  @ApiProperty({ type: String, nullable: true, format: 'date-time' })
+  purchased_at!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  donation!: string | null;
+
+  @ApiProperty({ type: String, nullable: true, example: 'payout_pending' })
+  payout!: string | null;
+}
+
+/** POST /me/payments/import */
+export class PaymentsImportResultDto {
+  @ApiProperty({ description: 'Rows detected in the CSV.' })
+  total!: number;
+
+  @ApiProperty({ description: 'Newly stored payments.' })
+  imported!: number;
+
+  @ApiProperty({ description: 'Rows updated with changed fields (e.g. payout state).' })
+  updated!: number;
+
+  @ApiProperty({ description: 'Rows already up to date (deduplicated).' })
+  skipped!: number;
+}

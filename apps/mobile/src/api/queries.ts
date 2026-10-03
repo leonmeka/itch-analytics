@@ -7,9 +7,10 @@ import type {
   ItchClaimedRewards,
   ItchCredentials,
   ItchGame,
-  ItchKeyStatus,
   ItchProfile,
   MetricsOverview,
+  Payment,
+  PaymentsImportResult,
 } from './types';
 
 export const queryKeys = {
@@ -19,8 +20,8 @@ export const queryKeys = {
   itchGames: ['itch-games'] as const,
   itchRewards: ['itch-rewards'] as const,
   itchCredentials: ['itch-credentials'] as const,
-  itchKeyStatus: ['itch-key-status'] as const,
   itchGraphs: ['itch-graphs'] as const,
+  payments: ['payments'] as const,
 };
 
 export function useHealth() {
@@ -92,37 +93,24 @@ export function useItchGraphs(itchAccessToken: string | null) {
     retry: false,
   });
 }
-export function useItchKeyStatus(itchAccessToken: string | null) {
+
+export function usePayments() {
   return useQuery({
-    queryKey: queryKeys.itchKeyStatus,
-    queryFn: () => apiClient.itchKeyStatus() as Promise<ItchKeyStatus>,
-    enabled: itchAccessToken != null,
+    queryKey: queryKeys.payments,
+    queryFn: () => apiClient.payments() as Promise<Payment[]>,
     staleTime: 60_000,
     retry: false,
   });
 }
 
-export function useSaveItchKey() {
+export function useImportPayments() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (apiKey: string) => apiClient.setItchKey(apiKey),
-    onError: (error) => console.warn('failed to save itch API key', error),
+    mutationFn: (csv: string) => apiClient.importPayments(csv),
+    onError: (error) => console.warn('payments import failed', error),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.itchKeyStatus });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.itchGames });
-    },
-  });
-}
-
-export function useRemoveItchKey() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () => apiClient.removeItchKey(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.itchKeyStatus });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.itchGames });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.payments });
     },
   });
 }

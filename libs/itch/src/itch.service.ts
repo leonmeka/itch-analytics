@@ -12,12 +12,12 @@ import type {
   ItchProfile,
   ItchRawClaimedRewardsResponse,
   ItchRawCredentials,
+  ItchRawGameData,
   ItchRawGamesResponse,
   ItchRawGraphsResponse,
   ItchRawProfile,
   ItchSubProduct,
 } from './itch.types';
-import type { ItchRawGameData } from './itch.types';
 
 /**
  * itch.io client for OAuth'd users. The itch access token issued by the
@@ -85,7 +85,7 @@ export class ItchService {
     };
   }
 
-  async getMyGames(accessToken: string, apiKey: string | null = null): Promise<ItchGame[]> {
+  async getMyGames(accessToken: string): Promise<ItchGame[]> {
     let data: ItchRawGamesResponse;
 
     try {
@@ -130,74 +130,7 @@ export class ItchService {
       ),
     }));
 
-    await this.enrichWithRevenue(games, apiKey);
-
     return games;
-  }
-
-  /**
-   * itch.io strips `earnings` (revenue) from OAuth-scoped payloads and
-   * offers no scope to unlock it — the account's own unscoped API key
-   * (user settings) against the LEGACY my-games route is the only source
-   * (the field appears there once a game has gross revenue; it is omitted
-   * entirely for $0-revenue games, which is not an error). Merged per game
-   * id; games the key cannot see are left untouched.
-   */
-  private async enrichWithRevenue(games: ItchGame[], apiKey: string | null): Promise<void> {
-    if (games.length === 0 || !apiKey) return;
-
-    let data: ItchRawGamesResponse;
-
-    try {
-      const { data: body } = await firstValueFrom(
-        this.httpService.get<ItchRawGamesResponse>(
-          `https://itch.io/api/1/${apiKey}/my-games`,
-          this.auth(apiKey),
-        ),
-      );
-      data = body;
-    } catch (error) {
-      this.logger.warn(
-        'failed to fetch revenue via the stored account API key',
-        error instanceof Error ? error.message : error,
-      );
-      return;
-    }
-
-    const rawRevenueGames = Array.isArray(data.games) ? data.games : [];
-    const earningsById = new Map(
-      rawRevenueGames.map((game) => [
-        String(game.id ?? ''),
-        (game.earnings ?? []).map(
-          (earning): ItchEarning => ({
-            currency: earning.currency ?? '',
-            amount: earning.amount ?? 0,
-            amount_formatted: earning.amount_formatted ?? '',
-          }),
-        ),
-      ]),
-    );
-
-    for (const game of games) {
-      const earnings = earningsById.get(game.id);
-
-      if (earnings && earnings.length > 0) {
-        game.earnings = earnings;
-      }
-    }
-  }
-
-  /** Verifies an itch.io API key works (GET /credentials/info with it). */
-  async validateApiKey(apiKey: string): Promise<boolean> {
-    try {
-      const { data } = await firstValueFrom(
-        this.httpService.get<ItchRawCredentials>('/credentials/info', this.auth(apiKey)),
-      );
-
-      return data?.type === 'key';
-    } catch {
-      return false;
-    }
   }
 
   /**
@@ -211,10 +144,9 @@ export class ItchService {
 
     try {
       const { data: body } = await firstValueFrom(
-        this.httpService.get<ItchRawGameData>(
-          `${gameUrl.replace(/\/$/, '')}/data.json`,
-          { headers: { Accept: 'application/json' } },
-        ),
+        this.httpService.get<ItchRawGameData>(`${gameUrl.replace(/\/$/, '')}/data.json`, {
+          headers: { Accept: 'application/json' },
+        }),
       );
       data = body;
     } catch {

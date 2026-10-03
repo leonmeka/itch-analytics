@@ -7,9 +7,7 @@ import { OAuthIdentitiesModule, UsersModule } from '@/libs/shared';
 
 import { AUTH_CONFIG_KEY } from './auth.constants';
 import type { AuthConfig } from './auth.types';
-import { CryptoService, ENCRYPTION_KEY } from './crypto/crypto.service';
 import { ItchAuthGuard } from './guards/itch.guard';
-import { ItchKeysService } from './itch-keys/itch-keys.service';
 import { ItchOAuth2Strategy } from './strategies/itch.strategy';
 
 @Module({
@@ -63,17 +61,9 @@ import { ItchOAuth2Strategy } from './strategies/itch.strategy';
         },
       }),
     },
-    {
-      provide: ENCRYPTION_KEY,
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService): string =>
-        configService.getOrThrow<string>('APP_ENCRYPTION_KEY'),
-    },
-    CryptoService,
-    ItchKeysService,
     ItchOAuth2Strategy,
     ItchAuthGuard,
   ],
-  exports: [AUTH_CONFIG_KEY, JwtModule, ItchOAuth2Strategy, ItchKeysService],
+  exports: [AUTH_CONFIG_KEY, JwtModule, ItchOAuth2Strategy],
 })
 export class AuthModule {}

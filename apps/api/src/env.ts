@@ -11,5 +11,4 @@ export const env = z.object({
   API_OAUTH_ITCH_CLIENT_ID: z.string(),
   API_OAUTH_ITCH_CALLBACK_URL: z.string(),
   API_OAUTH_AUTH_SUCCESS_REDIRECT_URL: z.url(),
-  APP_ENCRYPTION_KEY: z.string(),
 });

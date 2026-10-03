@@ -4,11 +4,9 @@ import { type ThemeColor, useThemeColor } from 'heroui-native/hooks';
 import { ActivityIndicator } from 'react-native';
 
 type ButtonProps = ButtonRootProps & {
-  /** Replaces the label with a spinner and disables the button. */
   isLoading?: boolean;
 };
 
-/** Spinner tint per built-in variant — matches the variant's label color. */
 const VARIANT_SPINNER_TOKEN: Record<NonNullable<ButtonRootProps['variant']>, ThemeColor> = {
   primary: 'accent-foreground',
   secondary: 'accent-soft-foreground',
@@ -44,11 +42,6 @@ function ButtonImpl({
   );
 }
 
-/**
- * Generic button wrapper over the built-in HeroUI variants (contrast-locked
- * by the theme). Injects a spinner while `isLoading` is set; the spinner
- * color is derived from the variant's label token.
- */
 export const Button = Object.assign(ButtonImpl, {
   Label: HeroButton.Label,
 });

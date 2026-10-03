@@ -5,9 +5,10 @@ import type {
   ItchClaimedRewards,
   ItchCredentials,
   ItchGame,
-  ItchKeyStatus,
   ItchProfile,
   MetricsOverview,
+  Payment,
+  PaymentsImportResult,
 } from './types';
 
 /** Completes the itch.io implicit OAuth flow started in the system browser. */
@@ -54,12 +55,11 @@ export const apiClient = {
     authedFetch<ItchCredentials | null>('/itch/credentials', { itchToken: itchAccessToken }),
   itchGraphs: (itchAccessToken: string) =>
     authedFetch<MetricsOverview | null>('/itch/graphs', { itchToken: itchAccessToken }),
-  itchKeyStatus: () => authedFetch<ItchKeyStatus>('/me/itch-key-status'),
-  setItchKey: (apiKey: string) =>
-    authedFetch<ItchKeyStatus>('/me/itch-key', {
-      method: 'PUT',
+  importPayments: (csv: string) =>
+    authedFetch<PaymentsImportResult>('/me/payments/import', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: apiKey }),
+      body: JSON.stringify({ csv }),
     }),
-  removeItchKey: () => authedFetch<ItchKeyStatus>('/me/itch-key', { method: 'DELETE' }),
+  payments: () => authedFetch<Payment[]>('/me/payments'),
 };

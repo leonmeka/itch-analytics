@@ -21,6 +21,9 @@ async function bootstrap(): Promise<void> {
 
   app.enableShutdownHooks();
 
+  // CSV imports can be large; the generous limit only applies to the
+  // payments import path (the global pipe stays tight below it).
+  app.use('/me/payments/import', json({ limit: '10mb' }));
   app.use(json({ limit: '100kb' }));
   app.use(urlencoded({ extended: true, limit: '100kb' }));
   app.use(cookieParser());

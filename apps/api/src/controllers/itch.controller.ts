@@ -7,17 +7,14 @@ import {
 } from '@itch/protocol';
 import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { type AuthenticatedRequest, AuthGuard, ItchKeysService } from '@/libs/auth';
+import { type AuthenticatedRequest, AuthGuard } from '@/libs/auth';
 import { ItchService } from '@/libs/itch';
 
 @ApiTags('itch')
 @Controller('itch')
 @UseGuards(AuthGuard)
 export class ItchController {
-  constructor(
-    private readonly itchService: ItchService,
-    private readonly itchKeysService: ItchKeysService,
-  ) {}
+  constructor(private readonly itchService: ItchService) {}
 
   @Get('me')
   async getItchProfile(@Req() request: AuthenticatedRequest): Promise<ItchProfileDto | null> {
@@ -33,9 +30,7 @@ export class ItchController {
     const accessToken = this.getItchAccessToken(request);
     if (!accessToken) return [];
 
-    const apiKey = await this.itchKeysService.getKeyForUser(request.user.id);
-
-    return this.itchService.getMyGames(accessToken, apiKey);
+    return this.itchService.getMyGames(accessToken);
   }
 
   /** Account-wide daily views/downloads/purchases series (legacy API). */
@@ -44,8 +39,7 @@ export class ItchController {
     const accessToken = this.getItchAccessToken(request);
     if (!accessToken) return null;
 
-    const apiKey = await this.itchKeysService.getKeyForUser(request.user.id);
-    const graphs = await this.itchService.getGraphs([accessToken, apiKey]);
+    const graphs = await this.itchService.getGraphs([accessToken]);
 
     return {
       views_series: graphs.views.map((point) => ({ date: point.date, value: point.count })),
