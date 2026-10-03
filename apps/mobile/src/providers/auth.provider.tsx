@@ -1,13 +1,6 @@
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 
 import { apiClient, type CompleteLoginInput, type CurrentUser, loginURL } from '../api/client';
 import { useCompleteLogin, useLogout, useMe } from '../api/queries';

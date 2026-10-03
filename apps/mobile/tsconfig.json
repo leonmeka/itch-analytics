@@ -1,14 +1,7 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "types": [
-      "uniwind/types",
-      "node"
-    ]
+    "types": ["uniwind/types", "node"]
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "uniwind-types.d.ts"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", "uniwind-types.d.ts"]
 }

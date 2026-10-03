@@ -1,12 +1,9 @@
 import '../../global.css';
 
-import { ActivityIndicator } from 'react-native';
 import { Button } from 'heroui-native/button';
 import { Card } from 'heroui-native/card';
 import { Typography } from 'heroui-native/text';
-import { View } from 'react-native';
-
-import { FullscreenSpinner } from '../components/fullscreen-spinner.component';
+import { ActivityIndicator, View } from 'react-native';
 import { useHealth, useItchGames, useItchProfile } from '../api/queries';
 import { useAuth } from '../providers/auth.provider';
 
@@ -44,8 +41,9 @@ export function DashboardScreen() {
   const health = useHealth();
   const itchProfile = useItchProfile(itchToken);
   const games = useItchGames(itchToken);
+
   if (health.isPending) {
-    return <FullscreenSpinner heading="Loading dashboard…" />;
+    return null;
   }
 
   if (health.isError) {
@@ -97,9 +95,7 @@ export function DashboardScreen() {
         {(games.data ?? []).map((game) => (
           <Card key={game.id}>
             <Card.Body>
-              <Typography className="text-foreground">
-                {game.title ?? `Game ${game.id}`}
-              </Typography>
+              <Typography className="text-foreground">{game.title ?? `Game ${game.id}`}</Typography>
               <Typography type="body-xs" className="text-muted">
                 {game.views_count ?? 0} views · {game.downloads_count ?? 0} downloads
               </Typography>
