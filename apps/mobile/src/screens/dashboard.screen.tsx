@@ -1,17 +1,22 @@
 import '../../global.css';
 
+import type { PaymentDto, PaymentsSummaryDto } from '@itch/protocol';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Card } from 'heroui-native/card';
 import { Typography } from 'heroui-native/text';
 import { useMemo } from 'react';
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import { queryKeys, useImportPayments, useItchProfile, usePayments, usePaymentsSummary } from '../api/queries';
-import type { PaymentDto, PaymentsSummaryDto } from '@itch/protocol';
-import { FileInput } from '../components/ui/file-input';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import {
+  queryKeys,
+  useImportPayments,
+  useItchProfile,
+  usePayments,
+  usePaymentsSummary,
+} from '../api/queries';
 import { Button } from '../components/ui/button';
+import { FileInput } from '../components/ui/file-input';
 import { useAuth } from '../providers/auth.provider';
 
 function HeroBackground() {
@@ -73,7 +78,10 @@ function Hero({ userId }: { userId: string | null }) {
           </View>
         </View>
 
-        <Pressable accessibilityRole="button" className="h-10 w-10 items-center justify-center rounded-full bg-white/25 active:bg-white/40">
+        <Pressable
+          accessibilityRole="button"
+          className="h-10 w-10 items-center justify-center rounded-full bg-white/25 active:bg-white/40"
+        >
           <Typography className="text-base text-white">⚙︎</Typography>
         </Pressable>
       </View>
@@ -150,7 +158,7 @@ function PaymentRow({ payment, isLast }: { payment: PaymentDto; isLast: boolean 
   );
 }
 
-function PaymentsSyncCard() {
+function PaymentsSyncCard({ userId }: { userId: string }) {
   const importMutation = useImportPayments();
 
   return (
@@ -159,18 +167,16 @@ function PaymentsSyncCard() {
         <Typography className="text-foreground">Sync purchases</Typography>
         <Typography type="body-xs" className="text-muted">
           itch.io's API doesn't expose revenue. Download the CSV from
-          itch.io/dashboard/export-purchases/all, then pick it here
-          (deduplicated automatically).
+          itch.io/dashboard/export-purchases/all, then pick it here (deduplicated automatically).
         </Typography>
         <FileInput
           isDisabled={importMutation.isPending}
-          onFile={(file) => importMutation.mutate(file.text)}
+          onFile={(file) => importMutation.mutate({ userId, csv: file.text })}
         />
         {importMutation.isSuccess ? (
           <Typography type="body-xs" className="text-muted">
-            Imported {importMutation.data?.imported ?? 0} new ·{' '}
-            {importMutation.data?.updated ?? 0} updated ·{' '}
-            {importMutation.data?.skipped ?? 0} unchanged
+            Imported {importMutation.data?.imported ?? 0} new · {importMutation.data?.updated ?? 0}{' '}
+            updated · {importMutation.data?.skipped ?? 0} unchanged
           </Typography>
         ) : null}
         {importMutation.isError ? (
@@ -190,14 +196,11 @@ export function DashboardScreen() {
   const summary = usePaymentsSummary(userId);
   void summary;
 
-  const items = useMemo(
-    () => payments.data?.pages.flatMap((page) => page) ?? [],
-    [payments.data],
-  );
+  const items = useMemo(() => payments.data?.pages.flatMap((page) => page) ?? [], [payments.data]);
 
   const listFooter = (
     <View className="gap-4 pb-8">
-      <PaymentsSyncCard />
+      {userId ? <PaymentsSyncCard userId={userId} /> : null}
 
       <View className="px-6">
         <Button variant="secondary" onPress={logout}>
@@ -235,9 +238,8 @@ export function DashboardScreen() {
             </Typography.Heading>
             <Typography type="body-xs" className="text-muted">
               {summary.data?.total ?? 0} total
-            </Typography.Heading>
+            </Typography>
           </View>
-
         </View>
       }
       onEndReachedThreshold={0.4}

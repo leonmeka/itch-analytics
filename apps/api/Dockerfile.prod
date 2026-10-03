@@ -30,9 +30,4 @@ COPY libs/shared/src/db ./libs/shared/src/db
 
 EXPOSE ${API_PORT}
 
-# Env vars (API_DATABASE_URL, API_JWT_SECRET, API_OAUTH_ITCH_*, ...) are
-# injected at container runtime — never baked into the image.
-#
-# The migrate step runs from libs/shared so drizzle-kit resolves its config
-# relative to the package (matching the ahegao prod layout).
 CMD ["sh", "-c", "cd libs/shared && ../../node_modules/.bin/drizzle-kit migrate --config=./src/db/drizzle.config.ts && exec node --enable-source-maps ../../dist/apps/api/src/main"]
