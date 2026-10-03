@@ -6,19 +6,9 @@ import { Card } from 'heroui-native/card';
 import { Typography } from 'heroui-native/text';
 import { View } from 'react-native';
 
+import { FullscreenSpinner } from '../components/fullscreen-spinner.component';
 import { useHealth, useItchGames, useItchProfile } from '../api/queries';
 import { useAuth } from '../providers/auth.provider';
-
-function FullscreenSpinner({ heading }: { heading?: string }) {
-  return (
-    <View className="flex-1 items-center justify-center gap-4 bg-background">
-      <ActivityIndicator size="large" color="#8f8f99" />
-      <Typography.Paragraph type="body-sm" className="text-muted">
-        {heading ?? 'Loading…'}
-      </Typography.Paragraph>
-    </View>
-  );
-}
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -49,32 +39,11 @@ function StatCardLoading({ label }: { label: string }) {
 }
 
 export function DashboardScreen() {
-  const { itchToken, isAuthenticated, isRedirecting, login, logout } = useAuth();
+  const { itchToken, isAuthenticated, logout } = useAuth();
 
   const health = useHealth();
   const itchProfile = useItchProfile(itchToken);
   const games = useItchGames(itchToken);
-
-  if (isRedirecting) {
-    return <FullscreenSpinner heading="Opening itch.io…" />;
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <View className="flex-1 gap-4 bg-background px-6 pt-24">
-        <Typography.Heading type="h1" className="text-foreground">
-          itch
-        </Typography.Heading>
-        <Typography.Paragraph type="body-sm" className="text-muted">
-          Sign in with itch.io to see your games.
-        </Typography.Paragraph>
-        <Button variant="primary" onPress={() => void login()}>
-          Sign in with itch.io
-        </Button>
-      </View>
-    );
-  }
-
   if (health.isPending) {
     return <FullscreenSpinner heading="Loading dashboard…" />;
   }

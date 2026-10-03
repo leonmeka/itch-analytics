@@ -1,16 +1,12 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import type { ItchGame, ItchProfile, ItchRawGamesResponse, ItchRawProfile } from './itch.types';
 
-/**
- * itch.io client for OAuth'd users. The itch access token issued by the
- * implicit OAuth flow doubles as the API key for api.itch.io (Authorization:
- * Bearer), scoped by the grants the user approved — e.g. `profile:me` for
- * the profile and `profile:games` for the games the user develops.
- */
 @Injectable()
 export class ItchService {
+  private readonly logger = new Logger(ItchService.name);
+
   constructor(private readonly httpService: HttpService) {}
 
   async getProfile(accessToken: string): Promise<ItchProfile | null> {
@@ -21,7 +17,12 @@ export class ItchService {
         this.httpService.get<ItchRawProfile>('/profile', this.auth(accessToken)),
       );
       data = body;
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        'failed to fetch itch profile',
+        error instanceof Error ? error.message : error,
+      );
+
       return null;
     }
 
@@ -43,7 +44,12 @@ export class ItchService {
         this.httpService.get<ItchRawGamesResponse>('/profile/games', this.auth(accessToken)),
       );
       data = body;
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        'failed to fetch itch games (is profile:games in the OAuth scope?)',
+        error instanceof Error ? error.message : error,
+      );
+
       return [];
     }
 
