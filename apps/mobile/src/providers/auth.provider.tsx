@@ -95,10 +95,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         // Auth sheet closed without the app receiving the OAuth params
         console.warn(`auth session closed without params (type=${result.type})`);
-        setRedirecting(false);
       }
     } catch (error) {
       console.warn('Failed to start itch OAuth flow', error);
+    } finally {
+      // The auth hand-off is done either way; without this the signed-in
+      // state would never render until a manual refresh re-inits state.
       setRedirecting(false);
     }
   }, [completeLogin]);

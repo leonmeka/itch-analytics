@@ -1,13 +1,24 @@
 import '../../global.css';
 
+import { ActivityIndicator } from 'react-native';
 import { Button } from 'heroui-native/button';
 import { Card } from 'heroui-native/card';
-import { Skeleton } from 'heroui-native/skeleton';
 import { Typography } from 'heroui-native/text';
 import { View } from 'react-native';
 
 import { useHealth, useItchGames, useItchProfile } from '../api/queries';
 import { useAuth } from '../providers/auth.provider';
+
+function FullscreenSpinner({ heading }: { heading?: string }) {
+  return (
+    <View className="flex-1 items-center justify-center gap-4 bg-background">
+      <ActivityIndicator size="large" color="#8f8f99" />
+      <Typography.Paragraph type="body-sm" className="text-muted">
+        {heading ?? 'Loading…'}
+      </Typography.Paragraph>
+    </View>
+  );
+}
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -24,25 +35,29 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatCardSkeleton() {
+function StatCardLoading({ label }: { label: string }) {
   return (
     <Card className="flex-1">
       <Card.Body>
         <Typography type="body-xs" className="text-muted">
-          Loading
+          {label}
         </Typography>
-        <Skeleton className="h-8 w-20" />
+        <ActivityIndicator size="small" color="#8f8f99" />
       </Card.Body>
     </Card>
   );
 }
 
 export function DashboardScreen() {
-  const { itchToken, isAuthenticated, login, logout } = useAuth();
+  const { itchToken, isAuthenticated, isRedirecting, login, logout } = useAuth();
 
   const health = useHealth();
   const itchProfile = useItchProfile(itchToken);
   const games = useItchGames(itchToken);
+
+  if (isRedirecting) {
+    return <FullscreenSpinner heading="Opening itch.io…" />;
+  }
 
   if (!isAuthenticated) {
     return (
@@ -61,19 +76,7 @@ export function DashboardScreen() {
   }
 
   if (health.isPending) {
-    return (
-      <View className="flex-1 gap-6 bg-background px-6 pt-24">
-        <Typography.Heading type="h1" className="text-foreground">
-          itch
-        </Typography.Heading>
-        <View className="flex-row flex-wrap gap-3">
-          <StatCardSkeleton />
-          <StatCardSkeleton />
-          <StatCardSkeleton />
-          <StatCardSkeleton />
-        </View>
-      </View>
-    );
+    return <FullscreenSpinner heading="Loading dashboard…" />;
   }
 
   if (health.isError) {
@@ -104,16 +107,30 @@ export function DashboardScreen() {
 
       <View className="flex-row flex-wrap gap-3">
         <StatCard label="API status" value={health.data.status} />
-        <StatCard label="Games" value={String(games.data?.length ?? 0)} />
-        <StatCard label="Total views" value={String(totalViews)} />
-        <StatCard label="Total downloads" value={String(totalDownloads)} />
+        {games.isPending ? (
+          <StatCardLoading label="Games" />
+        ) : (
+          <StatCard label="Games" value={String(games.data?.length ?? 0)} />
+        )}
+        {games.isPending ? (
+          <StatCardLoading label="Total views" />
+        ) : (
+          <StatCard label="Total views" value={String(totalViews)} />
+        )}
+        {games.isPending ? (
+          <StatCardLoading label="Total downloads" />
+        ) : (
+          <StatCard label="Total downloads" value={String(totalDownloads)} />
+        )}
       </View>
 
       <View className="gap-2">
         {(games.data ?? []).map((game) => (
           <Card key={game.id}>
             <Card.Body>
-              <Typography className="text-foreground">{game.title ?? `Game ${game.id}`}</Typography>
+              <Typography className="text-foreground">
+                {game.title ?? `Game ${game.id}`}
+              </Typography>
               <Typography type="body-xs" className="text-muted">
                 {game.views_count ?? 0} views · {game.downloads_count ?? 0} downloads
               </Typography>
