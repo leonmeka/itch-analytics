@@ -1,0 +1,1 @@
+ALTER TABLE "oauth_identities" ADD COLUMN "username" text;

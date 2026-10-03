@@ -49,3 +49,42 @@
 }
 
 @source './node_modules/heroui-native/lib';
+
+@layer theme {
+  :root {
+    --cash-accent: #fa5c5c;
+    --cash-accent-ink: #201012;
+    @variant light {
+      --cash-background: #f5f5f5;
+      --cash-surface: #ffffff;
+      --cash-foreground: #121212;
+      --cash-muted: #707070;
+      --cash-well: #eeeeee;
+      --cash-border: #e8e8e8;
+      --cash-accent-soft: #fff0ef;
+      --cash-link: #aa3030;
+    }
+    @variant dark {
+      --cash-background: #101010;
+      --cash-surface: #1c1c1c;
+      --cash-foreground: #f7f7f7;
+      --cash-muted: #a0a0a0;
+      --cash-well: #292929;
+      --cash-border: #303030;
+      --cash-accent-soft: #392020;
+      --cash-link: #ff9691;
+    }
+  }
+}
+@theme inline static {
+  --color-cash-background: var(--cash-background);
+  --color-cash-surface: var(--cash-surface);
+  --color-cash-foreground: var(--cash-foreground);
+  --color-cash-muted: var(--cash-muted);
+  --color-cash-well: var(--cash-well);
+  --color-cash-border: var(--cash-border);
+  --color-cash-accent: var(--cash-accent);
+  --color-cash-accent-ink: var(--cash-accent-ink);
+  --color-cash-accent-soft: var(--cash-accent-soft);
+  --color-cash-link: var(--cash-link);
+}

@@ -1,10 +1,12 @@
 import type {
-  ItchProfileDto,
+  OauthIdentityDto,
   PaymentDto,
-  PaymentsGraphDto,
+  PaymentsFilterDto,
+  PaymentsGraphsDto,
   PaymentsSummaryDto,
 } from '@itch/protocol';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { loadLastSynced, saveLastSynced } from '../utils/sync.storage';
 import type { CompleteLoginInput } from './client';
 import { apiClient } from './client';
 import { logout, me } from './session';
@@ -12,14 +14,11 @@ import { logout, me } from './session';
 export const queryKeys = {
   health: ['health'] as const,
   me: ['me'] as const,
-  itchProfile: ['itch-profile'] as const,
-  itchGames: ['itch-games'] as const,
-  itchRewards: ['itch-rewards'] as const,
-  itchCredentials: ['itch-credentials'] as const,
-  itchGraphs: ['itch-graphs'] as const,
+  oauthIdentity: ['oauth-identity'] as const,
   payments: ['payments'] as const,
   paymentsSummary: ['payments-summary'] as const,
   paymentsGraph: ['payments-graph'] as const,
+  lastSynced: ['last-synced'] as const,
 };
 
 export const PAYMENTS_PAGE_SIZE = 20;
@@ -41,49 +40,55 @@ export function useMe() {
   });
 }
 
-export function useItchProfile(userId: string | null, itchAccessToken: string | null) {
+export function useOauthIdentity(userId: string | null) {
   return useQuery({
-    queryKey: [...queryKeys.itchProfile, userId] as const,
+    queryKey: [...queryKeys.oauthIdentity, userId] as const,
+    queryFn: () => apiClient.oauthIdentity(userId as string) as Promise<OauthIdentityDto>,
+    enabled: userId != null,
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+export function usePaymentsGraph(userId: string | null, filters: Partial<PaymentsFilterDto> = {}) {
+  return useQuery({
+    queryKey: [...queryKeys.paymentsGraph, userId, filters],
+    queryFn: () => apiClient.paymentsGraph(userId as string, filters) as Promise<PaymentsGraphsDto>,
+    enabled: userId != null,
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+export function usePaymentsSummary(
+  userId: string | null,
+  filters: Partial<PaymentsFilterDto> = {},
+) {
+  return useQuery({
+    queryKey: [...queryKeys.paymentsSummary, userId, filters],
     queryFn: () =>
-      apiClient.itchProfile(userId as string, itchAccessToken as string) as Promise<ItchProfileDto>,
-    enabled: userId != null && itchAccessToken != null,
-    staleTime: 60_000,
-    retry: false,
-  });
-}
-
-export function usePaymentsGraph(userId: string | null) {
-  return useQuery({
-    queryKey: queryKeys.paymentsGraph,
-    queryFn: () => apiClient.paymentsGraph(userId as string) as Promise<PaymentsGraphDto>,
+      apiClient.paymentsSummary(userId as string, filters) as Promise<PaymentsSummaryDto>,
     enabled: userId != null,
     staleTime: 60_000,
     retry: false,
   });
 }
 
-export function usePaymentsSummary(userId: string | null) {
-  return useQuery({
-    queryKey: queryKeys.paymentsSummary,
-    queryFn: () => apiClient.paymentsSummary(userId as string) as Promise<PaymentsSummaryDto>,
-    enabled: userId != null,
-    staleTime: 60_000,
-    retry: false,
-  });
-}
-
-export function usePayments(userId: string | null) {
+export function usePayments(userId: string | null, filters: Partial<PaymentsFilterDto> = {}) {
   return useInfiniteQuery({
-    queryKey: [...queryKeys.payments, userId, PAYMENTS_PAGE_SIZE] as const,
+    queryKey: [...queryKeys.payments, userId, PAYMENTS_PAGE_SIZE, filters] as const,
     queryFn: ({ pageParam }) =>
-      apiClient.payments(userId as string, PAYMENTS_PAGE_SIZE, pageParam as number) as Promise<
-        PaymentDto[]
-      >,
+      apiClient.payments(
+        userId as string,
+        PAYMENTS_PAGE_SIZE,
+        pageParam as number,
+        filters,
+      ) as Promise<PaymentDto[]>,
     initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: (lastPage, pages) => {
       if (lastPage.length < PAYMENTS_PAGE_SIZE) return undefined;
 
-      return lastPage.length;
+      return pages.reduce((offset, page) => offset + page.length, 0);
     },
     enabled: userId != null,
     staleTime: 60_000,
@@ -98,10 +103,33 @@ export function useImportPayments() {
     mutationFn: ({ userId, csv }: { userId: string; csv: string }) =>
       apiClient.importPayments(userId, csv),
     onError: (error) => console.warn('payments import failed', error),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.payments });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.payments }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.paymentsSummary }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.paymentsGraph }),
+      ]);
     },
   });
+}
+
+export function useLastSynced() {
+  return useQuery({
+    queryKey: queryKeys.lastSynced,
+    queryFn: loadLastSynced,
+    staleTime: Infinity,
+    retry: false,
+  });
+}
+
+export function useMarkSynced() {
+  const queryClient = useQueryClient();
+
+  return async () => {
+    const syncedAt = new Date();
+    await saveLastSynced(syncedAt);
+    queryClient.setQueryData(queryKeys.lastSynced, syncedAt.toISOString());
+  };
 }
 
 export function useCompleteLogin() {

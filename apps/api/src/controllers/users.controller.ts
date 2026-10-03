@@ -1,8 +1,9 @@
 import {
-  ItchProfileDto,
+  OauthIdentityDto,
   PaginationDto,
   PaymentDto,
-  PaymentsGraphDto,
+  PaymentsFilterDto,
+  PaymentsGraphsDto,
   PaymentsImportResultDto,
   PaymentsSummaryDto,
   UserDto,
@@ -21,10 +22,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { type AuthenticatedRequest, AuthGuard } from '@/libs/auth';
-import { ItchService, PaymentsImporterService } from '@/libs/itch';
-import { PaymentsService, schema, UsersService } from '@/libs/shared';
+import { PaymentsImporterService } from '@/libs/itch';
+import {
+  OAuthIdentitiesService,
+  OAuthProvider,
+  PaymentsService,
+  schema,
+  UsersService,
+} from '@/libs/shared';
 
 @ApiTags('users')
 @Controller('users')
@@ -33,7 +40,7 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly paymentsService: PaymentsService,
     private readonly paymentsImporterService: PaymentsImporterService,
-    private readonly itchService: ItchService,
+    private readonly oauthIdentitiesService: OAuthIdentitiesService,
   ) {}
 
   @Get(':user_id')
@@ -63,17 +70,13 @@ export class UsersController {
     @Req() request: AuthenticatedRequest,
     @Param('user_id') userId: string,
     @Query() pagination: PaginationDto,
+    @Query() filters: PaymentsFilterDto,
   ): Promise<PaymentDto[]> {
     if (request.user?.id !== userId) {
       throw new ForbiddenException("Cannot access another user's resources");
     }
 
-    return this.paymentsService.findMany({
-      where: eq(schema.paymentsTable.user_id, userId),
-      orderBy: [desc(schema.paymentsTable.purchased_at), desc(schema.paymentsTable.external_id)],
-      limit: pagination.limit,
-      offset: pagination.offset,
-    });
+    return this.paymentsService.getPayments(userId, filters, pagination.limit, pagination.offset);
   }
 
   @Get(':user_id/payments/summary')
@@ -81,12 +84,13 @@ export class UsersController {
   async paymentsSummary(
     @Req() request: AuthenticatedRequest,
     @Param('user_id') userId: string,
+    @Query() filters: PaymentsFilterDto,
   ): Promise<PaymentsSummaryDto> {
     if (request.user?.id !== userId) {
       throw new ForbiddenException("Cannot access another user's resources");
     }
 
-    return this.paymentsService.getSummary(userId);
+    return this.paymentsService.getSummary(userId, filters);
   }
 
   @Get(':user_id/payments/graph')
@@ -94,14 +98,13 @@ export class UsersController {
   async paymentsGraph(
     @Req() request: AuthenticatedRequest,
     @Param('user_id') userId: string,
-  ): Promise<PaymentsGraphDto> {
+    @Query() filters: PaymentsFilterDto,
+  ): Promise<PaymentsGraphsDto> {
     if (request.user?.id !== userId) {
       throw new ForbiddenException("Cannot access another user's resources");
     }
 
-    const points = await this.paymentsService.getRevenueSeries(userId);
-
-    return { points };
+    return this.paymentsService.getGraph(userId, filters);
   }
 
   @Get(':user_id/payments/:payment_id')
@@ -147,18 +150,21 @@ export class UsersController {
     return this.paymentsImporterService.import(userId, body.csv);
   }
 
-  @Get(':user_id/itch/profile')
+  @Get(':user_id/oauth-identity')
   @UseGuards(AuthGuard)
-  async itchProfile(
+  async oauthIdentity(
     @Req() request: AuthenticatedRequest,
     @Param('user_id') userId: string,
-  ): Promise<ItchProfileDto | null> {
+  ): Promise<OauthIdentityDto | null> {
     if (request.user?.id !== userId) {
       throw new ForbiddenException("Cannot access another user's resources");
     }
 
-    if (!request.itchAccessToken) return null;
-
-    return this.itchService.getProfile(request.itchAccessToken);
+    return await this.oauthIdentitiesService.find({
+      where: and(
+        eq(schema.oauthIdentitiesTable.user_id, userId),
+        eq(schema.oauthIdentitiesTable.provider, OAuthProvider.Itch),
+      ),
+    });
   }
 }

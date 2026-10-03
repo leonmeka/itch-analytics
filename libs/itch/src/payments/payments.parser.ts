@@ -91,13 +91,21 @@ export function splitCsv(csv: string): string[][] {
   return rows;
 }
 
-const toCents = (amount: string | null): number | null => {
+export const toCents = (amount: string | null): number | null => {
   if (!amount) return null;
 
   const match = /-?\d+(\.\d+)?/.exec(amount.replace(',', ''));
   if (!match) return null;
 
   return Math.round(Number.parseFloat(match[0]) * 100);
+};
+
+export const toBareCents = (value: string | null): number | null => {
+  if (!value) return null;
+
+  const match = /\d+/.exec(value.replace(',', ''));
+
+  return match ? Number.parseInt(match[0], 10) : null;
 };
 
 const toTimestamp = (value: string | null): Date | null => {

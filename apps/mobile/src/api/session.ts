@@ -8,7 +8,6 @@ const SESSION_KEY = 'itch.session.v1';
 export type StoredSession = {
   accessToken: string;
   refreshToken: string;
-  itchToken: string | null;
 };
 
 export async function loadSession(): Promise<StoredSession | null> {
@@ -49,7 +48,6 @@ async function refreshSession(refreshToken: string): Promise<StoredSession | nul
     const next: StoredSession = {
       accessToken: result.access_token,
       refreshToken: result.refresh_token,
-      itchToken: (await loadSession())?.itchToken ?? null,
     };
 
     await saveSession(next);
@@ -61,22 +59,20 @@ async function refreshSession(refreshToken: string): Promise<StoredSession | nul
 
 export async function authedFetch<TResponse>(
   path: string,
-  init: RequestInit & { itchToken?: string } = {},
+  init: RequestInit = {},
 ): Promise<TResponse> {
-  const { itchToken, ...rest } = init;
   const session = await loadSession();
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
-    ...(rest.headers as Record<string, string> | undefined),
+    ...(init.headers as Record<string, string> | undefined),
   };
 
   if (session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;
-  if (itchToken) headers['x-itch-token'] = itchToken;
 
   const doFetch = (bearer: string | undefined) =>
     fetch(`${API_URL_BASE}${path}`, {
-      ...rest,
+      ...init,
       headers: bearer ? { ...headers, Authorization: `Bearer ${bearer}` } : headers,
     });
 

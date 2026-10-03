@@ -61,7 +61,15 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
       ),
     });
 
+    const profileData = {
+      username,
+      name: displayName || username || urlName,
+      avatar_url: avatarUrl,
+    };
+
     if (existing) {
+      await this.oauthIdentitiesService.update(existing.id, profileData);
+
       const user = await this.usersService.find({
         where: eq(schema.usersTable.id, existing.user_id),
       });
@@ -79,8 +87,7 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
       user_id: user.id,
       provider: OAuthProvider.Itch,
       provider_user_id: providerUserId,
-      name: displayName || username || urlName,
-      avatar_url: avatarUrl,
+      ...profileData,
     });
 
     return user;

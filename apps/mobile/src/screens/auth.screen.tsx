@@ -36,25 +36,29 @@ export function AuthScreen() {
           <Button.Label>Sign in with itch.io</Button.Label>
         </Button>
 
-        <Typography type="body-xs" className="mt-3 text-center text-white/80">
-          By clicking continue, you agree to our{' '}
-          <Typography
-            type="body-xs"
-            className="text-white underline"
-            onPress={openBrowser(TERMS_OF_SERVICE_URL)}
-          >
-            Terms of Service
-          </Typography>{' '}
-          and{' '}
-          <Typography
-            type="body-xs"
-            className="text-white underline"
-            onPress={openBrowser(PRIVACY_POLICY_URL)}
-          >
-            Privacy Policy
+        <View className="mt-3 items-center">
+          <Typography type="body-xs" className="text-center text-white/80">
+            By continuing, you agree to our{' '}
+            <Typography
+              type="body-xs"
+              accessibilityRole="link"
+              onPress={openBrowser(TERMS_OF_SERVICE_URL)}
+              className="text-white/80 underline"
+            >
+              Terms of Service
+            </Typography>{' '}
+            and{' '}
+            <Typography
+              type="body-xs"
+              accessibilityRole="link"
+              onPress={openBrowser(PRIVACY_POLICY_URL)}
+              className="text-white/80 underline"
+            >
+              Privacy Policy
+            </Typography>
+            .
           </Typography>
-          .
-        </Typography>
+        </View>
       </View>
     </View>
   );

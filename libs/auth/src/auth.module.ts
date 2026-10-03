@@ -45,7 +45,7 @@ import { ItchOAuth2Strategy } from './strategies/itch.strategy';
         ),
         itchClientID: configService.getOrThrow<string>('API_OAUTH_ITCH_CLIENT_ID'),
         itchCallbackURL: configService.getOrThrow<string>('API_OAUTH_ITCH_CALLBACK_URL'),
-        itchScope: ['profile:me', 'profile:games', 'game:view:rewards'],
+        itchScope: ['profile:me'],
         itchAuthorizationURL: 'https://itch.io/user/oauth',
         itchUserinfoURL: 'https://api.itch.io/profile',
       }),

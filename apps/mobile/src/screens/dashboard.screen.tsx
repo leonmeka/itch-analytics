@@ -1,299 +1,545 @@
 import '../../global.css';
-
-import type { PaymentDto, PaymentsSummaryDto } from '@itch/protocol';
+import type { PaymentDto } from '@itch/protocol';
+import { StatusBar } from 'expo-status-bar';
 import { Card } from 'heroui-native/card';
+import { Input } from 'heroui-native/input';
+import { Skeleton } from 'heroui-native/skeleton';
 import { Typography } from 'heroui-native/text';
-import { useMemo } from 'react';
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  queryKeys,
-  useImportPayments,
-  useItchProfile,
+  ActivityIndicator,
+  BackHandler,
+  FlatList,
+  Image,
+  RefreshControl,
+  ScrollView,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCSSVariable, useUniwind } from 'uniwind';
+import RedLogo from '../../assets/itch-logo-red.svg';
+import {
+  useLastSynced,
+  useOauthIdentity,
   usePayments,
   usePaymentsGraph,
   usePaymentsSummary,
 } from '../api/queries';
-import { RevenueGraph } from '../components/revenue-graph.component';
+import { AuthBackground } from '../components/auth-background.component';
+import { CashIcon, type CashIconName } from '../components/cash-icon.component';
+import {
+  CashSection,
+  CashState,
+  PaymentRow,
+  PaymentSkeletons,
+} from '../components/cash-ui.component';
+import { CountryHeatmap } from '../components/charts/country-heatmap.component';
+import { PieChart } from '../components/charts/pie-chart.component';
+import { StatCard } from '../components/charts/stat-card.component';
+import { TimeSeriesChart } from '../components/charts/time-series-chart.component';
+import { PageHeader } from '../components/page-header.component';
+import {
+  formatLastSynced,
+  PaymentsSync,
+  type PaymentsSyncHandle,
+  type PaymentsSyncPhase,
+} from '../components/payments-sync.component';
 import { Button } from '../components/ui/button';
-import { FileInput } from '../components/ui/file-input';
 import { useAuth } from '../providers/auth.provider';
+import { formatDate, formatMoney, paymentSource } from '../utils/payments.format';
+import { AccountScreen } from './account.screen';
+import { ItchSyncScreen } from './itch-sync.screen';
+import { PaymentDetailScreen } from './payment-detail.screen';
 
-function HeroBackground() {
-  return (
-    <Svg
-      height="100%"
-      preserveAspectRatio="xMidYMid slice"
-      style={StyleSheet.absoluteFill}
-      viewBox="0 0 400 300"
-      width="100%"
-    >
-      <Defs>
-        <LinearGradient id="hero" x1="0" x2="1" y1="0" y2="1">
-          <Stop offset="0" stopColor="#ff8a7a" />
-          <Stop offset="1" stopColor="#e14b4b" />
-        </LinearGradient>
-      </Defs>
-      <Rect fill="url(#hero)" height="300" width="400" x="0" y="0" />
-    </Svg>
-  );
-}
-
-function Avatar({ uri, name }: { uri: string | null; name: string }) {
-  if (uri) {
-    return <Image source={{ uri }} style={styles.avatar} />;
-  }
-
-  return (
-    <View style={[styles.avatar, styles.avatarFallback]}>
-      <Typography.Heading type="h4" className="text-white">
-        {name.charAt(0).toUpperCase()}
-      </Typography.Heading>
-    </View>
-  );
-}
-
-function Hero({ userId }: { userId: string | null }) {
-  const { itchToken } = useAuth();
-  const insets = useSafeAreaInsets();
-  const itchProfile = useItchProfile(userId, itchToken);
-  const name = itchProfile.data?.display_name ?? itchProfile.data?.username ?? 'itch';
-
-  return (
-    <View style={[styles.hero, { paddingTop: insets.top + 12 }]}>
-      <HeroBackground />
-
-      <View className="flex-row items-center justify-between px-6">
-        <View className="flex-row items-center gap-3.5">
-          <View className="rounded-full border-2 border-white/40">
-            <Avatar uri={itchProfile.data?.avatar_url ?? null} name={name} />
-          </View>
-          <View>
-            <Typography.Heading type="h3" className="text-white">
-              {name}
-            </Typography.Heading>
-            <Typography type="body-xs" className="text-white/75">
-              itch.io developer
-            </Typography>
-          </View>
-        </View>
-
-        <Pressable
-          accessibilityRole="button"
-          className="h-10 w-10 items-center justify-center rounded-full bg-white/25 active:bg-white/40"
-        >
-          <Typography className="text-base text-white">⚙︎</Typography>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-function HeadlineMetrics({ summary }: { summary: PaymentsSummaryDto | undefined }) {
-  const primaryRevenue = summary?.revenue[0] ?? null;
-
-  const formatRevenue = (currency: string, amountCents: number): string => {
-    try {
-      return new Intl.NumberFormat('en', { style: 'currency', currency }).format(amountCents / 100);
-    } catch {
-      return `${(amountCents / 100).toFixed(2)} ${currency}`;
-    }
-  };
-
-  return (
-    <View className="-mt-10 flex-row gap-3 px-6">
-      <Card className="flex-1 overflow-hidden rounded-2xl bg-surface shadow-sm">
-        <Card.Body className="gap-0.5">
-          <Typography type="body-xs" className="text-muted">
-            Gross revenue
-          </Typography>
-          <Typography.Heading type="h3" className="text-foreground">
-            {primaryRevenue
-              ? formatRevenue(primaryRevenue.currency, primaryRevenue.amount_cents)
-              : '—'}
-          </Typography.Heading>
-        </Card.Body>
-      </Card>
-
-      <Card className="flex-1 overflow-hidden rounded-2xl bg-surface shadow-sm">
-        <Card.Body className="gap-0.5">
-          <Typography type="body-xs" className="text-muted">
-            Payments
-          </Typography>
-          <Typography.Heading type="h3" className="text-foreground">
-            {summary?.total ?? '—'}
-          </Typography.Heading>
-        </Card.Body>
-      </Card>
-    </View>
-  );
-}
-
-function PaymentRow({ payment, isLast }: { payment: PaymentDto; isLast: boolean }) {
-  const date = payment.purchased_at
-    ? new Date(payment.purchased_at).toLocaleDateString('en', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      })
-    : null;
-
-  return (
-    <View
-      className={`flex-row items-center justify-between px-4 py-3.5${isLast ? '' : ' border-b border-border'}`}
-    >
-      <View className="flex-1">
-        <Typography type="body-sm" className="text-foreground">
-          {payment.object_name ?? 'Payment'}
-        </Typography>
-        <Typography type="body-xs" className="text-muted">
-          {date ?? ''} · {payment.source ?? ''}
-        </Typography>
-      </View>
-
-      <Typography.Heading type="h6" className="text-foreground">
-        {payment.amount != null ? `$${payment.amount}` : '—'}
-      </Typography.Heading>
-    </View>
-  );
-}
-
-function PaymentsSyncCard({ userId }: { userId: string }) {
-  const importMutation = useImportPayments();
-
-  return (
-    <Card className="mx-6 my-3 rounded-2xl bg-surface shadow-sm">
-      <Card.Body className="gap-2">
-        <Typography className="text-foreground">Sync purchases</Typography>
-        <Typography type="body-xs" className="text-muted">
-          itch.io's API doesn't expose revenue. Download the CSV from
-          itch.io/dashboard/export-purchases/all, then pick it here (deduplicated automatically).
-        </Typography>
-        <FileInput
-          isDisabled={importMutation.isPending}
-          onFile={(file) => importMutation.mutate({ userId, csv: file.text })}
-        />
-        {importMutation.isSuccess ? (
-          <Typography type="body-xs" className="text-muted">
-            Imported {importMutation.data?.imported ?? 0} new · {importMutation.data?.updated ?? 0}{' '}
-            updated · {importMutation.data?.skipped ?? 0} unchanged
-          </Typography>
-        ) : null}
-        {importMutation.isError ? (
-          <Typography type="body-xs" className="text-danger">
-            Import failed — {String(importMutation.error.message)}
-          </Typography>
-        ) : null}
-      </Card.Body>
-    </Card>
-  );
-}
+type Tab = 'Overview' | 'Payments' | 'Account';
+const tabs: { label: Tab; icon: CashIconName }[] = [
+  { label: 'Overview', icon: 'home' },
+  { label: 'Payments', icon: 'receipt' },
+  { label: 'Account', icon: 'account' },
+];
 
 export function DashboardScreen() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const userId = user?.id ?? null;
-  const payments = usePayments(userId);
-  const summary = usePaymentsSummary(userId);
-  const graph = usePaymentsGraph(userId);
+  const profile = useOauthIdentity(userId);
+  const [tab, setTab] = useState<Tab>('Overview');
+  const [detail, setDetail] = useState<PaymentDto | null>(null);
+  const [syncOpen, setSyncOpen] = useState(false);
+  const [syncPhase, setSyncPhase] = useState<PaymentsSyncPhase>('idle');
+  const syncRef = useRef<PaymentsSyncHandle>(null);
+  const [searchDraft, setSearchDraft] = useState('');
+  const [isSearchFocused, setSearchFocused] = useState(false);
+  const [search, setSearch] = useState('');
+  const { theme } = useUniwind();
+  const insets = useSafeAreaInsets();
+  const [foreground, muted, accent] = useCSSVariable([
+    '--cash-foreground',
+    '--cash-muted',
+    '--cash-accent',
+  ]) as string[];
+  const allSummary = usePaymentsSummary(userId);
+  const lastSynced = useLastSynced();
+  const summary = usePaymentsSummary(userId, search ? { search } : undefined);
+  const graph = usePaymentsGraph(userId, search ? { search } : undefined);
+  const payments = usePayments(userId, tab === 'Payments' && search ? { search } : undefined);
   const items = useMemo(() => {
     const seen = new Set<string>();
-
     return (
-      payments.data?.pages.flat().filter((payment) => {
-        if (seen.has(payment.id)) return false;
-
-        seen.add(payment.id);
+      payments.data?.pages.flat().filter((row) => {
+        if (seen.has(row.id)) return false;
+        seen.add(row.id);
         return true;
       }) ?? []
     );
   }, [payments.data]);
-
-  const listFooter = (
-    <View className="gap-4 pb-8">
-      {userId ? <PaymentsSyncCard userId={userId} /> : null}
-
-      <View className="px-6">
-        <Button variant="secondary" onPress={logout}>
-          Sign out
-        </Button>
-      </View>
-    </View>
-  );
-
-  return (
-    <FlatList
-      className="flex-1 bg-background"
-      contentContainerStyle={{ paddingBottom: 8 }}
-      data={items}
-      keyExtractor={(payment) => payment.id}
-      ListEmptyComponent={
-        payments.isPending ? (
-          <ActivityIndicator className="py-10" size="large" color="#8f8f99" />
-        ) : (
-          <Typography.Paragraph type="body-sm" className="py-10 text-center text-muted">
-            No payments yet — sync your CSV below.
-          </Typography.Paragraph>
-        )
+  const navigate = (next: Tab) => {
+    setTab(next);
+    setDetail(null);
+    setSyncOpen(false);
+  };
+  const startSync = () => syncRef.current?.start();
+  const refresh = async () => {
+    await Promise.all([
+      allSummary.refetch(),
+      summary.refetch(),
+      graph.refetch(),
+      payments.refetch(),
+    ]);
+  };
+  const busy = payments.isRefetching || summary.isRefetching || graph.isRefetching;
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (detail) {
+        setDetail(null);
+        return true;
       }
-      ListFooterComponent={listFooter}
-      ListHeaderComponent={
-        <View className="gap-5">
-          <Hero userId={userId} />
-
-          <HeadlineMetrics summary={summary.data} />
-
-          <View className="px-6">
-            <Card className="rounded-2xl bg-surface p-4 shadow-sm">
-              <RevenueGraph
-                currency={summary.data?.revenue[0]?.currency ?? 'USD'}
-                points={graph.data?.points ?? []}
-              />
-            </Card>
-          </View>
-
-          <View className="flex-row items-center justify-between px-6">
-            <Typography.Heading type="h4" className="text-foreground">
-              Payments
-            </Typography.Heading>
-            <Typography type="body-xs" className="text-muted">
-              {summary.data?.total ?? 0} total
-            </Typography>
-          </View>
-        </View>
+      if (tab !== 'Overview') {
+        setTab('Overview');
+        return true;
       }
-      onEndReachedThreshold={0.4}
-      onEndReached={() => {
-        if (payments.hasNextPage && !payments.isFetchingNextPage) {
-          void payments.fetchNextPage();
-        }
-      }}
-      renderItem={({ item }) => (
-        <View className="mx-6 mb-2.5 overflow-hidden rounded-2xl bg-surface shadow-sm">
-          <PaymentRow payment={item} isLast />
-        </View>
-      )}
-      onRefresh={() => void payments.refetch()}
-      refreshing={payments.isRefetching}
+      return false;
+    });
+    return () => subscription.remove();
+  }, [detail, tab]);
+  const paymentsState = payments.isPending ? (
+    <PaymentSkeletons />
+  ) : payments.isError ? (
+    <CashState
+      title="Payments couldn't load"
+      description="Check your connection and try again."
+      icon="info"
+      action="Try again"
+      onPress={() => void payments.refetch()}
+    />
+  ) : (
+    <CashState
+      title={search ? 'No matching payments' : 'Your first sale starts here'}
+      description={
+        search
+          ? 'Try another product name or purchase ID.'
+          : 'Sync your itch.io purchase history to see your revenue and payments.'
+      }
+      action={search ? 'Clear search' : 'Sync purchases'}
+      onPress={
+        search
+          ? () => {
+              setSearch('');
+              setSearchDraft('');
+            }
+          : startSync
+      }
     />
   );
+  return (
+    <View className="flex-1 bg-cash-background">
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+      {detail ? (
+        <View className="flex-1" style={{ paddingTop: insets.top }}>
+          <PaymentDetailScreen payment={detail} onBack={() => setDetail(null)} />
+        </View>
+      ) : tab === 'Account' ? (
+        <View className="flex-1" style={{ paddingTop: insets.top }}>
+          <AccountScreen
+            profile={profile.data}
+            profileFailed={profile.isError || (profile.isSuccess && !profile.data)}
+            retryProfile={() => void profile.refetch()}
+          />
+        </View>
+      ) : tab === 'Payments' ? (
+        <FlatList
+          data={items}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            paddingTop: insets.top,
+            paddingBottom: 24,
+            maxWidth: 640,
+            width: '100%',
+            alignSelf: 'center',
+          }}
+          refreshControl={
+            <RefreshControl refreshing={busy} onRefresh={() => void refresh()} tintColor={accent} />
+          }
+          ListHeaderComponent={
+            <>
+              <PageHeader title="Payments">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-11 rounded-full bg-cash-surface px-4"
+                  accessibilityLabel="Sync purchases"
+                  isDisabled={syncPhase === 'running'}
+                  onPress={startSync}
+                >
+                  <CashIcon name="sync" size={17} />
+                  <Button.Label className="text-cash-foreground">
+                    {syncPhase === 'running'
+                      ? 'Syncing…'
+                      : syncPhase === 'error'
+                        ? 'Sync failed'
+                        : lastSynced.data
+                          ? `Sync · ${formatLastSynced(lastSynced.data)}`
+                          : 'Sync now'}
+                  </Button.Label>
+                </Button>
+              </PageHeader>
+              <View className="gap-5 px-5 pb-5">
+                {userId ? (
+                  <PaymentsSync
+                    ref={syncRef}
+                    userId={userId}
+                    onNeedsVisible={() => setSyncOpen(true)}
+                    onPhaseChange={setSyncPhase}
+                  />
+                ) : null}
+                <View
+                  className={`flex-row items-center gap-2 rounded-full border bg-cash-surface pl-4 ${isSearchFocused ? 'border-cash-accent' : 'border-transparent'}`}
+                >
+                  <CashIcon name="search" size={19} color={muted} />
+                  <Input
+                    variant="secondary"
+                    background={null}
+                    className="h-12 flex-1 rounded-none border-0 bg-transparent px-1 text-[15px] text-cash-foreground ios:shadow-none ios:outline-0 ios:focus:outline-0 android:shadow-none android:border-0 android:focus:border-0"
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
+                    placeholder="Product or purchase ID"
+                    placeholderTextColor={muted}
+                    value={searchDraft}
+                    maxLength={128}
+                    returnKeyType="search"
+                    onChangeText={(value) => {
+                      setSearchDraft(value);
+                      if (!value) setSearch('');
+                    }}
+                    onSubmitEditing={() => setSearch(searchDraft.trim())}
+                    accessibilityLabel="Search payments by product or purchase ID"
+                  />
+                  <Button
+                    isIconOnly
+                    variant="ghost"
+                    accessibilityLabel={searchDraft ? 'Search payments' : 'Search'}
+                    onPress={() => setSearch(searchDraft.trim())}
+                    className="h-11 w-11 rounded-full"
+                  >
+                    <CashIcon name="arrow" size={18} />
+                  </Button>
+                </View>
+                <View className="flex-row items-center justify-between">
+                  <Typography type="body-sm" className="text-cash-muted">
+                    {search ? `Results for “${search}”` : `${summary.data?.total ?? '—'} items`}
+                  </Typography>
+                </View>
+              </View>
+            </>
+          }
+          renderItem={({ item, index }) => (
+            <View
+              className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-[24px]' : ''} ${index === items.length - 1 ? 'rounded-b-[24px]' : ''}`}
+            >
+              <PaymentRow
+                payment={item}
+                onPress={() => setDetail(item)}
+                last={index === items.length - 1}
+              />
+            </View>
+          )}
+          ListEmptyComponent={
+            <View className="mx-5 rounded-[24px] bg-cash-surface">{paymentsState}</View>
+          }
+          onEndReachedThreshold={0.4}
+          onEndReached={() => {
+            if (payments.hasNextPage && !payments.isFetchingNextPage) {
+              void payments.fetchNextPage();
+            }
+          }}
+          ListFooterComponent={
+            payments.hasNextPage ? (
+              <View className="h-16 items-center justify-center">
+                {payments.isFetchNextPageError ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="min-h-9 px-3"
+                    onPress={() => void payments.fetchNextPage()}
+                  >
+                    <Button.Label className="text-[13px] text-cash-link">
+                      Couldn't load more — tap to retry
+                    </Button.Label>
+                  </Button>
+                ) : (
+                  <ActivityIndicator color={muted} />
+                )}
+              </View>
+            ) : items.length > 0 ? (
+              <Typography type="body-xs" className="py-6 text-center text-cash-muted">
+                You're all caught up.
+              </Typography>
+            ) : null
+          }
+        />
+      ) : (
+        <ScrollView
+          key="overview"
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={busy} onRefresh={() => void refresh()} tintColor={accent} />
+          }
+          contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 28 }}
+        >
+          <View className="relative">
+            <View
+              className="absolute top-0 left-0 right-0"
+              pointerEvents="none"
+              style={{ height: insets.top + 240, marginTop: -insets.top }}
+            >
+              <AuthBackground bandHeight={insets.top + 240} />
+            </View>
+            <View className="mx-auto w-full max-w-[640px] px-5 pb-3 pt-3">
+              <View className="min-h-11 flex-row items-center justify-between">
+                <View className="flex-1">
+                  <Typography type="body-xs" className="text-cash-foreground">
+                    {formatDate(new Date())}
+                  </Typography>
+                  <Typography
+                    accessibilityRole="header"
+                    numberOfLines={1}
+                    className="mt-0.5 text-[30px] font-medium leading-[38px] tracking-[-1px] text-cash-foreground"
+                  >
+                    {profile.data?.username
+                      ? `@${profile.data.username}`
+                      : (profile.data?.name ?? 'Welcome')}
+                  </Typography>
+                </View>
+                <Button
+                  isIconOnly
+                  variant="ghost"
+                  className="h-11 w-11 rounded-full bg-cash-surface p-0"
+                  accessibilityLabel="Open your account"
+                  onPress={() => navigate('Account')}
+                >
+                  {profile.data?.avatar_url ? (
+                    <Image
+                      source={{ uri: profile.data.avatar_url }}
+                      className="h-11 w-11 rounded-full"
+                    />
+                  ) : (
+                    <RedLogo width={23} height={21} />
+                  )}
+                </Button>
+              </View>
+            </View>
+            <View className="mx-auto w-full max-w-[640px] gap-3 px-5">
+              <Card className="rounded-[28px] bg-cash-surface p-5 shadow-none">
+                {graph.isPending ? (
+                  <View className="gap-4">
+                    <Skeleton className="h-14 w-52 rounded-xl" />
+                    <Skeleton className="h-[200px] w-full rounded-2xl" />
+                  </View>
+                ) : graph.isError ? (
+                  <CashState
+                    title="Chart unavailable"
+                    description="Try loading your revenue history again."
+                    icon="info"
+                    action="Retry"
+                    onPress={() => void graph.refetch()}
+                  />
+                ) : graph.data.revenue.length ? (
+                  <TimeSeriesChart
+                    label="Gross revenue"
+                    points={graph.data.revenue.map((point) => ({
+                      date: point.date,
+                      value: point.value,
+                    }))}
+                    formatValue={(value) => formatMoney(value)}
+                  />
+                ) : (
+                  <View className="gap-5">
+                    <CashState
+                      title="Your first sale starts here"
+                      description="Sync your itch.io purchase history to see your revenue over time."
+                      icon="receipt"
+                      action="Sync purchases"
+                      onPress={startSync}
+                    />
+                    <Button
+                      onPress={() => navigate('Payments')}
+                      className="h-[50px] rounded-full bg-cash-accent"
+                    >
+                      <Button.Label className="text-[14px] font-medium text-cash-accent-ink">
+                        View payments
+                      </Button.Label>
+                    </Button>
+                  </View>
+                )}
+              </Card>
+              {graph.isPending ? (
+                <>
+                  <View className="flex-row gap-3">
+                    <Skeleton className="h-[150px] flex-1 rounded-[24px]" />
+                    <Skeleton className="h-[150px] flex-1 rounded-[24px]" />
+                  </View>
+                  <View className="flex-row gap-3">
+                    <Skeleton className="h-[150px] flex-1 rounded-[24px]" />
+                    <Skeleton className="h-[150px] flex-1 rounded-[24px]" />
+                  </View>
+                  <Skeleton className="h-[130px] w-full rounded-[24px]" />
+                </>
+              ) : graph.isError || !graph.data ? (
+                <Card className="rounded-[24px] bg-cash-surface shadow-none">
+                  <CashState
+                    title="Stats unavailable"
+                    description="Try loading your revenue history again."
+                    icon="info"
+                    action="Retry"
+                    onPress={() => void graph.refetch()}
+                  />
+                </Card>
+              ) : (
+                <>
+                  <View className="flex-row gap-3">
+                    <StatCard
+                      label="Total payments"
+                      points={graph.data.payments}
+                      formatValue={(value) => String(Math.round(value))}
+                    />
+                    <StatCard
+                      label="Total customers"
+                      points={graph.data.customers}
+                      formatValue={(value) => String(Math.round(value))}
+                    />
+                  </View>
+                  <View className="flex-row gap-3">
+                    <StatCard
+                      label="Average payment"
+                      points={graph.data.average}
+                      formatValue={formatMoney}
+                    />
+                    <StatCard
+                      label="Tip revenue"
+                      points={graph.data.tips}
+                      formatValue={formatMoney}
+                    />
+                  </View>
+                  <View className="gap-1 rounded-[24px] bg-cash-surface p-4">
+                    <Typography type="body-xs" className="text-cash-muted">
+                      Payment providers
+                    </Typography>
+                    {allSummary.isPending ? (
+                      <Skeleton className="h-[78px] w-full rounded-2xl" />
+                    ) : (
+                      <PieChart
+                        size={78}
+                        slices={(allSummary.data?.sources ?? []).map((entry) => ({
+                          label: paymentSource(entry.source === 'unknown' ? null : entry.source),
+                          value: entry.amount_cents,
+                        }))}
+                      />
+                    )}
+                  </View>
+                </>
+              )}
+              <View>
+                <Card className="rounded-[24px] bg-cash-surface p-5 shadow-none">
+                  {allSummary.isPending ? (
+                    <Skeleton className="h-[180px] w-full rounded-2xl" />
+                  ) : allSummary.data?.countries.length ? (
+                    <CountryHeatmap
+                      countries={allSummary.data.countries.map((entry) => ({
+                        code: entry.country_code,
+                        value: entry.payments,
+                      }))}
+                    />
+                  ) : (
+                    <CashState
+                      title="No country data yet"
+                      description="Where your buyers are appears here once your purchases sync."
+                      icon="info"
+                    />
+                  )}
+                </Card>
+              </View>
+              <View>
+                <CashSection
+                  title="Recent payments"
+                  action="See all"
+                  onPress={() => navigate('Payments')}
+                />
+                <Card className="gap-0 overflow-hidden rounded-[24px] bg-cash-surface p-0 shadow-none">
+                  {items.length
+                    ? items
+                        .slice(0, 4)
+                        .map((payment, index) => (
+                          <PaymentRow
+                            key={payment.id}
+                            payment={payment}
+                            onPress={() => setDetail(payment)}
+                            last={index === Math.min(items.length, 4) - 1}
+                          />
+                        ))
+                    : paymentsState}
+                </Card>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      )}
+      <View
+        className="border-t border-cash-border bg-cash-surface px-5 pt-2"
+        style={{ paddingBottom: insets.bottom }}
+      >
+        <View className="mx-auto w-full max-w-[480px] flex-row">
+          {tabs.map((item) => (
+            <Button
+              key={item.label}
+              variant="ghost"
+              accessibilityRole="tab"
+              accessibilityLabel={item.label}
+              accessibilityState={{ selected: tab === item.label }}
+              onPress={() => navigate(item.label)}
+              className="h-[58px] flex-1 flex-col gap-1 rounded-2xl"
+            >
+              <View
+                className={`h-8 w-14 items-center justify-center rounded-full ${tab === item.label ? 'bg-cash-accent-soft' : ''}`}
+              >
+                <CashIcon
+                  name={item.icon}
+                  size={22}
+                  color={tab === item.label ? foreground : muted}
+                />
+              </View>
+              <Button.Label
+                className={`text-[11px] ${tab === item.label ? 'font-medium text-cash-foreground' : 'text-cash-muted'}`}
+              >
+                {item.label}
+              </Button.Label>
+            </Button>
+          ))}
+        </View>
+      </View>
+      {syncOpen && userId ? (
+        <ItchSyncScreen userId={userId} onClose={() => setSyncOpen(false)} />
+      ) : null}
+    </View>
+  );
 }
-
-const styles = StyleSheet.create({
-  hero: {
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-    overflow: 'hidden',
-    paddingBottom: 48,
-  },
-  avatar: {
-    backgroundColor: '#ffffff33',
-    borderRadius: 999,
-    height: 56,
-    width: 56,
-  },
-  avatarFallback: {
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-});

@@ -34,6 +34,7 @@ export const oauthIdentitiesTable = pgTable(
     provider: oauthProviderEnum().notNull(),
     provider_user_id: text().notNull(),
     email: text(),
+    username: text(),
     name: text(),
     avatar_url: text(),
   },

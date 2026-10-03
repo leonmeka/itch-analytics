@@ -7,7 +7,3 @@ export type CreatePayment = InferInsertModel<typeof schema.paymentsTable>;
 export type UpdatePayment = Partial<CreatePayment>;
 
 export type PaymentWithRelations = Payment;
-
-export type PaymentRevenueRow = { currency: string; amount_cents: number };
-
-export type PaymentRevenueDayRow = { date: string; amount_cents: number };

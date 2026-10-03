@@ -2,8 +2,9 @@ import type { ButtonRootProps } from 'heroui-native/button';
 import { Button as HeroButton } from 'heroui-native/button';
 import { type ThemeColor, useThemeColor } from 'heroui-native/hooks';
 import { ActivityIndicator } from 'react-native';
+import { usePressFeedbackAnimation } from '../pressable-feedback.component';
 
-type ButtonProps = ButtonRootProps & {
+type ButtonProps = Omit<ButtonRootProps, 'animation' | 'feedbackVariant'> & {
   isLoading?: boolean;
 };
 
@@ -24,10 +25,17 @@ function ButtonImpl({
   isDisabled,
   ...props
 }: ButtonProps) {
+  const feedbackAnimation = usePressFeedbackAnimation();
   const spinnerColor = useThemeColor(VARIANT_SPINNER_TOKEN[variant]);
 
   return (
-    <HeroButton {...props} variant={variant} isDisabled={isDisabled || isLoading}>
+    <HeroButton
+      feedbackVariant="scale-highlight"
+      animation={feedbackAnimation}
+      {...props}
+      variant={variant}
+      isDisabled={isDisabled || isLoading}
+    >
       {isLoading ? (
         <>
           <ActivityIndicator size="small" color={spinnerColor} />

@@ -8,11 +8,11 @@
   "files": {
     "includes": [
       "**",
-      "!!**/dist/**",
-      "!!**/coverage/**",
-      "!!**/node_modules/**",
-      "!!apps/api/src/@generated/**",
-      "!!libs/shared/src/db/migrations/**",
+      "!!**/dist",
+      "!!**/coverage",
+      "!!**/node_modules",
+      "!!apps/api/src/@generated",
+      "!!libs/shared/src/db/migrations",
       "!!apps/mobile/global.css",
       "!!apps/mobile/assets/**/*.svg"
     ]
@@ -52,8 +52,18 @@
   "overrides": [
     {
       "includes": ["apps/mobile/global.css", "apps/mobile/**/*.svg"],
-      "linter": { "enabled": false },
-      "formatter": { "enabled": false }
+      "linter": {
+        "enabled": false
+      },
+      "formatter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["apps/mobile/uniwind-types.d.ts"],
+      "formatter": {
+        "enabled": false
+      }
     }
   ],
   "css": {

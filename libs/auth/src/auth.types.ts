@@ -5,7 +5,6 @@ import type { User } from '@/libs/shared';
 
 export interface AuthenticatedRequest extends Request {
   user: User;
-  itchAccessToken?: string | null;
 }
 
 export interface AuthConfig {

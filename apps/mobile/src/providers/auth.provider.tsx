@@ -23,7 +23,6 @@ interface AuthContextValue {
   isLoading: boolean;
   isRedirecting: boolean;
   user: UserDto | null;
-  itchToken: string | null;
   login: () => Promise<void>;
   logout: () => void;
 }
@@ -32,7 +31,6 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [redirecting, setRedirecting] = useState(false);
-  const [itchToken, setItchToken] = useState<string | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
 
   const { data: meData, isPending } = useMe();
@@ -44,8 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !redirecting && !isLoading && user !== null;
 
   useEffect(() => {
-    void loadSession().then((session) => {
-      setItchToken(session?.itchToken ?? null);
+    void loadSession().then(() => {
       setSessionReady(true);
     });
   }, []);
@@ -54,20 +51,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const completeLogin = useCallback(
     async (input: CompleteLoginInput) => {
-      setItchToken(input.accessToken);
-
       const result = await completeLoginMutation.mutateAsync(input);
 
       await saveSession({
         accessToken: result.access_token,
         refreshToken: result.refresh_token,
-        itchToken: input.accessToken,
       });
 
       queryClient.setQueryData(queryKeys.me, result.user);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.itchProfile });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.itchGames });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.itchRewards });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.oauthIdentity });
     },
     [completeLoginMutation, queryClient],
   );
@@ -103,7 +95,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [completeLogin]);
 
   const logout = useCallback(() => {
-    setItchToken(null);
     logoutMutation.mutate();
   }, [logoutMutation]);
 
@@ -113,11 +104,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading,
       isRedirecting: redirecting,
       user,
-      itchToken,
       login,
       logout,
     }),
-    [isAuthenticated, isLoading, redirecting, user, itchToken, login, logout],
+    [isAuthenticated, isLoading, redirecting, user, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

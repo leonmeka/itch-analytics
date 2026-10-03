@@ -53,14 +53,10 @@ async function bootstrap(): Promise<void> {
   // Security headers
   app.use(helmet());
 
-  // DTO validation + coercion (class-validator / class-transformer)
+  // DTO validation
   app.useGlobalPipes(
     new ValidationPipe({
-      // strip properties that have no decorator (undeclared input is dropped)
       whitelist: true,
-      // reject requests carrying unknown properties outright
-      forbidNonWhitelisted: true,
-      // transform payloads into DTO instances so defaults/transforms apply
       transform: true,
     }),
   );

@@ -1,8 +1,10 @@
+import { createHmac } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { and, eq, inArray } from 'drizzle-orm';
 
 import { PaymentsService, schema } from '@/libs/shared';
-import { type ParsedPaymentsCsv, parsePaymentsCsv } from './payments.parser';
+import { type ParsedPaymentsCsv, parsePaymentsCsv, toBareCents, toCents } from './payments.parser';
 
 export interface PaymentsImportSummary {
   total: number;
@@ -13,38 +15,38 @@ export interface PaymentsImportSummary {
 
 const UPDATABLE_FIELDS = [
   'object_name',
-  'amount',
   'amount_cents',
   'currency',
   'source',
-  'created_at_csv',
   'purchased_at',
-  'email',
-  'full_name',
+  'country_code',
+  'customer_key',
   'donation',
   'on_sale',
-  'country_code',
-  'ip',
-  'product_price',
-  'tax_added',
-  'tip',
-  'marketplace_fee',
-  'source_fee',
+  'product_price_cents',
+  'tax_added_cents',
+  'tip_cents',
+  'marketplace_fee_cents',
+  'source_fee_cents',
   'payout',
-  'amount_delivered',
+  'amount_delivered_cents',
   'source_id',
-  'billing_name',
-  'billing_street_1',
-  'billing_street_2',
-  'billing_city',
-  'billing_state',
-  'billing_zip',
-  'billing_country',
 ] as const;
 
 @Injectable()
 export class PaymentsImporterService {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  private customerKey(email: string | null): string | null {
+    if (!email) return null;
+
+    return createHmac('sha256', this.configService.getOrThrow<string>('API_JWT_SECRET'))
+      .update(email.trim().toLowerCase())
+      .digest('base64url');
+  }
 
   async import(userId: string, csv: string): Promise<PaymentsImportSummary> {
     const { rows, malformed } = parsePaymentsCsv(csv);
@@ -122,33 +124,22 @@ export class PaymentsImporterService {
       user_id: userId,
       external_id: row.externalId as string,
       object_name: row.values.object_name ?? null,
-      amount: row.values.amount ?? null,
       amount_cents: row.amountCents,
       currency: row.values.currency ?? null,
       source: row.values.source ?? null,
-      created_at_csv: row.createdAtCsv,
       purchased_at: row.purchasedAt,
-      email: row.values.email ?? null,
-      full_name: row.values.full_name ?? null,
+      country_code: row.values.country_code ?? null,
+      customer_key: this.customerKey(row.values.email),
       donation: row.values.donation ?? null,
       on_sale: row.values.on_sale ?? null,
-      country_code: row.values.country_code ?? null,
-      ip: row.values.ip ?? null,
-      product_price: row.values.product_price ?? null,
-      tax_added: row.values.tax_added ?? null,
-      tip: row.values.tip ?? null,
-      marketplace_fee: row.values.marketplace_fee ?? null,
-      source_fee: row.values.source_fee ?? null,
+      product_price_cents: toBareCents(row.values.product_price),
+      tax_added_cents: toCents(row.values.tax_added),
+      tip_cents: toCents(row.values.tip),
+      marketplace_fee_cents: toCents(row.values.marketplace_fee),
+      source_fee_cents: toCents(row.values.source_fee),
       payout: row.values.payout ?? null,
-      amount_delivered: row.values.amount_delivered ?? null,
+      amount_delivered_cents: toCents(row.values.amount_delivered),
       source_id: row.values.source_id ?? null,
-      billing_name: row.values.billing_name ?? null,
-      billing_street_1: row.values.billing_street_1 ?? null,
-      billing_street_2: row.values.billing_street_2 ?? null,
-      billing_city: row.values.billing_city ?? null,
-      billing_state: row.values.billing_state ?? null,
-      billing_zip: row.values.billing_zip ?? null,
-      billing_country: row.values.billing_country ?? null,
     };
   }
 }

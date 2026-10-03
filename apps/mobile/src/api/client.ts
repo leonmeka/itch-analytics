@@ -1,8 +1,9 @@
 import type {
   AuthTokenResponseDto,
-  ItchProfileDto,
+  OauthIdentityDto,
   PaymentDto,
-  PaymentsGraphDto,
+  PaymentsFilterDto,
+  PaymentsGraphsDto,
   PaymentsImportResultDto,
   PaymentsSummaryDto,
 } from '@itch/protocol';
@@ -28,6 +29,14 @@ export const API_URL_BASE = env.EXPO_PUBLIC_API_URL;
 
 export const loginURL = `${API_URL_BASE}/auth/login`;
 
+const searchParams = (params: Record<string, string | number | undefined>): string => {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value != null && value !== '') query.set(key, String(value));
+  }
+  return query.toString();
+};
+
 export const apiClient = {
   health: () => fetchBase<{ status: string }>(API_URL_BASE, '/health'),
   completeLogin: (input: CompleteLoginInput) =>
@@ -36,22 +45,22 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ access_token: input.accessToken, state: input.state }),
     }),
-  itchProfile: (userId: string, itchAccessToken: string) =>
-    authedFetch<ItchProfileDto | null>(`/users/${userId}/itch/profile`, {
-      itchToken: itchAccessToken,
-    }),
+  oauthIdentity: (userId: string) =>
+    authedFetch<OauthIdentityDto | null>(`/users/${userId}/oauth-identity`),
   importPayments: (userId: string, csv: string) =>
     authedFetch<PaymentsImportResultDto>(`/users/${userId}/payments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ csv }),
     }),
-  paymentsGraph: (userId: string) =>
-    authedFetch<PaymentsGraphDto>(`/users/${userId}/payments/graph`),
-  paymentsSummary: (userId: string) =>
-    authedFetch<PaymentsSummaryDto>(`/users/${userId}/payments/summary`),
-  payments: (userId: string, limit = 20, offset = 0) =>
-    authedFetch<PaymentDto[]>(`/users/${userId}/payments?limit=${limit}&offset=${offset}`),
+  paymentsGraph: (userId: string, filters: Partial<PaymentsFilterDto>) =>
+    authedFetch<PaymentsGraphsDto>(`/users/${userId}/payments/graph?${searchParams(filters)}`),
+  paymentsSummary: (userId: string, filters: Partial<PaymentsFilterDto>) =>
+    authedFetch<PaymentsSummaryDto>(`/users/${userId}/payments/summary?${searchParams(filters)}`),
+  payments: (userId: string, limit: number, offset: number, filters: Partial<PaymentsFilterDto>) =>
+    authedFetch<PaymentDto[]>(
+      `/users/${userId}/payments?${searchParams({ limit, offset, ...filters })}`,
+    ),
   payment: (userId: string, paymentId: string) =>
     authedFetch<PaymentDto>(`/users/${userId}/payments/${paymentId}`),
 };

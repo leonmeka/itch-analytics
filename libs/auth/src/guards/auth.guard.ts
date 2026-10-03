@@ -48,9 +48,6 @@ export class AuthGuard implements CanActivate {
     }
 
     request.user = user;
-    const itchToken = request.headers['x-itch-token'];
-
-    request.itchAccessToken = typeof itchToken === 'string' ? itchToken : null;
 
     return true;
   }
