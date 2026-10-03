@@ -7,7 +7,15 @@ import { useMemo } from 'react';
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { useImportPayments, useItchProfile, usePayments, usePaymentsSummary } from '../api/queries';
+import {
+  queryKeys,
+  useImportPayments,
+  useItchProfile,
+  usePayments,
+  usePaymentsGraph,
+  usePaymentsSummary,
+} from '../api/queries';
+import { RevenueGraph } from '../components/revenue-graph.component';
 import { Button } from '../components/ui/button';
 import { FileInput } from '../components/ui/file-input';
 import { useAuth } from '../providers/auth.provider';
@@ -187,6 +195,7 @@ export function DashboardScreen() {
   const userId = user?.id ?? null;
   const payments = usePayments(userId);
   const summary = usePaymentsSummary(userId);
+  const graph = usePaymentsGraph(userId);
   const items = useMemo(() => {
     const seen = new Set<string>();
 
@@ -233,6 +242,15 @@ export function DashboardScreen() {
           <Hero userId={userId} />
 
           <HeadlineMetrics summary={summary.data} />
+
+          <View className="px-6">
+            <Card className="rounded-2xl bg-surface p-4 shadow-sm">
+              <RevenueGraph
+                currency={summary.data?.revenue[0]?.currency ?? 'USD'}
+                points={graph.data?.points ?? []}
+              />
+            </Card>
+          </View>
 
           <View className="flex-row items-center justify-between px-6">
             <Typography.Heading type="h4" className="text-foreground">

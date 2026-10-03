@@ -1,4 +1,9 @@
-import type { ItchProfileDto, PaymentDto, PaymentsSummaryDto } from '@itch/protocol';
+import type {
+  ItchProfileDto,
+  PaymentDto,
+  PaymentsGraphDto,
+  PaymentsSummaryDto,
+} from '@itch/protocol';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CompleteLoginInput } from './client';
 import { apiClient } from './client';
@@ -14,6 +19,7 @@ export const queryKeys = {
   itchGraphs: ['itch-graphs'] as const,
   payments: ['payments'] as const,
   paymentsSummary: ['payments-summary'] as const,
+  paymentsGraph: ['payments-graph'] as const,
 };
 
 export const PAYMENTS_PAGE_SIZE = 20;
@@ -41,6 +47,16 @@ export function useItchProfile(userId: string | null, itchAccessToken: string | 
     queryFn: () =>
       apiClient.itchProfile(userId as string, itchAccessToken as string) as Promise<ItchProfileDto>,
     enabled: userId != null && itchAccessToken != null,
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+export function usePaymentsGraph(userId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.paymentsGraph,
+    queryFn: () => apiClient.paymentsGraph(userId as string) as Promise<PaymentsGraphDto>,
+    enabled: userId != null,
     staleTime: 60_000,
     retry: false,
   });

@@ -2,20 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, Max, Min } from 'class-validator';
 
-/**
- * Wire DTOs shared between the NestJS API and the mobile app.
- *
- * Response DTOs mirror the underlying drizzle entities field-for-field (no
- * custom response shapes): controllers return entity rows straight through
- * and only declare these classes for their wire documentation. Custom shapes
- * exist only where there is no entity (computed aggregates, itch.io data).
- * Request payloads are class-validated by the API's global ValidationPipe;
- * request documentation comes from @nestjs/swagger.
- *
- * The mobile client consumes everything type-only (`import type`), so the
- * decorators never reach the client bundle.
- */
-
 export class UserDto {
   @ApiProperty({ format: 'uuid' })
   id!: string;
@@ -35,7 +21,6 @@ export class HealthDto {
   status!: string;
 }
 
-/** GET /itch/me */
 export class ItchProfileDto {
   @ApiProperty()
   id!: string;
@@ -50,7 +35,6 @@ export class ItchProfileDto {
   avatar_url!: string | null;
 }
 
-/** POST /auth/token response — our session pair plus the provisioning user. */
 export class AuthTokenResponseDto {
   @ApiProperty({ format: 'url' })
   redirect_url!: string;
@@ -65,7 +49,6 @@ export class AuthTokenResponseDto {
   refresh_token!: string;
 }
 
-/** Imported itch.io payment — mirrors the payments entity field-for-field. */
 export class PaymentDto {
   @ApiProperty({ format: 'uuid' })
   id!: string;
@@ -167,7 +150,6 @@ export class PaymentDto {
   amount_cents!: number | null;
 }
 
-/** Gross revenue grouped per currency (headline aggregate). */
 export class PaymentRevenueDto {
   @ApiProperty({ example: 'USD' })
   currency!: string;
@@ -176,16 +158,25 @@ export class PaymentRevenueDto {
   amount_cents!: number;
 }
 
-/**
- * Isolated computed resource (not an entity mirror): overview metrics of a
- * user's imported payments.
- */
 export class PaymentsSummaryDto {
   @ApiProperty({ description: 'Total imported payments.' })
   total!: number;
 
   @ApiProperty({ type: [PaymentRevenueDto] })
   revenue!: PaymentRevenueDto[];
+}
+
+export class PaymentGraphPointDto {
+  @ApiProperty({ example: '2026-09-26' })
+  date!: string;
+
+  @ApiProperty({ description: 'Cumulative gross amount in cents.' })
+  amount_cents!: number;
+}
+
+export class PaymentsGraphDto {
+  @ApiProperty({ type: [PaymentGraphPointDto] })
+  points!: PaymentGraphPointDto[];
 }
 
 export class PaginationDto {
@@ -203,7 +194,6 @@ export class PaginationDto {
   offset: number = 0;
 }
 
-/** POST /me/payments/import */
 export class PaymentsImportResultDto {
   @ApiProperty({ description: 'Rows detected in the CSV.' })
   total!: number;

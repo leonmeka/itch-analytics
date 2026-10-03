@@ -2,6 +2,7 @@ import {
   ItchProfileDto,
   PaginationDto,
   PaymentDto,
+  PaymentsGraphDto,
   PaymentsImportResultDto,
   PaymentsSummaryDto,
   UserDto,
@@ -85,12 +86,22 @@ export class UsersController {
       throw new ForbiddenException("Cannot access another user's resources");
     }
 
-    const [total, revenue] = await Promise.all([
-      this.paymentsService.count(eq(schema.paymentsTable.user_id, userId)),
-      this.paymentsService.getRevenueByCurrency(userId),
-    ]);
+    return this.paymentsService.getSummary(userId);
+  }
 
-    return { total, revenue };
+  @Get(':user_id/payments/graph')
+  @UseGuards(AuthGuard)
+  async paymentsGraph(
+    @Req() request: AuthenticatedRequest,
+    @Param('user_id') userId: string,
+  ): Promise<PaymentsGraphDto> {
+    if (request.user?.id !== userId) {
+      throw new ForbiddenException("Cannot access another user's resources");
+    }
+
+    const points = await this.paymentsService.getRevenueSeries(userId);
+
+    return { points };
   }
 
   @Get(':user_id/payments/:payment_id')

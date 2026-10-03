@@ -2,6 +2,7 @@ import type {
   AuthTokenResponseDto,
   ItchProfileDto,
   PaymentDto,
+  PaymentsGraphDto,
   PaymentsImportResultDto,
   PaymentsSummaryDto,
 } from '@itch/protocol';
@@ -45,6 +46,8 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ csv }),
     }),
+  paymentsGraph: (userId: string) =>
+    authedFetch<PaymentsGraphDto>(`/users/${userId}/payments/graph`),
   paymentsSummary: (userId: string) =>
     authedFetch<PaymentsSummaryDto>(`/users/${userId}/payments/summary`),
   payments: (userId: string, limit = 20, offset = 0) =>
