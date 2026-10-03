@@ -23,10 +23,6 @@ export function AuthScreen() {
 
       <View className="flex-1 items-center justify-center px-8">
         <WhiteLogo width={72} height={65} />
-
-        <Typography.Paragraph className="mt-8 text-center text-2xl font-semibold text-white">
-          itch.io analytics
-        </Typography.Paragraph>
       </View>
 
       <View className="absolute inset-x-0 px-6" style={{ bottom: insets.bottom }}>

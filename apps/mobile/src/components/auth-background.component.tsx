@@ -8,7 +8,7 @@ const SHAPE = (x: number, y: number, scale: number, rotate: number) =>
   `translate(${x} ${y}) scale(${scale}) rotate(${rotate})`;
 
 export function AuthBackground() {
-  const [accent, accentForeground, _accentLift, accentDeep] = useCSSVariable([
+  const [accent, accentForeground, _accentLift, _accentDeep] = useCSSVariable([
     '--color-accent',
     '--color-accent-foreground',
     '--color-accent-lift',
@@ -27,14 +27,7 @@ export function AuthBackground() {
         d={LOGO_PATH}
         fill={accentForeground as string}
         opacity="0.1"
-        transform={SHAPE(430, -560, 8.5, 14)}
-      />
-
-      <Path
-        d={LOGO_PATH}
-        fill={accentDeep as string}
-        opacity="0.14"
-        transform={SHAPE(-640, 1290, 8.8, -16)}
+        transform={SHAPE(0, -200, 8, 20)}
       />
     </Svg>
   );

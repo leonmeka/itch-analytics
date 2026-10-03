@@ -187,7 +187,18 @@ export function DashboardScreen() {
   const userId = user?.id ?? null;
   const payments = usePayments(userId);
   const summary = usePaymentsSummary(userId);
-  const items = useMemo(() => payments.data?.pages.flat() ?? [], [payments.data]);
+  const items = useMemo(() => {
+    const seen = new Set<string>();
+
+    return (
+      payments.data?.pages.flat().filter((payment) => {
+        if (seen.has(payment.id)) return false;
+
+        seen.add(payment.id);
+        return true;
+      }) ?? []
+    );
+  }, [payments.data]);
 
   const listFooter = (
     <View className="gap-4 pb-8">
