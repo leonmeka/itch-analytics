@@ -1,4 +1,53 @@
-@import "tailwindcss";
-@import "uniwind";
+@import 'tailwindcss';
+@import 'uniwind';
 
-@import "heroui-native/styles";
+@import 'heroui-native/styles';
+
+@layer theme {
+  :root {
+    @variant light {
+      --accent: #fa5c5c;
+      --accent-foreground: #ffffff;
+    }
+    @variant dark {
+      /* itch-flavored dark: deep warm blacks instead of stock gray, accent
+       * lifted slightly so it holds contrast on the darker base. */
+      --background: oklch(0.14 0.012 25);
+      --foreground: oklch(0.96 0.003 25);
+
+      --surface: oklch(0.19 0.014 25);
+      --surface-foreground: oklch(0.96 0.003 25);
+      --surface-secondary: oklch(0.23 0.014 25);
+      --surface-tertiary: oklch(0.27 0.014 25);
+
+      --overlay: oklch(0.19 0.014 25);
+      --overlay-foreground: oklch(0.96 0.003 25);
+
+      --muted: oklch(0.65 0.02 25);
+      --default: oklch(0.24 0.012 25);
+      --default-foreground: oklch(0.96 0.003 25);
+
+      --accent: oklch(0.67 0.2 25);
+      --accent-foreground: #ffffff;
+
+      --field-background: oklch(0.19 0.014 25);
+      --field-foreground: oklch(0.96 0.003 25);
+      --field-placeholder: oklch(0.65 0.02 25);
+
+      --segment: oklch(0.24 0.012 25);
+      --segment-foreground: oklch(0.96 0.003 25);
+
+      --border: oklch(0.28 0.012 25);
+      --separator: oklch(0.34 0.014 25);
+      --focus: var(--accent);
+      --link: var(--foreground);
+    }
+  }
+}
+
+@theme inline static {
+  --color-accent-lift: color-mix(in oklab, var(--accent) 76%, #ffffff);
+  --color-accent-deep: color-mix(in oklab, var(--accent) 55%, #000000);
+}
+
+@source './node_modules/heroui-native/lib';
