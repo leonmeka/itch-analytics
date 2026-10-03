@@ -103,10 +103,6 @@ export function useCompleteLogin() {
   return useMutation({
     mutationFn: (input: CompleteLoginInput) => apiClient.completeLogin(input),
     onError: (error) => console.warn('itch sign-in failed', error),
-    // NOTE: no cache invalidation here — the session is persisted by the
-    // AuthProvider after the mutation resolves, and only then are the
-    // session-dependent queries refreshed (otherwise they race the
-    // SecureStore write and probe /auth/me without a token).
   });
 }
 

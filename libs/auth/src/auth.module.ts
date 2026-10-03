@@ -45,11 +45,6 @@ import { ItchOAuth2Strategy } from './strategies/itch.strategy';
         ),
         itchClientID: configService.getOrThrow<string>('API_OAUTH_ITCH_CLIENT_ID'),
         itchCallbackURL: configService.getOrThrow<string>('API_OAUTH_ITCH_CALLBACK_URL'),
-        // profile:games lists the games the user develops — the dashboard's
-        // core data (views/downloads/purchases); profile:me identifies the
-        // user; game:view:rewards covers claimed rewards. Revenue (earnings)
-        // is not exposed to any OAuth scope — it comes from the user's own
-        // stored API key instead.
         itchScope: ['profile:me', 'profile:games', 'game:view:rewards'],
         itchAuthorizationURL: 'https://itch.io/user/oauth',
         itchUserinfoURL: 'https://api.itch.io/profile',

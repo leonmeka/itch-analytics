@@ -108,9 +108,7 @@ export async function me(): Promise<UserDto | null> {
 export async function logout(): Promise<void> {
   try {
     await authedFetch<void>('/auth/logout', { method: 'POST' });
-  } catch {
-    // server-side cleanup is best-effort; the local session dies regardless
-  }
+  } catch {}
 
   await clearSession();
 }

@@ -14,17 +14,6 @@ import type { AuthConfig } from '../auth.types';
 
 const OAUTH_STATE_TTL_MS = 10 * 60_000;
 
-/**
- * itch.io does not support the authorization-code flow for third-party apps;
- * its "OAuth" is the implicit flow ("response_type=token"): after approval,
- * itch.io redirects to the registered Authorization Callback URL with the
- * access token — and the state passed at login — in the URL hash part.
- *
- * The strategy owns the itch.io flow, following the passport provider
- * pattern: `authenticate()` performs the transport (redirect to itch.io, or
- * consume the token the app posts back), and the app-specific provisioning
- * lives in the passport `validate()` hook.
- */
 @Injectable()
 export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuthProvider.Itch) {
   constructor(
@@ -46,10 +35,6 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
     this.complete(request);
   }
 
-  /**
-   * App-specific provisioning, mirroring the standard OAuth2 strategy's
-   * `validate(accessToken, refreshToken, profile)` contract.
-   */
   async validate(
     _accessToken: string,
     _refreshToken: string | undefined,
@@ -101,7 +86,6 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
     return user;
   }
 
-  /** Login step: issue a signed state param and redirect to itch.io. */
   private begin(_request: Request): void {
     const state = this.createState();
     const config = this.authConfig;
@@ -116,7 +100,6 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
     this.redirect(url.toString());
   }
 
-  /** Token step: the app posted the callback page's params; provision. */
   private async complete(request: Request): Promise<void> {
     try {
       const { access_token, state } = (request.body ?? {}) as {
@@ -156,7 +139,6 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
     return data;
   }
 
-  /** itch.io returns the state in the hash; verify signature + expiry. */
   private verifyState(state?: string): boolean {
     if (!state) return false;
 

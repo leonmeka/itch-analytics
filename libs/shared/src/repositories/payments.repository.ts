@@ -21,7 +21,6 @@ export class PaymentsRepository extends BaseRepository<
     super(database, schema.paymentsTable, 'paymentsTable');
   }
 
-  /** Gross revenue grouped per currency (sum of amount_cents). */
   async getRevenueByCurrency(userId: string): Promise<PaymentRevenueRow[]> {
     return this.database
       .select({

@@ -16,32 +16,24 @@ import { IsInt, Max, Min } from 'class-validator';
  * decorators never reach the client bundle.
  */
 
-/* ── request DTOs (validated + documented) ─────────────────────────── */
-
-/* ── entity-backed response DTOs (mirrors of the drizzle entities) ── */
-
 export class UserDto {
   @ApiProperty({ format: 'uuid' })
   id!: string;
 
   @ApiProperty({ type: String, format: 'date-time' })
-  created_at!: Date; // ISO string over the wire
+  created_at!: Date;
 
   @ApiProperty({ type: String, format: 'date-time' })
-  updated_at!: Date; // ISO string over the wire
+  updated_at!: Date;
 
   @ApiProperty({ example: 'user' })
   role!: 'user' | 'admin';
 }
 
-/* ── computed responses (no entity exists) ─────────────────────────── */
-
 export class HealthDto {
   @ApiProperty({ example: 'ok' })
   status!: string;
 }
-
-/* ── external itch.io data (third-party, no entity) ────────────────── */
 
 /** GET /itch/me */
 export class ItchProfileDto {
@@ -79,10 +71,10 @@ export class PaymentDto {
   id!: string;
 
   @ApiProperty({ type: String, format: 'date-time' })
-  created_at!: Date; // ISO string over the wire
+  created_at!: Date;
 
   @ApiProperty({ type: String, format: 'date-time' })
-  updated_at!: Date; // ISO string over the wire
+  updated_at!: Date;
 
   @ApiProperty({ format: 'uuid' })
   user_id!: string;
@@ -169,7 +161,7 @@ export class PaymentDto {
   billing_country!: string | null;
 
   @ApiProperty({ type: Date, nullable: true, format: 'date-time' })
-  purchased_at!: Date | null; // ISO string over the wire
+  purchased_at!: Date | null;
 
   @ApiProperty({ type: Number, nullable: true, description: 'Gross amount in cents.' })
   amount_cents!: number | null;

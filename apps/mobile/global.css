@@ -10,8 +10,6 @@
       --accent-foreground: #ffffff;
     }
     @variant dark {
-      /* itch-flavored dark: deep warm blacks instead of stock gray, accent
-       * lifted slightly so it holds contrast on the darker base. */
       --background: oklch(0.14 0.012 25);
       --foreground: oklch(0.96 0.003 25);
 

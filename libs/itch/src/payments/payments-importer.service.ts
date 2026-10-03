@@ -11,7 +11,6 @@ export interface PaymentsImportSummary {
   skipped: number;
 }
 
-/** CSV-mapped fields that may change between exports (diffed on import). */
 const UPDATABLE_FIELDS = [
   'object_name',
   'amount',
@@ -43,13 +42,6 @@ const UPDATABLE_FIELDS = [
   'billing_country',
 ] as const;
 
-/**
- * Maps itch.io dashboard export-purchases CSV rows into the shared payments
- * table. All data access goes through the shared PaymentsService's inherited
- * calls (findMany/create/update); this service only owns the CSV→row
- * mapping, deduplication and change detection (e.g. payout state changes
- * between exports).
- */
 @Injectable()
 export class PaymentsImporterService {
   constructor(private readonly paymentsService: PaymentsService) {}
@@ -102,7 +94,6 @@ export class PaymentsImporterService {
     };
   }
 
-  /** Fields that differ between the stored row and the fresh CSV row. */
   private diff(
     current: { [key: string]: unknown },
     payload: { [key: string]: unknown },

@@ -41,7 +41,6 @@ const CSV_FIELDS = [
   'billing_country',
 ] as const;
 
-/** RFC-4180-ish CSV splitter: quoted fields, escaped quotes, CRLF. */
 export function splitCsv(csv: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -104,14 +103,12 @@ const toCents = (amount: string | null): number | null => {
 const toTimestamp = (value: string | null): Date | null => {
   if (!value) return null;
 
-  // itch export format: "2026-08-23 19:45:22 UTC"
   const iso = value.trim().replace(' UTC', 'Z').replace(' ', 'T');
   const date = new Date(iso);
 
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
-/** Parses an itch.io dashboard export-purchases CSV into payment rows. */
 export function parsePaymentsCsv(csv: string): ParsedPaymentsCsv {
   const matrix = splitCsv(csv.replace(/^\uFEFF/, ''));
   const malformed = matrix.filter((row) => row.length < 2).length;

@@ -1,34 +1,35 @@
 import '../../global.css';
 
-import type { PaymentDto, PaymentsSummaryDto } from '@itch/protocol';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Card } from 'heroui-native/card';
 import { Typography } from 'heroui-native/text';
 import { useMemo } from 'react';
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import {
-  queryKeys,
-  useImportPayments,
-  useItchProfile,
-  usePayments,
-  usePaymentsSummary,
-} from '../api/queries';
-import { Button } from '../components/ui/button';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { queryKeys, useImportPayments, useItchProfile, usePayments, usePaymentsSummary } from '../api/queries';
+import type { PaymentDto, PaymentsSummaryDto } from '@itch/protocol';
 import { FileInput } from '../components/ui/file-input';
+import { Button } from '../components/ui/button';
 import { useAuth } from '../providers/auth.provider';
 
 function HeroBackground() {
   return (
-    <Svg height="100%" style={StyleSheet.absoluteFill} viewBox="0 0 400 260" width="100%">
+    <Svg
+      height="100%"
+      preserveAspectRatio="xMidYMid slice"
+      style={StyleSheet.absoluteFill}
+      viewBox="0 0 400 300"
+      width="100%"
+    >
       <Defs>
         <LinearGradient id="hero" x1="0" x2="1" y1="0" y2="1">
           <Stop offset="0" stopColor="#ff8a7a" />
-          <Stop offset="1" stopColor="#fa5c5c" />
+          <Stop offset="1" stopColor="#e14b4b" />
         </LinearGradient>
       </Defs>
-      <Rect fill="url(#hero)" height="260" rx="0" width="400" x="0" y="0" />
+      <Rect fill="url(#hero)" height="300" width="400" x="0" y="0" />
     </Svg>
   );
 }
@@ -49,28 +50,31 @@ function Avatar({ uri, name }: { uri: string | null; name: string }) {
 
 function Hero({ userId }: { userId: string | null }) {
   const { itchToken } = useAuth();
+  const insets = useSafeAreaInsets();
   const itchProfile = useItchProfile(userId, itchToken);
   const name = itchProfile.data?.display_name ?? itchProfile.data?.username ?? 'itch';
 
   return (
-    <View className="h-52">
+    <View style={[styles.hero, { paddingTop: insets.top + 12 }]}>
       <HeroBackground />
 
-      <View className="flex-row items-start justify-between px-6 pt-16">
-        <View className="flex-row items-center gap-3">
-          <Avatar uri={itchProfile.data?.avatar_url ?? null} name={name} />
+      <View className="flex-row items-center justify-between px-6">
+        <View className="flex-row items-center gap-3.5">
+          <View className="rounded-full border-2 border-white/40">
+            <Avatar uri={itchProfile.data?.avatar_url ?? null} name={name} />
+          </View>
           <View>
             <Typography.Heading type="h3" className="text-white">
               {name}
             </Typography.Heading>
-            <Typography type="body-xs" className="text-white/80">
+            <Typography type="body-xs" className="text-white/75">
               itch.io developer
             </Typography>
           </View>
         </View>
 
-        <Pressable accessibilityRole="button" className="rounded-full bg-white/20 p-2">
-          <Typography className="text-white">⚙︎</Typography>
+        <Pressable accessibilityRole="button" className="h-10 w-10 items-center justify-center rounded-full bg-white/25 active:bg-white/40">
+          <Typography className="text-base text-white">⚙︎</Typography>
         </Pressable>
       </View>
     </View>
@@ -89,26 +93,22 @@ function HeadlineMetrics({ summary }: { summary: PaymentsSummaryDto | undefined 
   };
 
   return (
-    <View className="flex-row flex-wrap gap-3 px-6">
-      <Card className="min-w-[45%] flex-1">
-        <Card.Body>
+    <View className="-mt-10 flex-row gap-3 px-6">
+      <Card className="flex-1 overflow-hidden rounded-2xl bg-surface shadow-sm">
+        <Card.Body className="gap-0.5">
           <Typography type="body-xs" className="text-muted">
             Gross revenue
           </Typography>
-          {primaryRevenue ? (
-            <Typography.Heading type="h3" className="text-foreground">
-              {formatRevenue(primaryRevenue.currency, primaryRevenue.amount_cents)}
-            </Typography.Heading>
-          ) : (
-            <Typography.Heading type="h3" className="text-foreground">
-              —
-            </Typography.Heading>
-          )}
+          <Typography.Heading type="h3" className="text-foreground">
+            {primaryRevenue
+              ? formatRevenue(primaryRevenue.currency, primaryRevenue.amount_cents)
+              : '—'}
+          </Typography.Heading>
         </Card.Body>
       </Card>
 
-      <Card className="min-w-[45%] flex-1">
-        <Card.Body>
+      <Card className="flex-1 overflow-hidden rounded-2xl bg-surface shadow-sm">
+        <Card.Body className="gap-0.5">
           <Typography type="body-xs" className="text-muted">
             Payments
           </Typography>
@@ -121,7 +121,7 @@ function HeadlineMetrics({ summary }: { summary: PaymentsSummaryDto | undefined 
   );
 }
 
-function PaymentRow({ payment }: { payment: PaymentDto }) {
+function PaymentRow({ payment, isLast }: { payment: PaymentDto; isLast: boolean }) {
   const date = payment.purchased_at
     ? new Date(payment.purchased_at).toLocaleDateString('en', {
         day: 'numeric',
@@ -131,7 +131,9 @@ function PaymentRow({ payment }: { payment: PaymentDto }) {
     : null;
 
   return (
-    <View className="flex-row items-center justify-between border-b border-border px-6 py-3">
+    <View
+      className={`flex-row items-center justify-between px-4 py-3.5${isLast ? '' : ' border-b border-border'}`}
+    >
       <View className="flex-1">
         <Typography type="body-sm" className="text-foreground">
           {payment.object_name ?? 'Payment'}
@@ -148,26 +150,27 @@ function PaymentRow({ payment }: { payment: PaymentDto }) {
   );
 }
 
-/** itch.io's API hides revenue; users pick the dashboard CSV export. */
-function PaymentsSyncCard({ userId }: { userId: string }) {
+function PaymentsSyncCard() {
   const importMutation = useImportPayments();
 
   return (
-    <Card className="mx-6 my-3">
+    <Card className="mx-6 my-3 rounded-2xl bg-surface shadow-sm">
       <Card.Body className="gap-2">
         <Typography className="text-foreground">Sync purchases</Typography>
         <Typography type="body-xs" className="text-muted">
           itch.io's API doesn't expose revenue. Download the CSV from
-          itch.io/dashboard/export-purchases/all, then pick it here (deduplicated automatically).
+          itch.io/dashboard/export-purchases/all, then pick it here
+          (deduplicated automatically).
         </Typography>
         <FileInput
           isDisabled={importMutation.isPending}
-          onFile={(file) => importMutation.mutate({ userId, csv: file.text })}
+          onFile={(file) => importMutation.mutate(file.text)}
         />
         {importMutation.isSuccess ? (
           <Typography type="body-xs" className="text-muted">
-            Imported {importMutation.data?.imported ?? 0} new · {importMutation.data?.updated ?? 0}{' '}
-            updated · {importMutation.data?.skipped ?? 0} unchanged
+            Imported {importMutation.data?.imported ?? 0} new ·{' '}
+            {importMutation.data?.updated ?? 0} updated ·{' '}
+            {importMutation.data?.skipped ?? 0} unchanged
           </Typography>
         ) : null}
         {importMutation.isError ? (
@@ -183,15 +186,18 @@ function PaymentsSyncCard({ userId }: { userId: string }) {
 export function DashboardScreen() {
   const { user, logout } = useAuth();
   const userId = user?.id ?? null;
-  const insets = useSafeAreaInsets();
   const payments = usePayments(userId);
   const summary = usePaymentsSummary(userId);
+  void summary;
 
-  const items = useMemo(() => payments.data?.pages.flatMap((page) => page) ?? [], [payments.data]);
+  const items = useMemo(
+    () => payments.data?.pages.flatMap((page) => page) ?? [],
+    [payments.data],
+  );
 
   const listFooter = (
     <View className="gap-4 pb-8">
-      {userId ? <PaymentsSyncCard userId={userId} /> : null}
+      <PaymentsSyncCard />
 
       <View className="px-6">
         <Button variant="secondary" onPress={logout}>
@@ -204,7 +210,7 @@ export function DashboardScreen() {
   return (
     <FlatList
       className="flex-1 bg-background"
-      contentContainerStyle={{ paddingBottom: insets.bottom }}
+      contentContainerStyle={{ paddingBottom: 8 }}
       data={items}
       keyExtractor={(payment) => payment.id}
       ListEmptyComponent={
@@ -218,13 +224,20 @@ export function DashboardScreen() {
       }
       ListFooterComponent={listFooter}
       ListHeaderComponent={
-        <View className="gap-6">
+        <View className="gap-5">
           <Hero userId={userId} />
+
           <HeadlineMetrics summary={summary.data} />
 
-          <Typography.Heading type="h4" className="px-6 text-foreground">
-            Payments
-          </Typography.Heading>
+          <View className="flex-row items-center justify-between px-6">
+            <Typography.Heading type="h4" className="text-foreground">
+              Payments
+            </Typography.Heading>
+            <Typography type="body-xs" className="text-muted">
+              {summary.data?.total ?? 0} total
+            </Typography.Heading>
+          </View>
+
         </View>
       }
       onEndReachedThreshold={0.4}
@@ -233,14 +246,24 @@ export function DashboardScreen() {
           void payments.fetchNextPage();
         }
       }}
-      refreshing={payments.isRefetching}
-      renderItem={({ item }) => <PaymentRow payment={item} />}
+      renderItem={({ item }) => (
+        <View className="mx-6 mb-2.5 overflow-hidden rounded-2xl bg-surface shadow-sm">
+          <PaymentRow payment={item} isLast />
+        </View>
+      )}
       onRefresh={() => void payments.refetch()}
+      refreshing={payments.isRefetching}
     />
   );
 }
 
 const styles = StyleSheet.create({
+  hero: {
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: 'hidden',
+    paddingBottom: 48,
+  },
   avatar: {
     backgroundColor: '#ffffff33',
     borderRadius: 999,

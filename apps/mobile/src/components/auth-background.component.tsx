@@ -23,7 +23,6 @@ export function AuthBackground() {
     >
       <Rect fill={accent as string} height="1920" width="1080" x="0" y="0" />
 
-      {/* one huge mark, mostly off-canvas, top-right */}
       <Path
         d={LOGO_PATH}
         fill={accentForeground as string}
@@ -31,7 +30,6 @@ export function AuthBackground() {
         transform={SHAPE(430, -560, 8.5, 14)}
       />
 
-      {/* a second, darker echo, bottom-left */}
       <Path
         d={LOGO_PATH}
         fill={accentDeep as string}

@@ -3,11 +3,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import type { ItchProfile, ItchRawProfile } from './itch.types';
 
-/**
- * itch.io client for OAuth'd users. The itch access token issued by the
- * implicit OAuth flow doubles as the API key for api.itch.io (Authorization:
- * Bearer), scoped by the grants the user approved.
- */
 @Injectable()
 export class ItchService {
   private readonly logger = new Logger(ItchService.name);
