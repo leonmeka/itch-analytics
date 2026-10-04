@@ -12,7 +12,6 @@ import {
   FlatList,
   Image,
   RefreshControl,
-  ScrollView,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,18 +24,17 @@ import {
   usePaymentsGraph,
   usePaymentsSummary,
 } from '../api/queries';
-import { AuthBackground } from '../components/auth-background.component';
-import { CashIcon, type CashIconName } from '../components/cash-icon.component';
+import { BottomNavigation, type NavigationTab } from '../components/bottom-navigation.component';
+import { CashIcon } from '../components/cash-icon.component';
 import {
   CashSection,
   CashState,
   PaymentRow,
   PaymentSkeletons,
 } from '../components/cash-ui.component';
-import { CountryHeatmap } from '../components/charts/country-heatmap.component';
-import { PieChart } from '../components/charts/pie-chart.component';
 import { StatCard } from '../components/charts/stat-card.component';
 import { TimeSeriesChart } from '../components/charts/time-series-chart.component';
+import { DashboardScrollView } from '../components/dashboard-scroll-view.component';
 import { PageHeader } from '../components/page-header.component';
 import {
   formatLastSynced,
@@ -46,23 +44,16 @@ import {
 } from '../components/payments-sync.component';
 import { Button } from '../components/ui/button';
 import { useAuth } from '../providers/auth.provider';
-import { formatDate, formatMoney, paymentSource } from '../utils/payments.format';
+import { formatDate, formatMoney } from '../utils/payments.format';
 import { AccountScreen } from './account.screen';
 import { ItchSyncScreen } from './itch-sync.screen';
 import { PaymentDetailScreen } from './payment-detail.screen';
-
-type Tab = 'Overview' | 'Payments' | 'Account';
-const tabs: { label: Tab; icon: CashIconName }[] = [
-  { label: 'Overview', icon: 'home' },
-  { label: 'Payments', icon: 'receipt' },
-  { label: 'Account', icon: 'account' },
-];
 
 export function DashboardScreen() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const profile = useOauthIdentity(userId);
-  const [tab, setTab] = useState<Tab>('Overview');
+  const [tab, setTab] = useState<NavigationTab>('Dashboard');
   const [detail, setDetail] = useState<PaymentDto | null>(null);
   const [syncOpen, setSyncOpen] = useState(false);
   const [syncPhase, setSyncPhase] = useState<PaymentsSyncPhase>('idle');
@@ -72,12 +63,7 @@ export function DashboardScreen() {
   const [search, setSearch] = useState('');
   const { theme } = useUniwind();
   const insets = useSafeAreaInsets();
-  const [foreground, muted, accent] = useCSSVariable([
-    '--cash-foreground',
-    '--cash-muted',
-    '--cash-accent',
-  ]) as string[];
-  const allSummary = usePaymentsSummary(userId);
+  const [foreground, muted] = useCSSVariable(['--cash-foreground', '--cash-muted']) as string[];
   const lastSynced = useLastSynced();
   const summary = usePaymentsSummary(userId, search ? { search } : undefined);
   const graph = usePaymentsGraph(userId, search ? { search } : undefined);
@@ -92,19 +78,14 @@ export function DashboardScreen() {
       }) ?? []
     );
   }, [payments.data]);
-  const navigate = (next: Tab) => {
+  const navigate = (next: NavigationTab) => {
     setTab(next);
     setDetail(null);
     setSyncOpen(false);
   };
   const startSync = () => syncRef.current?.start();
   const refresh = async () => {
-    await Promise.all([
-      allSummary.refetch(),
-      summary.refetch(),
-      graph.refetch(),
-      payments.refetch(),
-    ]);
+    await Promise.all([summary.refetch(), graph.refetch(), payments.refetch()]);
   };
   const busy = payments.isRefetching || summary.isRefetching || graph.isRefetching;
   useEffect(() => {
@@ -113,8 +94,8 @@ export function DashboardScreen() {
         setDetail(null);
         return true;
       }
-      if (tab !== 'Overview') {
-        setTab('Overview');
+      if (tab !== 'Dashboard') {
+        setTab('Dashboard');
         return true;
       }
       return false;
@@ -179,7 +160,13 @@ export function DashboardScreen() {
             alignSelf: 'center',
           }}
           refreshControl={
-            <RefreshControl refreshing={busy} onRefresh={() => void refresh()} tintColor={accent} />
+            <RefreshControl
+              refreshing={busy}
+              onRefresh={() => void refresh()}
+              tintColor={foreground}
+              colors={[foreground]}
+              progressViewOffset={insets.top}
+            />
           }
           ListHeaderComponent={
             <>
@@ -299,32 +286,32 @@ export function DashboardScreen() {
           }
         />
       ) : (
-        <ScrollView
-          key="overview"
-          showsVerticalScrollIndicator={false}
+        <DashboardScrollView
+          key="dashboard"
           refreshControl={
-            <RefreshControl refreshing={busy} onRefresh={() => void refresh()} tintColor={accent} />
+            <RefreshControl
+              refreshing={busy}
+              onRefresh={() => void refresh()}
+              tintColor={foreground}
+              colors={[foreground]}
+              progressViewOffset={insets.top}
+            />
           }
-          contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 28 }}
         >
           <View className="relative">
-            <View
-              className="absolute top-0 left-0 right-0"
-              pointerEvents="none"
-              style={{ height: insets.top + 240, marginTop: -insets.top }}
-            >
-              <AuthBackground bandHeight={insets.top + 240} />
-            </View>
             <View className="mx-auto w-full max-w-[640px] px-5 pb-3 pt-3">
               <View className="min-h-11 flex-row items-center justify-between">
                 <View className="flex-1">
-                  <Typography type="body-xs" className="text-cash-foreground">
+                  <Typography
+                    type="body-xs"
+                    className="text-[12px] leading-[16px] text-cash-foreground"
+                  >
                     {formatDate(new Date())}
                   </Typography>
                   <Typography
                     accessibilityRole="header"
                     numberOfLines={1}
-                    className="mt-0.5 text-[30px] font-medium leading-[38px] tracking-[-1px] text-cash-foreground"
+                    className="text-[30px] font-medium leading-[38px] tracking-[-1px] text-cash-foreground"
                   >
                     {profile.data?.username
                       ? `@${profile.data.username}`
@@ -403,7 +390,6 @@ export function DashboardScreen() {
                     <Skeleton className="h-[150px] flex-1 rounded-[24px]" />
                     <Skeleton className="h-[150px] flex-1 rounded-[24px]" />
                   </View>
-                  <Skeleton className="h-[130px] w-full rounded-[24px]" />
                 </>
               ) : graph.isError || !graph.data ? (
                 <Card className="rounded-[24px] bg-cash-surface shadow-none">
@@ -441,44 +427,8 @@ export function DashboardScreen() {
                       formatValue={formatMoney}
                     />
                   </View>
-                  <View className="gap-1 rounded-[24px] bg-cash-surface p-4">
-                    <Typography type="body-xs" className="text-cash-muted">
-                      Payment providers
-                    </Typography>
-                    {allSummary.isPending ? (
-                      <Skeleton className="h-[78px] w-full rounded-2xl" />
-                    ) : (
-                      <PieChart
-                        size={78}
-                        slices={(allSummary.data?.sources ?? []).map((entry) => ({
-                          label: paymentSource(entry.source === 'unknown' ? null : entry.source),
-                          value: entry.amount_cents,
-                        }))}
-                      />
-                    )}
-                  </View>
                 </>
               )}
-              <View>
-                <Card className="rounded-[24px] bg-cash-surface p-5 shadow-none">
-                  {allSummary.isPending ? (
-                    <Skeleton className="h-[180px] w-full rounded-2xl" />
-                  ) : allSummary.data?.countries.length ? (
-                    <CountryHeatmap
-                      countries={allSummary.data.countries.map((entry) => ({
-                        code: entry.country_code,
-                        value: entry.payments,
-                      }))}
-                    />
-                  ) : (
-                    <CashState
-                      title="No country data yet"
-                      description="Where your buyers are appears here once your purchases sync."
-                      icon="info"
-                    />
-                  )}
-                </Card>
-              </View>
               <View>
                 <CashSection
                   title="Recent payments"
@@ -502,41 +452,9 @@ export function DashboardScreen() {
               </View>
             </View>
           </View>
-        </ScrollView>
+        </DashboardScrollView>
       )}
-      <View
-        className="border-t border-cash-border bg-cash-surface px-5 pt-2"
-        style={{ paddingBottom: insets.bottom }}
-      >
-        <View className="mx-auto w-full max-w-[480px] flex-row">
-          {tabs.map((item) => (
-            <Button
-              key={item.label}
-              variant="ghost"
-              accessibilityRole="tab"
-              accessibilityLabel={item.label}
-              accessibilityState={{ selected: tab === item.label }}
-              onPress={() => navigate(item.label)}
-              className="h-[58px] flex-1 flex-col gap-1 rounded-2xl"
-            >
-              <View
-                className={`h-8 w-14 items-center justify-center rounded-full ${tab === item.label ? 'bg-cash-accent-soft' : ''}`}
-              >
-                <CashIcon
-                  name={item.icon}
-                  size={22}
-                  color={tab === item.label ? foreground : muted}
-                />
-              </View>
-              <Button.Label
-                className={`text-[11px] ${tab === item.label ? 'font-medium text-cash-foreground' : 'text-cash-muted'}`}
-              >
-                {item.label}
-              </Button.Label>
-            </Button>
-          ))}
-        </View>
-      </View>
+      <BottomNavigation selectedTab={tab} onSelect={navigate} />
       {syncOpen && userId ? (
         <ItchSyncScreen userId={userId} onClose={() => setSyncOpen(false)} />
       ) : null}

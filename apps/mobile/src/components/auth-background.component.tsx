@@ -10,10 +10,11 @@ const SHAPE = (x: number, y: number, scale: number, rotate: number) =>
 // Full-screen accent wash with a giant logo watermark. With `bandHeight`,
 // renders as a top band that fades into the page background (hero sections).
 export function AuthBackground({ bandHeight }: { bandHeight?: number } = {}) {
-  const [accent, accentForeground, background] = useCSSVariable([
+  const [accent, accentForeground, background, heroShade] = useCSSVariable([
     '--color-accent',
     '--color-accent-foreground',
     '--cash-background',
+    '--cash-hero-shade',
   ]);
 
   const frame = bandHeight
@@ -21,27 +22,37 @@ export function AuthBackground({ bandHeight }: { bandHeight?: number } = {}) {
     : { top: 0, left: 0, right: 0, bottom: 0 };
 
   return (
-    <Svg
-      preserveAspectRatio="xMidYMid slice"
-      style={{ position: 'absolute', ...frame }}
-      viewBox="0 0 1080 1920"
-    >
-      <Rect fill={accent as string} height="1920" width="1080" x="0" y="0" />
-      <Path
-        d={LOGO_PATH}
-        fill={accentForeground as string}
-        opacity="0.1"
-        transform={SHAPE(0, -200, 8, 20)}
-      />
+    <>
+      <Svg
+        preserveAspectRatio="xMidYMid slice"
+        style={{ position: 'absolute', ...frame }}
+        viewBox="0 0 1080 1920"
+      >
+        <Rect fill={accent as string} height="1920" width="1080" x="0" y="0" />
+        <Path
+          d={LOGO_PATH}
+          fill={accentForeground as string}
+          opacity="0.1"
+          transform={SHAPE(0, -200, 8, 20)}
+        />
+      </Svg>
       {bandHeight ? (
-        <Defs>
-          <LinearGradient id="hero-fade" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0.55" stopColor={background as string} stopOpacity={0} />
-            <Stop offset="1" stopColor={background as string} stopOpacity={1} />
-          </LinearGradient>
-        </Defs>
+        <Svg pointerEvents="none" style={{ position: 'absolute', ...frame }}>
+          <Defs>
+            <LinearGradient id="hero-depth" x1="100%" y1="0%" x2="0%" y2="100%">
+              <Stop offset="0" stopColor={heroShade as string} stopOpacity={0.7} />
+              <Stop offset="0.55" stopColor={heroShade as string} stopOpacity={0.2} />
+              <Stop offset="1" stopColor={heroShade as string} stopOpacity={0} />
+            </LinearGradient>
+            <LinearGradient id="hero-fade" x1="0%" y1="0%" x2="0%" y2="100%">
+              <Stop offset="0.45" stopColor={background as string} stopOpacity={0} />
+              <Stop offset="1" stopColor={background as string} stopOpacity={1} />
+            </LinearGradient>
+          </Defs>
+          <Rect fill="url(#hero-depth)" height="100%" width="100%" />
+          <Rect fill="url(#hero-fade)" height="100%" width="100%" />
+        </Svg>
       ) : null}
-      {bandHeight ? <Rect fill="url(#hero-fade)" height="1920" width="1080" x="0" y="0" /> : null}
-    </Svg>
+    </>
   );
 }

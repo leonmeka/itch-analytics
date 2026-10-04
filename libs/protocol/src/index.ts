@@ -136,6 +136,17 @@ export class PaymentDto {
   amount_cents!: number | null;
 }
 
+export class CreatorDto {
+  @ApiProperty({ format: 'uuid' })
+  user_id!: string;
+
+  @ApiProperty({ description: "Creator's itch.io username." })
+  username!: string;
+
+  @ApiProperty({ example: 500500, description: 'Gross revenue in USD cents.' })
+  revenue_cents!: number;
+}
+
 export class PaymentSourceDto {
   @ApiProperty({ example: 'stripe' })
   source!: string;

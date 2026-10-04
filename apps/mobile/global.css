@@ -56,6 +56,7 @@
     --cash-accent-ink: #201012;
     @variant light {
       --cash-background: #f5f5f5;
+      --cash-hero-shade: #982f3e;
       --cash-surface: #ffffff;
       --cash-foreground: #121212;
       --cash-muted: #707070;
@@ -66,6 +67,7 @@
     }
     @variant dark {
       --cash-background: #101010;
+      --cash-hero-shade: #170b10;
       --cash-surface: #1c1c1c;
       --cash-foreground: #f7f7f7;
       --cash-muted: #a0a0a0;
