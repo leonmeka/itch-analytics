@@ -8,7 +8,6 @@ export type NavigationTab = 'Home' | 'Payments' | 'Creators' | 'Settings';
 
 const tabs: { label: NavigationTab; icon: CashIconName }[] = [
   { label: 'Home', icon: 'home' },
-  { label: 'Payments', icon: 'receipt' },
   { label: 'Creators', icon: 'users' },
   { label: 'Settings', icon: 'settings' },
 ];
