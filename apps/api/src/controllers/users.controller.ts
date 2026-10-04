@@ -7,6 +7,7 @@ import {
   PaymentsImportResultDto,
   PaymentsSummaryDto,
   UserDto,
+  UserWithRevenueDto,
 } from '@itch/protocol';
 import {
   BadRequestException,
@@ -42,6 +43,12 @@ export class UsersController {
     private readonly paymentsImporterService: PaymentsImporterService,
     private readonly oauthIdentitiesService: OAuthIdentitiesService,
   ) {}
+
+  @Get()
+  @UseGuards(AuthGuard)
+  async list(@Query() pagination: PaginationDto): Promise<UserWithRevenueDto[]> {
+    return this.usersService.getUsersWithRevenue(pagination.limit, pagination.offset);
+  }
 
   @Get(':user_id')
   @UseGuards(AuthGuard)

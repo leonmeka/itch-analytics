@@ -1,4 +1,5 @@
 import type {
+  CreatorDto,
   OauthIdentityDto,
   PaymentDto,
   PaymentsFilterDto,
@@ -18,10 +19,12 @@ export const queryKeys = {
   payments: ['payments'] as const,
   paymentsSummary: ['payments-summary'] as const,
   paymentsGraph: ['payments-graph'] as const,
+  creators: ['creators'] as const,
   lastSynced: ['last-synced'] as const,
 };
 
 export const PAYMENTS_PAGE_SIZE = 20;
+export const CREATORS_PAGE_SIZE = 20;
 
 export function useHealth() {
   return useQuery({
@@ -91,6 +94,22 @@ export function usePayments(userId: string | null, filters: Partial<PaymentsFilt
       return pages.reduce((offset, page) => offset + page.length, 0);
     },
     enabled: userId != null,
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+export function useCreators() {
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.creators, CREATORS_PAGE_SIZE] as const,
+    queryFn: ({ pageParam }) =>
+      apiClient.creators(CREATORS_PAGE_SIZE, pageParam as number) as Promise<CreatorDto[]>,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, pages) => {
+      if (lastPage.length < CREATORS_PAGE_SIZE) return undefined;
+
+      return pages.reduce((offset, page) => offset + page.length, 0);
+    },
     staleTime: 60_000,
     retry: false,
   });

@@ -1,5 +1,6 @@
 import type {
   AuthTokenResponseDto,
+  CreatorDto,
   OauthIdentityDto,
   PaymentDto,
   PaymentsFilterDto,
@@ -63,4 +64,6 @@ export const apiClient = {
     ),
   payment: (userId: string, paymentId: string) =>
     authedFetch<PaymentDto>(`/users/${userId}/payments/${paymentId}`),
+  creators: (limit: number, offset: number) =>
+    authedFetch<CreatorDto[]>(`/creators?${searchParams({ limit, offset })}`),
 };

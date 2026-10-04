@@ -136,11 +136,11 @@ export class PaymentDto {
   amount_cents!: number | null;
 }
 
-export class CreatorDto {
+export class UserWithRevenueDto {
   @ApiProperty({ format: 'uuid' })
-  user_id!: string;
+  id!: string;
 
-  @ApiProperty({ description: "Creator's itch.io username." })
+  @ApiProperty({ description: "User's itch.io username." })
   username!: string;
 
   @ApiProperty({ example: 500500, description: 'Gross revenue in USD cents.' })

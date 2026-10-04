@@ -9,4 +9,8 @@ export class UsersService extends BaseService<User, CreateUser, UpdateUser, User
   constructor(protected readonly usersRepository: UsersRepository) {
     super(usersRepository);
   }
+
+  getUsersWithRevenue(limit: number, offset: number) {
+    return this.usersRepository.getUsersWithRevenue(limit, offset);
+  }
 }
