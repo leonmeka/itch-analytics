@@ -23,6 +23,7 @@ export class UsersRepository extends BaseRepository<
       .select({
         id: schema.usersTable.id,
         username: schema.oauthIdentitiesTable.username,
+        avatar_url: schema.oauthIdentitiesTable.avatar_url,
         revenue_cents: sql<number>`coalesce(sum(${schema.paymentsTable.amount_cents}), 0)::double precision`,
       })
       .from(schema.usersTable)
@@ -40,7 +41,11 @@ export class UsersRepository extends BaseRepository<
           ne(schema.oauthIdentitiesTable.username, ''),
         ),
       )
-      .groupBy(schema.usersTable.id, schema.oauthIdentitiesTable.username)
+      .groupBy(
+        schema.usersTable.id,
+        schema.oauthIdentitiesTable.username,
+        schema.oauthIdentitiesTable.avatar_url,
+      )
       .orderBy(
         desc(sql`coalesce(sum(${schema.paymentsTable.amount_cents}), 0)`),
         asc(schema.oauthIdentitiesTable.username),

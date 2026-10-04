@@ -1,9 +1,10 @@
 import type { UserWithRevenueDto } from '@itch/protocol';
 import { Typography } from 'heroui-native/text';
 import { useMemo } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
+import RedLogo from '../../assets/itch-logo-red.svg';
 import { useCreators } from '../api/queries';
 import { CashIcon } from '../components/cash-icon.component';
 import { CashState, PaymentSkeletons } from '../components/cash-ui.component';
@@ -27,8 +28,19 @@ function CreatorRow({
       accessibilityRole="button"
       accessibilityLabel={`@${creator.username}, gross revenue ${formatMoney(creator.revenue_cents)}. View profile.`}
       onPress={onPress}
-      className={`min-h-[64px] flex-row items-center justify-between gap-3 px-4 py-3 ${last ? '' : 'border-b border-cash-border'}`}
+      className={`min-h-[64px] flex-row items-center gap-3 px-4 py-3 ${last ? '' : 'border-b border-cash-border'}`}
     >
+      {creator.avatar_url ? (
+        <Image
+          source={{ uri: creator.avatar_url }}
+          accessibilityLabel={`@${creator.username}'s itch.io avatar`}
+          className="h-11 w-11 rounded-full bg-cash-well"
+        />
+      ) : (
+        <View className="h-11 w-11 items-center justify-center rounded-full bg-cash-accent-soft">
+          <RedLogo width={23} height={21} />
+        </View>
+      )}
       <Typography numberOfLines={1} className="flex-1 text-[15px] font-medium text-cash-foreground">
         @{creator.username}
       </Typography>

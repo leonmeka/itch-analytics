@@ -143,6 +143,9 @@ export class UserWithRevenueDto {
   @ApiProperty({ description: "User's itch.io username." })
   username!: string;
 
+  @ApiProperty({ type: String, nullable: true, format: 'url' })
+  avatar_url!: string | null;
+
   @ApiProperty({ example: 500500, description: 'Gross revenue in USD cents.' })
   revenue_cents!: number;
 }
