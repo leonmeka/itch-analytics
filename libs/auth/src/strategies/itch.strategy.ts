@@ -52,7 +52,7 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
     const displayName = typeof rawUser.display_name === 'string' ? rawUser.display_name : undefined;
     const urlName = typeof rawUser.url_name === 'string' ? rawUser.url_name : undefined;
     const avatarUrl =
-      typeof rawUser.avatar_url === 'string' && rawUser.avatar_url ? rawUser.avatar_url : undefined;
+      typeof rawUser.cover_url === 'string' && rawUser.cover_url ? rawUser.cover_url : undefined;
 
     const existing = await this.oauthIdentitiesService.find({
       where: and(

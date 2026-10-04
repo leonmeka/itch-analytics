@@ -41,9 +41,6 @@ export class OauthIdentityDto {
   provider_user_id!: string;
 
   @ApiProperty({ type: String, nullable: true })
-  email!: string | null;
-
-  @ApiProperty({ type: String, nullable: true })
   username!: string | null;
 
   @ApiProperty({ type: String, nullable: true })

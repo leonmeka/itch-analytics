@@ -43,6 +43,13 @@
       "when": 1791065640939,
       "tag": "0005_charming_trauma",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791144554379,
+      "tag": "0006_empty_tattoo",
+      "breakpoints": true
     }
   ]
 }
