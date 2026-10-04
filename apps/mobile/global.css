@@ -54,9 +54,10 @@
   :root {
     --cash-accent: #fa5c5c;
     --cash-accent-ink: #201012;
+    --cash-hero-foreground: #ffffff;
     @variant light {
       --cash-background: #f5f5f5;
-      --cash-hero-shade: #982f3e;
+      --cash-hero-shade: #7e2433;
       --cash-surface: #ffffff;
       --cash-foreground: #121212;
       --cash-muted: #707070;
@@ -88,5 +89,6 @@
   --color-cash-accent: var(--cash-accent);
   --color-cash-accent-ink: var(--cash-accent-ink);
   --color-cash-accent-soft: var(--cash-accent-soft);
+  --color-cash-hero-foreground: var(--cash-hero-foreground);
   --color-cash-link: var(--cash-link);
 }

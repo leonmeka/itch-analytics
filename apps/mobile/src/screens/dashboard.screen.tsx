@@ -27,6 +27,7 @@ import {
 import { BottomNavigation, type NavigationTab } from '../components/bottom-navigation.component';
 import { CashIcon } from '../components/cash-icon.component';
 import {
+  CashIconButton,
   CashSection,
   CashState,
   PaymentRow,
@@ -35,7 +36,6 @@ import {
 import { StatCard } from '../components/charts/stat-card.component';
 import { TimeSeriesChart } from '../components/charts/time-series-chart.component';
 import { DashboardScrollView } from '../components/dashboard-scroll-view.component';
-import { PageHeader } from '../components/page-header.component';
 import {
   formatLastSynced,
   PaymentsSync,
@@ -180,27 +180,37 @@ export function DashboardScreen() {
           }
           ListHeaderComponent={
             <>
-              <PageHeader title="Payments">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-11 rounded-full bg-cash-surface px-4"
-                  accessibilityLabel="Sync purchases"
-                  isDisabled={syncPhase === 'running'}
-                  onPress={startSync}
-                >
-                  <CashIcon name="sync" size={17} />
-                  <Button.Label className="text-cash-foreground">
-                    {syncPhase === 'running'
-                      ? 'Syncing…'
-                      : syncPhase === 'error'
-                        ? 'Sync failed'
-                        : lastSynced.data
-                          ? `Sync · ${formatLastSynced(lastSynced.data)}`
-                          : 'Sync now'}
-                  </Button.Label>
-                </Button>
-              </PageHeader>
+              <View className="mx-auto w-full max-w-[640px] px-5">
+                <View className="flex-row items-center gap-3 py-3">
+                  <CashIconButton
+                    name="back"
+                    label="Back to home"
+                    onPress={() => navigate('Home')}
+                  />
+                  <Typography className="flex-1 text-[20px] font-medium text-cash-foreground">
+                    Payments
+                  </Typography>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-11 rounded-full bg-cash-surface px-4"
+                    accessibilityLabel="Sync purchases"
+                    isDisabled={syncPhase === 'running'}
+                    onPress={startSync}
+                  >
+                    <CashIcon name="sync" size={17} />
+                    <Button.Label className="text-cash-foreground">
+                      {syncPhase === 'running'
+                        ? 'Syncing…'
+                        : syncPhase === 'error'
+                          ? 'Sync failed'
+                          : lastSynced.data
+                            ? `Sync · ${formatLastSynced(lastSynced.data)}`
+                            : 'Sync now'}
+                    </Button.Label>
+                  </Button>
+                </View>
+              </View>
               <View className="gap-5 px-5 pb-5">
                 {userId ? (
                   <PaymentsSync
@@ -314,14 +324,14 @@ export function DashboardScreen() {
                 <View className="flex-1">
                   <Typography
                     type="body-xs"
-                    className="text-[12px] leading-[16px] text-cash-foreground"
+                    className="text-[12px] leading-[16px] text-cash-hero-foreground"
                   >
                     {formatDate(new Date())}
                   </Typography>
                   <Typography
                     accessibilityRole="header"
                     numberOfLines={1}
-                    className="text-[30px] font-medium leading-[38px] tracking-[-1px] text-cash-foreground"
+                    className="text-[30px] font-medium leading-[38px] tracking-[-1px] text-cash-hero-foreground"
                   >
                     {profile.data?.username
                       ? `@${profile.data.username}`
