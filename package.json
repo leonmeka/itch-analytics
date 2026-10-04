@@ -11,6 +11,7 @@
     "build": "nest build api",
     "db:migrate": "pnpm --filter @itch/shared run migrate",
     "db:apply": "pnpm --filter @itch/shared run apply",
+    "db:seed": "pnpm --filter @itch/shared run seed",
     "db:studio": "pnpm --filter @itch/shared run studio",
     "mobile": "dotenv -e .env -- pnpm --filter @itch/mobile run start",
     "mobile:ios": "dotenv -e .env -- pnpm --filter @itch/mobile run run:ios",

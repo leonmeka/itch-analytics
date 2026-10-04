@@ -4,13 +4,13 @@ import { useCSSVariable } from 'uniwind';
 import { CashIcon, type CashIconName } from './cash-icon.component';
 import { Button } from './ui/button';
 
-export type NavigationTab = 'Dashboard' | 'Payments' | 'Creators' | 'Account';
+export type NavigationTab = 'Home' | 'Payments' | 'Creators' | 'Settings';
 
 const tabs: { label: NavigationTab; icon: CashIconName }[] = [
-  { label: 'Dashboard', icon: 'home' },
+  { label: 'Home', icon: 'home' },
   { label: 'Payments', icon: 'receipt' },
   { label: 'Creators', icon: 'users' },
-  { label: 'Account', icon: 'account' },
+  { label: 'Settings', icon: 'settings' },
 ];
 
 export function BottomNavigation({

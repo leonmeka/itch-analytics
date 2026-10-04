@@ -45,17 +45,19 @@ import {
 import { Button } from '../components/ui/button';
 import { useAuth } from '../providers/auth.provider';
 import { formatDate, formatMoney } from '../utils/payments.format';
-import { AccountScreen } from './account.screen';
+import { CreatorScreen } from './creator.screen';
 import { CreatorsScreen } from './creators.screen';
 import { ItchSyncScreen } from './itch-sync.screen';
 import { PaymentDetailScreen } from './payment-detail.screen';
+import { SettingsScreen } from './settings.screen';
 
 export function DashboardScreen() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const profile = useOauthIdentity(userId);
-  const [tab, setTab] = useState<NavigationTab>('Dashboard');
+  const [tab, setTab] = useState<NavigationTab>('Home');
   const [detail, setDetail] = useState<PaymentDto | null>(null);
+  const [creatorId, setCreatorId] = useState<string | null>(null);
   const [syncOpen, setSyncOpen] = useState(false);
   const [syncPhase, setSyncPhase] = useState<PaymentsSyncPhase>('idle');
   const syncRef = useRef<PaymentsSyncHandle>(null);
@@ -82,6 +84,7 @@ export function DashboardScreen() {
   const navigate = (next: NavigationTab) => {
     setTab(next);
     setDetail(null);
+    setCreatorId(null);
     setSyncOpen(false);
   };
   const startSync = () => syncRef.current?.start();
@@ -95,14 +98,18 @@ export function DashboardScreen() {
         setDetail(null);
         return true;
       }
-      if (tab !== 'Dashboard') {
-        setTab('Dashboard');
+      if (creatorId) {
+        setCreatorId(null);
+        return true;
+      }
+      if (tab !== 'Home') {
+        setTab('Home');
         return true;
       }
       return false;
     });
     return () => subscription.remove();
-  }, [detail, tab]);
+  }, [creatorId, detail, tab]);
   const paymentsState = payments.isPending ? (
     <PaymentSkeletons />
   ) : payments.isError ? (
@@ -139,16 +146,16 @@ export function DashboardScreen() {
         <View className="flex-1" style={{ paddingTop: insets.top }}>
           <PaymentDetailScreen payment={detail} onBack={() => setDetail(null)} />
         </View>
-      ) : tab === 'Account' ? (
+      ) : creatorId ? (
         <View className="flex-1" style={{ paddingTop: insets.top }}>
-          <AccountScreen
-            profile={profile.data}
-            profileFailed={profile.isError || (profile.isSuccess && !profile.data)}
-            retryProfile={() => void profile.refetch()}
-          />
+          <CreatorScreen userId={creatorId} onBack={() => setCreatorId(null)} />
+        </View>
+      ) : tab === 'Settings' ? (
+        <View className="flex-1" style={{ paddingTop: insets.top }}>
+          <SettingsScreen />
         </View>
       ) : tab === 'Creators' ? (
-        <CreatorsScreen />
+        <CreatorsScreen onSelect={setCreatorId} />
       ) : tab === 'Payments' ? (
         <FlatList
           data={items}
@@ -325,8 +332,10 @@ export function DashboardScreen() {
                   isIconOnly
                   variant="ghost"
                   className="h-11 w-11 rounded-full bg-cash-surface p-0"
-                  accessibilityLabel="Open your account"
-                  onPress={() => navigate('Account')}
+                  accessibilityLabel="Open your creator profile"
+                  onPress={() => {
+                    if (userId) setCreatorId(userId);
+                  }}
                 >
                   {profile.data?.avatar_url ? (
                     <Image
@@ -434,7 +443,7 @@ export function DashboardScreen() {
               )}
               <View>
                 <CashSection
-                  title="Recent payments"
+                  title="Payments"
                   action="See all"
                   onPress={() => navigate('Payments')}
                 />

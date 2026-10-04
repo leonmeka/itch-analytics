@@ -1,4 +1,4 @@
-import type { UserWithRevenueDto } from '@itch/protocol';
+import type { UserProfileDto, UserWithRevenueDto } from '@itch/protocol';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, isNotNull, ne, sql } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -49,5 +49,34 @@ export class UsersRepository extends BaseRepository<
       .offset(offset);
 
     return result as UserWithRevenueDto[];
+  }
+
+  async getUserProfile(userId: string): Promise<UserProfileDto | null> {
+    const [profile] = await this.database
+      .select({
+        user_id: schema.usersTable.id,
+        username: schema.oauthIdentitiesTable.username,
+        name: schema.oauthIdentitiesTable.name,
+        avatar_url: schema.oauthIdentitiesTable.avatar_url,
+        revenue_cents: sql<number>`coalesce(sum(${schema.paymentsTable.amount_cents}), 0)::double precision`,
+      })
+      .from(schema.usersTable)
+      .innerJoin(
+        schema.oauthIdentitiesTable,
+        and(
+          eq(schema.oauthIdentitiesTable.user_id, schema.usersTable.id),
+          eq(schema.oauthIdentitiesTable.provider, OAuthProvider.Itch),
+        ),
+      )
+      .leftJoin(schema.paymentsTable, eq(schema.paymentsTable.user_id, schema.usersTable.id))
+      .where(eq(schema.usersTable.id, userId))
+      .groupBy(
+        schema.usersTable.id,
+        schema.oauthIdentitiesTable.username,
+        schema.oauthIdentitiesTable.name,
+        schema.oauthIdentitiesTable.avatar_url,
+      );
+
+    return profile ?? null;
   }
 }

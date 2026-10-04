@@ -7,6 +7,7 @@ import {
   PaymentsImportResultDto,
   PaymentsSummaryDto,
   UserDto,
+  UserProfileDto,
   UserWithRevenueDto,
 } from '@itch/protocol';
 import {
@@ -69,6 +70,18 @@ export class UsersController {
     }
 
     return user;
+  }
+
+  @Get(':user_id/profile')
+  @UseGuards(AuthGuard)
+  async profile(@Param('user_id') userId: string): Promise<UserProfileDto> {
+    const profile = await this.usersService.getUserProfile(userId);
+
+    if (!profile) {
+      throw new NotFoundException(`User ${userId} not found`);
+    }
+
+    return profile;
   }
 
   @Get(':user_id/payments')

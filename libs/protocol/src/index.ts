@@ -147,6 +147,23 @@ export class UserWithRevenueDto {
   revenue_cents!: number;
 }
 
+export class UserProfileDto {
+  @ApiProperty({ format: 'uuid' })
+  user_id!: string;
+
+  @ApiProperty({ type: String, nullable: true })
+  username!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  name!: string | null;
+
+  @ApiProperty({ type: String, nullable: true, format: 'url' })
+  avatar_url!: string | null;
+
+  @ApiProperty({ example: 500500, description: 'Gross revenue in USD cents.' })
+  revenue_cents!: number;
+}
+
 export class PaymentSourceDto {
   @ApiProperty({ example: 'stripe' })
   source!: string;

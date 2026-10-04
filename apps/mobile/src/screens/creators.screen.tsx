@@ -5,32 +5,48 @@ import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
 import { useCreators } from '../api/queries';
+import { CashIcon } from '../components/cash-icon.component';
 import { CashState, PaymentSkeletons } from '../components/cash-ui.component';
 import { PageHeader } from '../components/page-header.component';
+import { PressableFeedback } from '../components/pressable-feedback.component';
 import { Button } from '../components/ui/button';
 import { formatMoney } from '../utils/payments.format';
 
-function CreatorRow({ creator, last }: { creator: UserWithRevenueDto; last: boolean }) {
+function CreatorRow({
+  creator,
+  last,
+  onPress,
+}: {
+  creator: UserWithRevenueDto;
+  last: boolean;
+  onPress: () => void;
+}) {
+  const muted = useCSSVariable('--cash-muted') as string;
   return (
-    <View
-      accessibilityLabel={`@${creator.username}, gross revenue ${formatMoney(creator.revenue_cents)}`}
+    <PressableFeedback
+      accessibilityRole="button"
+      accessibilityLabel={`@${creator.username}, gross revenue ${formatMoney(creator.revenue_cents)}. View profile.`}
+      onPress={onPress}
       className={`min-h-[64px] flex-row items-center justify-between gap-3 px-4 py-3 ${last ? '' : 'border-b border-cash-border'}`}
     >
       <Typography numberOfLines={1} className="flex-1 text-[15px] font-medium text-cash-foreground">
         @{creator.username}
       </Typography>
-      <Typography
-        numberOfLines={1}
-        className="text-[16px] font-medium text-cash-foreground"
-        style={{ fontVariant: ['tabular-nums'] }}
-      >
-        {formatMoney(creator.revenue_cents)}
-      </Typography>
-    </View>
+      <View className="flex-row items-center gap-2">
+        <Typography
+          numberOfLines={1}
+          className="text-[16px] font-medium text-cash-foreground"
+          style={{ fontVariant: ['tabular-nums'] }}
+        >
+          {formatMoney(creator.revenue_cents)}
+        </Typography>
+        <CashIcon name="arrow" size={13} color={muted} />
+      </View>
+    </PressableFeedback>
   );
 }
 
-export function CreatorsScreen() {
+export function CreatorsScreen({ onSelect }: { onSelect: (userId: string) => void }) {
   const insets = useSafeAreaInsets();
   const [foreground, muted] = useCSSVariable(['--cash-foreground', '--cash-muted']) as string[];
   const creators = useCreators();
@@ -80,7 +96,11 @@ export function CreatorsScreen() {
         <View
           className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-[24px]' : ''} ${index === items.length - 1 ? 'rounded-b-[24px]' : ''}`}
         >
-          <CreatorRow creator={item} last={index === items.length - 1} />
+          <CreatorRow
+            creator={item}
+            last={index === items.length - 1}
+            onPress={() => onSelect(item.id)}
+          />
         </View>
       )}
       ListEmptyComponent={<View className="mx-5 rounded-[24px] bg-cash-surface">{state}</View>}

@@ -4,6 +4,7 @@ import type {
   PaymentsFilterDto,
   PaymentsGraphsDto,
   PaymentsSummaryDto,
+  UserProfileDto,
   UserWithRevenueDto,
 } from '@itch/protocol';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -20,6 +21,7 @@ export const queryKeys = {
   paymentsSummary: ['payments-summary'] as const,
   paymentsGraph: ['payments-graph'] as const,
   creators: ['creators'] as const,
+  creatorProfile: ['creator-profile'] as const,
   lastSynced: ['last-synced'] as const,
 };
 
@@ -110,6 +112,16 @@ export function useCreators() {
 
       return pages.reduce((offset, page) => offset + page.length, 0);
     },
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+export function useCreatorProfile(userId: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.creatorProfile, userId] as const,
+    queryFn: () => apiClient.creator(userId as string) as Promise<UserProfileDto | null>,
+    enabled: userId != null,
     staleTime: 60_000,
     retry: false,
   });

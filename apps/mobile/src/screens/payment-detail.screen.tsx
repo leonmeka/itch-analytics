@@ -63,7 +63,7 @@ export function PaymentDetailScreen({
           <DetailRow label="Imported">{formatDate(payment.created_at)}</DetailRow>
         </Card>
         <Typography className="mb-2 mt-6 text-[21px] font-medium tracking-[-0.6px] text-cash-foreground">
-          Money breakdown
+          Revenue Breakdown
         </Typography>
         <Card className="gap-0 rounded-[24px] bg-cash-surface px-5 py-1 shadow-none">
           {rows.map(({ label, cents }, index) => (

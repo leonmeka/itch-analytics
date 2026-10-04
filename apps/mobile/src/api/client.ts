@@ -6,6 +6,7 @@ import type {
   PaymentsGraphsDto,
   PaymentsImportResultDto,
   PaymentsSummaryDto,
+  UserProfileDto,
   UserWithRevenueDto,
 } from '@itch/protocol';
 import { env } from '../env';
@@ -66,4 +67,5 @@ export const apiClient = {
     authedFetch<PaymentDto>(`/users/${userId}/payments/${paymentId}`),
   creators: (limit: number, offset: number) =>
     authedFetch<UserWithRevenueDto[]>(`/users?${searchParams({ limit, offset })}`),
+  creator: (userId: string) => authedFetch<UserProfileDto | null>(`/users/${userId}/profile`),
 };

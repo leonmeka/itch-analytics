@@ -3,16 +3,20 @@
   "scripts": {
     "migrate": "drizzle-kit generate --config=./src/db/drizzle.config.ts",
     "apply": "drizzle-kit migrate --config=./src/db/drizzle.config.ts",
+    "seed": "tsx src/db/seed.ts",
     "studio": "drizzle-kit studio --config=./src/db/drizzle.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.5",
     "@nestjs/config": "^4.0.4",
+    "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
+    "drizzle-seed": "^0.3.1",
     "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/pg": "^8.23.1",
-    "drizzle-kit": "^0.31.10"
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.23.15"
   }
 }

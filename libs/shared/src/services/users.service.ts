@@ -13,4 +13,8 @@ export class UsersService extends BaseService<User, CreateUser, UpdateUser, User
   getUsersWithRevenue(limit: number, offset: number) {
     return this.usersRepository.getUsersWithRevenue(limit, offset);
   }
+
+  getUserProfile(userId: string) {
+    return this.usersRepository.getUserProfile(userId);
+  }
 }
