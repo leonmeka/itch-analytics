@@ -1,12 +1,12 @@
 import type {
   AuthTokenResponseDto,
-  CreatorDto,
   OauthIdentityDto,
   PaymentDto,
   PaymentsFilterDto,
   PaymentsGraphsDto,
   PaymentsImportResultDto,
   PaymentsSummaryDto,
+  UserWithRevenueDto,
 } from '@itch/protocol';
 import { env } from '../env';
 import { fetchBase } from './fetch-base';
@@ -65,5 +65,5 @@ export const apiClient = {
   payment: (userId: string, paymentId: string) =>
     authedFetch<PaymentDto>(`/users/${userId}/payments/${paymentId}`),
   creators: (limit: number, offset: number) =>
-    authedFetch<CreatorDto[]>(`/creators?${searchParams({ limit, offset })}`),
+    authedFetch<UserWithRevenueDto[]>(`/users?${searchParams({ limit, offset })}`),
 };

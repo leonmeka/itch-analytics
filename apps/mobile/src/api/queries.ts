@@ -1,10 +1,10 @@
 import type {
-  CreatorDto,
   OauthIdentityDto,
   PaymentDto,
   PaymentsFilterDto,
   PaymentsGraphsDto,
   PaymentsSummaryDto,
+  UserWithRevenueDto,
 } from '@itch/protocol';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { loadLastSynced, saveLastSynced } from '../utils/sync.storage';
@@ -103,7 +103,7 @@ export function useCreators() {
   return useInfiniteQuery({
     queryKey: [...queryKeys.creators, CREATORS_PAGE_SIZE] as const,
     queryFn: ({ pageParam }) =>
-      apiClient.creators(CREATORS_PAGE_SIZE, pageParam as number) as Promise<CreatorDto[]>,
+      apiClient.creators(CREATORS_PAGE_SIZE, pageParam as number) as Promise<UserWithRevenueDto[]>,
     initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => {
       if (lastPage.length < CREATORS_PAGE_SIZE) return undefined;

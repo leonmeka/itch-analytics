@@ -4,6 +4,7 @@ import { useCSSVariable } from 'uniwind';
 export type CashIconName =
   | 'home'
   | 'account'
+  | 'users'
   | 'arrow'
   | 'back'
   | 'down'
@@ -18,6 +19,8 @@ export type CashIconName =
 const paths: Record<CashIconName, string> = {
   home: 'M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z',
   account: 'M4 21v-2a8 8 0 0 1 16 0v2',
+  users:
+    'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
   arrow: 'm9 5 7 7-7 7',
   back: 'm14 5-7 7 7 7M7 12h14',
   down: 'm6 9 6 6 6-6',
@@ -53,6 +56,7 @@ export function CashIcon({
     >
       <Path d={paths[name]} />
       {name === 'account' ? <Circle cx={12} cy={7} r={4} /> : null}
+      {name === 'users' ? <Circle cx={9} cy={7} r={4} /> : null}
       {name === 'search' ? <Circle cx={10.5} cy={10.5} r={6.5} /> : null}
       {name === 'info' ? <Circle cx={12} cy={12} r={9} /> : null}
     </Svg>

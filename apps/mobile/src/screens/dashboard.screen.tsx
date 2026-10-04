@@ -46,6 +46,7 @@ import { Button } from '../components/ui/button';
 import { useAuth } from '../providers/auth.provider';
 import { formatDate, formatMoney } from '../utils/payments.format';
 import { AccountScreen } from './account.screen';
+import { CreatorsScreen } from './creators.screen';
 import { ItchSyncScreen } from './itch-sync.screen';
 import { PaymentDetailScreen } from './payment-detail.screen';
 
@@ -146,6 +147,8 @@ export function DashboardScreen() {
             retryProfile={() => void profile.refetch()}
           />
         </View>
+      ) : tab === 'Creators' ? (
+        <CreatorsScreen />
       ) : tab === 'Payments' ? (
         <FlatList
           data={items}
