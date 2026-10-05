@@ -23,8 +23,6 @@ const toGameId = (value: unknown): string | null => {
   return null;
 };
 
-// Ingests the itch.io dashboard analytics payload
-// (https://itch.io/dashboard/analytics?range_left=...&range_right=...).
 export function parseViewsPayload(payload: unknown): ParsedViewsPayload {
   if (typeof payload !== 'object' || payload == null) {
     return { rows: [], malformed: 0 };

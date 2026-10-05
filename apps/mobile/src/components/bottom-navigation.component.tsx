@@ -4,7 +4,7 @@ import { useCSSVariable } from 'uniwind';
 import { CashIcon, type CashIconName } from './cash-icon.component';
 import { Button } from './ui/button';
 
-export type NavigationTab = 'Home' | 'Games' | 'Payments' | 'Creators' | 'Settings';
+export type NavigationTab = 'Home' | 'Creators' | 'Settings';
 
 const tabs: { label: NavigationTab; icon: CashIconName }[] = [
   { label: 'Home', icon: 'home' },

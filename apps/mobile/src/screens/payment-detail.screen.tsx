@@ -1,18 +1,20 @@
-import type { PaymentDto } from '@itch/protocol';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card } from 'heroui-native/card';
 import { Typography } from 'heroui-native/text';
 import { ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CashIcon } from '../components/cash-icon.component';
-import { CashIconButton, DetailRow } from '../components/cash-ui.component';
+import { DetailRow } from '../components/cash-ui.component';
+import { PageHeader } from '../components/page-header.component';
+import type { RootStackParamList } from '../navigation/types';
 import { formatDate, formatMoney, paymentAmount, paymentSource } from '../utils/payments.format';
 
 export function PaymentDetailScreen({
-  payment,
-  onBack,
-}: {
-  payment: PaymentDto;
-  onBack: () => void;
-}) {
+  route,
+  navigation,
+}: NativeStackScreenProps<RootStackParamList, 'PaymentDetail'>) {
+  const insets = useSafeAreaInsets();
+  const { payment } = route.params;
   const rows: { label: string; cents: number | null }[] = [
     { label: 'Unit price', cents: payment.product_price_cents },
     { label: 'Tax added', cents: payment.tax_added_cents },
@@ -23,16 +25,11 @@ export function PaymentDetailScreen({
     { label: 'Net to you', cents: payment.amount_delivered_cents },
   ];
   return (
-    <View className="flex-1">
-      <View className="mx-auto w-full max-w-[640px] px-5">
-        <View className="flex-row items-center gap-3 py-3">
-          <CashIconButton name="back" label="Back to payments" onPress={onBack} />
-          <Typography className="text-[20px] font-medium text-cash-foreground">Payment</Typography>
-        </View>
-      </View>
+    <View className="flex-1 bg-cash-background" style={{ paddingTop: insets.top }}>
+      <PageHeader title="Payment" backLabel="Back" onBack={() => navigation.goBack()} />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
       >
         <View className="mx-auto w-full max-w-[640px] px-5">
           <View className="items-center pb-8 pt-7">

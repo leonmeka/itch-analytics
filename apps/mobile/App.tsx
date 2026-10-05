@@ -1,21 +1,47 @@
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { registerRootComponent } from 'expo';
 import { HeroUINativeProvider } from 'heroui-native/provider';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useCSSVariable, useUniwind } from 'uniwind';
+import { RootNavigator } from './src/navigation/root.navigation';
 import { AuthProvider, useAuth } from './src/providers/auth.provider';
 import { QueryProvider } from './src/providers/query.provider';
-import { AuthScreen } from './src/screens/auth.screen';
-import { DashboardScreen } from './src/screens/dashboard.screen';
+import { SyncProvider } from './src/providers/sync.provider';
 import './global.css';
 
 const AppRoutes = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user } = useAuth();
+  const { theme } = useUniwind();
+  const [background, surface, foreground, border, accent] = useCSSVariable([
+    '--cash-background',
+    '--cash-surface',
+    '--cash-foreground',
+    '--cash-border',
+    '--cash-accent',
+  ]) as string[];
+  const baseTheme = theme === 'dark' ? DarkTheme : DefaultTheme;
+  const navigationTheme = {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      background,
+      card: surface,
+      text: foreground,
+      border,
+      primary: accent,
+      notification: accent,
+    },
+  };
+  const userId = user?.id ?? null;
 
-  if (isLoading) {
-    return null;
-  }
-
-  return isAuthenticated ? <DashboardScreen /> : <AuthScreen />;
+  return (
+    <NavigationContainer theme={navigationTheme}>
+      <SyncProvider userId={userId}>
+        <RootNavigator />
+      </SyncProvider>
+    </NavigationContainer>
+  );
 };
 
 const App = () => {

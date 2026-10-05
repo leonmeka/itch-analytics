@@ -1,28 +1,31 @@
-import type { GameDto } from '@itch/protocol';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card } from 'heroui-native/card';
 import { Typography } from 'heroui-native/text';
 import { Image, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CashIcon } from '../components/cash-icon.component';
-import { CashIconButton, DetailRow } from '../components/cash-ui.component';
+import { DetailRow } from '../components/cash-ui.component';
+import { PageHeader } from '../components/page-header.component';
+import type { RootStackParamList } from '../navigation/types';
 import { formatDate, formatMoney } from '../utils/payments.format';
 
-export function GameDetailScreen({ game, onBack }: { game: GameDto; onBack: () => void }) {
+export function GameDetailScreen({
+  route,
+  navigation,
+}: NativeStackScreenProps<RootStackParamList, 'GameDetail'>) {
+  const insets = useSafeAreaInsets();
+  const { game } = route.params;
   const platforms = (game.traits ?? [])
     .filter((trait) => trait.startsWith('p_'))
     .map((trait) => trait[2].toUpperCase() + trait.slice(3));
   const otherTraits = (game.traits ?? []).filter((trait) => !trait.startsWith('p_'));
 
   return (
-    <View className="flex-1">
-      <View className="mx-auto w-full max-w-[640px] px-5">
-        <View className="flex-row items-center gap-3 py-3">
-          <CashIconButton name="back" label="Back to games" onPress={onBack} />
-          <Typography className="text-[20px] font-medium text-cash-foreground">Game</Typography>
-        </View>
-      </View>
+    <View className="flex-1 bg-cash-background" style={{ paddingTop: insets.top }}>
+      <PageHeader title="Game" backLabel="Back" onBack={() => navigation.goBack()} />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
       >
         <View className="mx-auto w-full max-w-[640px] px-5">
           <View className="items-center pb-8 pt-7">

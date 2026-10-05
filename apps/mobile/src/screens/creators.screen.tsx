@@ -1,4 +1,6 @@
 import type { UserWithRevenueDto } from '@itch/protocol';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Typography } from 'heroui-native/text';
 import { useMemo } from 'react';
 import { ActivityIndicator, FlatList, Image, RefreshControl, View } from 'react-native';
@@ -11,6 +13,7 @@ import { CashState, CreatorsSkeletons } from '../components/cash-ui.component';
 import { PageHeader } from '../components/page-header.component';
 import { PressableFeedback } from '../components/pressable-feedback.component';
 import { Button } from '../components/ui/button';
+import type { RootStackParamList } from '../navigation/types';
 import { formatMoney } from '../utils/payments.format';
 
 function CreatorRow({
@@ -58,7 +61,8 @@ function CreatorRow({
   );
 }
 
-export function CreatorsScreen({ onSelect }: { onSelect: (userId: string) => void }) {
+export function CreatorsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const [foreground, muted] = useCSSVariable(['--cash-foreground', '--cash-muted']) as string[];
   const creators = useCreators();
@@ -111,7 +115,7 @@ export function CreatorsScreen({ onSelect }: { onSelect: (userId: string) => voi
           <CreatorRow
             creator={item}
             last={index === items.length - 1}
-            onPress={() => onSelect(item.id)}
+            onPress={() => navigation.navigate('Creator', { userId: item.id })}
           />
         </View>
       )}

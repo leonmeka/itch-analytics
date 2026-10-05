@@ -1,14 +1,23 @@
 import type { UserProfileDto } from '@itch/protocol';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Skeleton } from 'heroui-native/skeleton';
 import { Typography } from 'heroui-native/text';
 import type { ReactNode } from 'react';
 import { Image, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RedLogo from '../../assets/itch-logo-red.svg';
 import { useCreatorProfile } from '../api/queries';
-import { CashIconButton, CashState } from '../components/cash-ui.component';
+import { CashState } from '../components/cash-ui.component';
+import { PageHeader } from '../components/page-header.component';
+import type { RootStackParamList } from '../navigation/types';
 import { formatMoney } from '../utils/payments.format';
 
-export function CreatorScreen({ userId, onBack }: { userId: string; onBack: () => void }) {
+export function CreatorScreen({
+  route,
+  navigation,
+}: NativeStackScreenProps<RootStackParamList, 'Creator'>) {
+  const insets = useSafeAreaInsets();
+  const { userId } = route.params;
   const profile = useCreatorProfile(userId);
 
   let content: ReactNode;
@@ -45,16 +54,11 @@ export function CreatorScreen({ userId, onBack }: { userId: string; onBack: () =
   }
 
   return (
-    <View className="flex-1">
-      <View className="mx-auto w-full max-w-[640px] px-5">
-        <View className="flex-row items-center gap-3 py-3">
-          <CashIconButton name="back" label="Back to creators" onPress={onBack} />
-          <Typography className="text-[20px] font-medium text-cash-foreground">Creator</Typography>
-        </View>
-      </View>
+    <View className="flex-1 bg-cash-background" style={{ paddingTop: insets.top }}>
+      <PageHeader title="Creator" backLabel="Back to creators" onBack={() => navigation.goBack()} />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
       >
         <View className="mx-auto w-full max-w-[640px] px-5">{content}</View>
       </ScrollView>

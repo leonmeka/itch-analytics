@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type FileDownload, WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { useImportPayments, useMarkSynced } from '../api/queries';
 import { CashIcon, type CashIconName } from '../components/cash-icon.component';
+import { PageHeader } from '../components/page-header.component';
 import { Button } from '../components/ui/button';
 import {
   CHALLENGE_TIMEOUT_MS,
@@ -190,20 +191,7 @@ export function ItchSyncScreen({ userId, onClose }: { userId: string; onClose: (
       onDismiss={onClose}
     >
       <View className="flex-1 bg-cash-background" style={{ paddingTop: insets.top }}>
-        <View className="flex-row items-center gap-3 px-5 pb-3">
-          <Button
-            isIconOnly
-            variant="ghost"
-            className="h-11 w-11 rounded-full bg-cash-surface p-0"
-            accessibilityLabel="Close sync"
-            onPress={onClose}
-          >
-            <CashIcon name="back" size={18} />
-          </Button>
-          <Typography type="body-sm" className="flex-1 font-medium text-cash-foreground">
-            Sync purchases
-          </Typography>
-        </View>
+        <PageHeader title="Sync purchases" backLabel="Close sync" onBack={onClose} />
         {status === 'connecting' || status === 'importing' ? null : (
           <View className="mx-5 mb-3 rounded-2xl bg-cash-surface p-3">
             <View className="flex-row items-start gap-2">

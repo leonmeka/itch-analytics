@@ -1,4 +1,5 @@
 import { ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Uniwind, useUniwind } from 'uniwind';
 import { CashIcon } from '../components/cash-icon.component';
 import { CashSection } from '../components/cash-ui.component';
@@ -7,12 +8,13 @@ import { Button } from '../components/ui/button';
 import { useAuth } from '../providers/auth.provider';
 
 export function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const { logout } = useAuth();
   const { theme, hasAdaptiveThemes } = useUniwind();
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 32 }}
+      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 32 }}
       keyboardShouldPersistTaps="handled"
     >
       <PageHeader title="Settings" />
