@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-cream: #fff9ef;
+  --color-itch: #fa5c5c;
+  --color-ink: #201012;
+  --animate-logo-wiggle: logo-wiggle 550ms ease-in-out;
+
+  @keyframes logo-wiggle {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    20% {
+      transform: rotate(-7deg);
+    }
+    40% {
+      transform: rotate(6deg);
+    }
+    60% {
+      transform: rotate(-4deg);
+    }
+    80% {
+      transform: rotate(2deg);
+    }
+  }
+}
+
+@custom-variant wide (@media (min-width: 1500px));
+@custom-variant tablet (@media (max-width: 900px));
+@custom-variant mobile (@media (max-width: 600px));
+@custom-variant short-desktop (@media (max-height: 680px) and (min-width: 601px));
+@custom-variant short-mobile (@media (max-height: 720px) and (max-width: 600px));
+@custom-variant compact {
+  @media (max-height: 520px), (min-resolution: 2dppx) and (max-width: 350px) {
+    @slot;
+  }
+}
