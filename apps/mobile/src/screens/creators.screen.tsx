@@ -37,10 +37,10 @@ function CreatorRow({
         <Image
           source={{ uri: creator.avatar_url }}
           accessibilityLabel={`@${creator.username}'s itch.io avatar`}
-          className="h-11 w-11 rounded-full bg-app-well"
+          className="h-11 w-11 overflow-hidden rounded-full bg-app-well"
         />
       ) : (
-        <View className="h-11 w-11 items-center justify-center rounded-full bg-app-accent-soft">
+        <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-app-accent-soft">
           <RedLogo width={23} height={21} />
         </View>
       )}

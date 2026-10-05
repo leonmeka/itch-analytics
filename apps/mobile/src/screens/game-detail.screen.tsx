@@ -33,10 +33,10 @@ export function GameDetailScreen({
               <Image
                 source={{ uri: game.cover_url }}
                 accessibilityLabel={`${game.title} cover`}
-                className="mb-5 h-[72px] w-[72px] rounded-app-media bg-app-well"
+                className="mb-5 h-[72px] w-[72px] overflow-hidden rounded-full bg-app-well"
               />
             ) : (
-              <View className="mb-5 h-[72px] w-[72px] items-center justify-center rounded-app-media bg-app-accent-soft">
+              <View className="mb-5 h-[72px] w-[72px] items-center justify-center rounded-full bg-app-accent-soft">
                 <Icon name="game" size={30} />
               </View>
             )}

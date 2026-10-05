@@ -245,7 +245,6 @@ export function HomeScreen() {
               <View className="flex-row gap-3">
                 <StatCard
                   label="Average payment"
-                  showChange={false}
                   points={graph.data.average}
                   formatValue={formatMoney}
                 />

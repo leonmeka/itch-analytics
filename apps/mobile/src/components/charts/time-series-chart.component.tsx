@@ -17,13 +17,11 @@ export function TimeSeriesChart({
   formatValue,
   label,
   aspectRatio = 3,
-  showChange = true,
 }: {
   points: TimeSeriesPoint[];
   formatValue: (value: number) => string;
   label?: string;
   aspectRatio?: number;
-  showChange?: boolean;
 }) {
   const [accent, border, surface] = useCSSVariable([
     '--app-accent',
@@ -70,16 +68,6 @@ export function TimeSeriesChart({
   const path = `M${PAD_X},${y(0)} ${coords.map((p) => `L${p.x},${p.y}`).join(' ')}`;
   const index = selected == null ? valid.length - 1 : Math.min(selected, valid.length - 1);
   const point = valid[index];
-  const today = new Date();
-  const windowEnd =
-    selected == null
-      ? Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
-      : Date.parse(point.date);
-  const windowStart = windowEnd - 6 * 86_400_000;
-  const beforeWindow = valid.findLast((entry) => Date.parse(entry.date) < windowStart);
-  const windowLast = valid.findLast((entry) => Date.parse(entry.date) <= windowEnd);
-  const change = Math.round((windowLast?.value ?? 0) - (beforeWindow?.value ?? 0));
-  const formattedChange = `${change > 0 ? '+' : change < 0 ? '−' : ''}${formatValue(Math.abs(change))}`;
   const scrubbing = selected != null;
   const selectAt = (location: number) => {
     const nearest = coords.reduce(
@@ -107,20 +95,6 @@ export function TimeSeriesChart({
             >
               {formatValue(point.value)}
             </Typography>
-            {showChange ? (
-              <View
-                accessible
-                accessibilityLabel={`Past seven days ${formattedChange}`}
-                className={`shrink-0 flex-row items-center gap-1 rounded-full px-2 py-1 ${change === 0 ? 'bg-app-well' : 'bg-app-accent-soft'}`}
-              >
-                <Typography
-                  className={`text-[11px] font-semibold leading-[14px] ${change === 0 ? 'text-app-muted' : 'text-app-link'}`}
-                  style={{ fontVariant: ['tabular-nums'] }}
-                >
-                  {change > 0 ? '↗' : change < 0 ? '↘' : '–'} {formatValue(Math.abs(change))} · 7d
-                </Typography>
-              </View>
-            ) : null}
           </View>
         </View>
       ) : null}
@@ -144,7 +118,7 @@ export function TimeSeriesChart({
         accessibilityRole="adjustable"
         accessibilityLabel={`${label ?? 'Cumulative'} chart`}
         accessibilityValue={{
-          text: `${formatDate(point.date)}: ${formatValue(point.value)}${showChange ? `, past seven days ${formattedChange}` : ''}`,
+          text: `${formatDate(point.date)}: ${formatValue(point.value)}`,
         }}
         accessibilityActions={[
           { name: 'increment', label: 'Next date' },

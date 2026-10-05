@@ -24,7 +24,7 @@ export function CreatorScreen({
   if (profile.isPending) {
     content = (
       <View className="items-center pb-8">
-        <Skeleton className="mb-4 h-20 w-20 rounded-full" />
+        <Skeleton className="mb-4 h-20 w-20 overflow-hidden rounded-full" />
         <Skeleton className="h-7 w-44 rounded-app-placeholder" />
         <Skeleton className="mt-1 h-5 w-28 rounded-app-placeholder" />
         <Skeleton className="mt-5 h-16 w-36 rounded-app-placeholder" />
@@ -73,10 +73,10 @@ function ProfileHero({ profile }: { profile: UserProfileDto }) {
         <Image
           source={{ uri: profile.avatar_url }}
           accessibilityLabel={`@${profile.username}'s itch.io avatar`}
-          className="mb-4 h-20 w-20 rounded-full bg-app-well"
+          className="mb-4 h-20 w-20 overflow-hidden rounded-full bg-app-well"
         />
       ) : (
-        <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-app-accent-soft">
+        <View className="mb-4 h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-app-accent-soft">
           <RedLogo width={38} height={34} />
         </View>
       )}
