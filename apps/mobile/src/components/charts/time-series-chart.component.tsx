@@ -29,14 +29,14 @@ export function TimeSeriesChart({
     '--app-surface',
   ]) as string[];
   const [selected, setSelected] = useState<number | null>(null);
-  const [layout, setLayout] = useState({ width: 300, height: 50 });
+  const [layout, setLayout] = useState({ width: 0, height: 0 });
   const valid = points.filter(
     (p) => Number.isFinite(Date.parse(p.date)) && Number.isFinite(p.value),
   );
 
   if (!valid.length) {
     return (
-      <View>
+      <View className="min-w-0 self-stretch">
         {label ? (
           <Typography type="body-xs" className="mb-2 text-app-muted">
             {label}
@@ -79,7 +79,7 @@ export function TimeSeriesChart({
   const gradientId = 'app-series';
 
   return (
-    <View>
+    <View className="min-w-0 self-stretch">
       {label ? (
         <View className="mb-3">
           <Typography type="body-xs" className="text-app-muted">
@@ -96,7 +96,7 @@ export function TimeSeriesChart({
         </View>
       ) : null}
       <View
-        style={{ width: '100%', aspectRatio, minHeight: 64 }}
+        style={{ alignSelf: 'stretch', aspectRatio, minHeight: 64 }}
         onLayout={(event: { nativeEvent: { layout: { width: number; height: number } } }) =>
           setLayout({
             width: event.nativeEvent.layout.width,
@@ -133,7 +133,12 @@ export function TimeSeriesChart({
           )
         }
       >
-        <Svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+        <Svg
+          width={layout.width}
+          height={layout.height}
+          style={{ position: 'absolute', top: 0, left: 0 }}
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+        >
           <Defs>
             <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor={accent} stopOpacity={0.15} />

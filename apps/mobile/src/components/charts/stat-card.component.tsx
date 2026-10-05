@@ -13,8 +13,15 @@ export function StatCard({
   formatValue: (value: number) => string;
 }) {
   return (
-    <View className="flex-1 rounded-app-card bg-app-surface p-4">
-      <TimeSeriesChart points={points} label={label} formatValue={formatValue} aspectRatio={2.5} />
+    <View className="min-w-0 flex-1 overflow-hidden rounded-app-card bg-app-surface">
+      <View className="m-4 min-w-0">
+        <TimeSeriesChart
+          points={points}
+          label={label}
+          formatValue={formatValue}
+          aspectRatio={2.5}
+        />
+      </View>
     </View>
   );
 }

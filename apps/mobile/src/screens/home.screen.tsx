@@ -160,7 +160,7 @@ export function HomeScreen() {
           }
         />
         <View className="mx-auto w-full max-w-[640px] gap-3 px-5">
-          <Card className="rounded-app-card bg-app-surface p-5 shadow-none">
+          <Card className="overflow-hidden rounded-app-card bg-app-surface p-4 shadow-none">
             {graph.isPending ? (
               <View>
                 <Skeleton className="h-4 w-24 rounded-app-placeholder" />
@@ -268,7 +268,7 @@ export function HomeScreen() {
             </Card>
           ) : viewsGraph.data?.views.length ? (
             <View className="flex-row gap-3">
-              <View className="flex-1 rounded-app-card bg-app-surface p-4">
+              <View className="min-w-0 flex-1 overflow-hidden rounded-app-card bg-app-surface p-4">
                 <TimeSeriesChart
                   label="Total views"
                   points={viewsGraph.data.views.map((point) => ({
