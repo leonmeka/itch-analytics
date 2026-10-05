@@ -7,59 +7,26 @@ import { formatDate } from '../../utils/payments.format';
 
 export type TimeSeriesPoint = { date: string; value: number };
 
-type ChartSize = 'sm' | 'lg';
+const STROKE_WIDTH = 2;
+const DOT_RADIUS = 3.5;
+const PAD_X = 8;
+const PAD_Y = 8;
 
-// One generic cumulative area-line chart in two sizes. Both variants are
-// touch-scrubbable and show a live value header (label at rest, explored
-// date while scrubbing); 'lg' adds the resting dot, base line and full
-// accessibility support, 'sm' is the compact sparkline for stat tiles.
-// The SVG renders 1:1 in the measured container width (dynamic viewBox) so
-// scrub dots and lines stay perfectly round regardless of tile width.
-const GEOMETRY: Record<
-  ChartSize,
-  {
-    height: number;
-    padX: number;
-    topY: number;
-    baseY: number;
-    strokeWidth: number;
-    dotRadius: number;
-    valueClass: string;
-    headerGap: string;
-  }
-> = {
-  sm: {
-    height: 44,
-    padX: 2,
-    topY: 4,
-    baseY: 42,
-    strokeWidth: 1.5,
-    dotRadius: 2.5,
-    valueClass: 'text-[24px] font-medium leading-[30px] tracking-[-1px]',
-    headerGap: 'mb-1.5',
-  },
-  lg: {
-    height: 176,
-    padX: 8,
-    topY: 12,
-    baseY: 156,
-    strokeWidth: 2.5,
-    dotRadius: 4,
-    valueClass: 'text-[26px] font-medium leading-[32px] tracking-[-1px]',
-    headerGap: 'mb-3',
-  },
-};
-
+// The one cumulative area-line chart used everywhere. The consumer defines the
+// plot area's aspectRatio (width ÷ height); the SVG renders 1:1 in the
+// measured box so scrub dots and lines stay perfectly round at any size.
+// Always shows a resting dot, scrubs with a dashed indicator and exposes
+// accessibility actions.
 export function TimeSeriesChart({
   points,
   formatValue,
-  size = 'lg',
   label,
+  aspectRatio = 6,
 }: {
   points: TimeSeriesPoint[];
   formatValue: (value: number) => string;
-  size?: ChartSize;
   label?: string;
+  aspectRatio?: number;
 }) {
   const [accent, border, surface] = useCSSVariable([
     '--cash-accent',
@@ -67,23 +34,21 @@ export function TimeSeriesChart({
     '--cash-surface',
   ]) as string[];
   const [selected, setSelected] = useState<number | null>(null);
-  const [width, setWidth] = useState(300);
-  const g = GEOMETRY[size];
+  const [layout, setLayout] = useState({ width: 300, height: 50 });
   const valid = points.filter(
     (p) => Number.isFinite(Date.parse(p.date)) && Number.isFinite(p.value),
   );
 
   if (!valid.length) {
-    if (size === 'lg') return null;
     return (
       <View>
         {label ? (
-          <Typography type="body-xs" className={`text-cash-muted ${g.headerGap}`}>
+          <Typography type="body-xs" className="mb-2 text-cash-muted">
             {label}
           </Typography>
         ) : null}
         <Typography
-          className={`text-cash-foreground ${g.valueClass}`}
+          className="text-[24px] font-medium leading-[30px] tracking-[-1px] text-cash-foreground"
           style={{ fontVariant: ['tabular-nums'] }}
         >
           —
@@ -97,36 +62,38 @@ export function TimeSeriesChart({
   const lastTime = Date.parse(valid[valid.length - 1].date);
   const low = Math.min(0, ...valid.map((p) => p.value));
   const high = Math.max(1, ...valid.map((p) => p.value));
-  const chartWidth = Math.max(1, width);
+  const chartWidth = Math.max(1, layout.width);
+  const chartHeight = Math.max(1, layout.height);
+  const topY = PAD_Y;
+  const baseY = chartHeight - PAD_Y;
   const x = (time: number) =>
-    g.padX + ((time - startTime) / (lastTime - startTime)) * (chartWidth - 2 * g.padX);
-  const y = (value: number) => g.baseY - ((value - low) / (high - low)) * (g.baseY - g.topY);
+    PAD_X + ((time - startTime) / (lastTime - startTime)) * (chartWidth - 2 * PAD_X);
+  const y = (value: number) => baseY - ((value - low) / (high - low)) * (baseY - topY);
   const coords = valid.map((p) => ({ x: x(Date.parse(p.date)), y: y(p.value) }));
-  const path = `M${g.padX},${y(0)} ${coords.map((p) => `L${p.x},${p.y}`).join(' ')}`;
+  const path = `M${PAD_X},${y(0)} ${coords.map((p) => `L${p.x},${p.y}`).join(' ')}`;
   const index = selected == null ? valid.length - 1 : Math.min(selected, valid.length - 1);
   const point = valid[index];
   const scrubbing = selected != null;
   const selectAt = (location: number) => {
-    const scaled = (location / chartWidth) * chartWidth;
     const nearest = coords.reduce(
-      (best, p, i) => (Math.abs(p.x - scaled) < Math.abs(coords[best].x - scaled) ? i : best),
+      (best, p, i) => (Math.abs(p.x - location) < Math.abs(coords[best].x - location) ? i : best),
       0,
     );
     setSelected(nearest);
   };
-  const gradientId = `cash-series-${size}`;
+  const gradientId = 'cash-series';
 
   return (
     <View>
       {label ? (
-        <View className={g.headerGap}>
+        <View className="mb-2">
           <Typography type="body-xs" className="text-cash-muted">
             {scrubbing ? formatDate(point.date) : label}
           </Typography>
           <Typography
             adjustsFontSizeToFit
             numberOfLines={1}
-            className={`mt-0.5 text-cash-foreground ${g.valueClass}`}
+            className="mt-0.5 text-[24px] font-medium leading-[30px] tracking-[-1px] text-cash-foreground"
             style={{ fontVariant: ['tabular-nums'] }}
           >
             {formatValue(point.value)}
@@ -134,8 +101,11 @@ export function TimeSeriesChart({
         </View>
       ) : null}
       <View
-        onLayout={(event: { nativeEvent: { layout: { width: number } } }) =>
-          setWidth(event.nativeEvent.layout.width)
+        onLayout={(event: { nativeEvent: { layout: { width: number; height: number } } }) =>
+          setLayout({
+            width: event.nativeEvent.layout.width,
+            height: event.nativeEvent.layout.height,
+          })
         }
         onTouchStart={(event: { nativeEvent: { locationX: number } }) =>
           selectAt(event.nativeEvent.locationX)
@@ -144,53 +114,45 @@ export function TimeSeriesChart({
           selectAt(event.nativeEvent.locationX)
         }
         onTouchEnd={() => setSelected(null)}
-        {...(size === 'lg'
-          ? {
-              accessible: true,
-              accessibilityRole: 'adjustable' as const,
-              accessibilityLabel: `${label ?? 'Cumulative'} chart`,
-              accessibilityValue: {
-                text: `${formatDate(point.date)}: ${formatValue(point.value)}`,
-              },
-              accessibilityActions: [
-                { name: 'increment', label: 'Next date' },
-                { name: 'decrement', label: 'Previous date' },
-              ],
-              onAccessibilityAction: (event: { nativeEvent: { actionName: string } }) =>
-                setSelected(
-                  Math.max(
-                    0,
-                    Math.min(
-                      valid.length - 1,
-                      index + (event.nativeEvent.actionName === 'increment' ? 1 : -1),
-                    ),
-                  ),
-                ),
-            }
-          : {})}
+        accessible
+        accessibilityRole="adjustable"
+        accessibilityLabel={`${label ?? 'Cumulative'} chart`}
+        accessibilityValue={{
+          text: `${formatDate(point.date)}: ${formatValue(point.value)}`,
+        }}
+        accessibilityActions={[
+          { name: 'increment', label: 'Next date' },
+          { name: 'decrement', label: 'Previous date' },
+        ]}
+        onAccessibilityAction={(event: { nativeEvent: { actionName: string } }) =>
+          setSelected(
+            Math.max(
+              0,
+              Math.min(
+                valid.length - 1,
+                index + (event.nativeEvent.actionName === 'increment' ? 1 : -1),
+              ),
+            ),
+          )
+        }
+        style={{ aspectRatio }}
       >
-        <Svg
-          width="100%"
-          height={g.height}
-          viewBox={`0 0 ${chartWidth} ${g.height}`}
-          preserveAspectRatio="none"
-        >
+        <Svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
           <Defs>
             <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={accent} stopOpacity={size === 'sm' ? 0.2 : 0.13} />
+              <Stop offset="0" stopColor={accent} stopOpacity={0.15} />
               <Stop offset="1" stopColor={accent} stopOpacity={0} />
             </LinearGradient>
           </Defs>
           <Path
-            d={`${path} L${chartWidth - g.padX},${g.height - 2} L${g.padX},${g.height - 2}Z`}
+            d={`${path} L${chartWidth - PAD_X},${chartHeight - 2} L${PAD_X},${chartHeight - 2}Z`}
             fill={`url(#${gradientId})`}
           />
           <Path
             d={path}
             fill="none"
             stroke={accent}
-            strokeWidth={g.strokeWidth}
-            vectorEffect="non-scaling-stroke"
+            strokeWidth={STROKE_WIDTH}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -198,22 +160,20 @@ export function TimeSeriesChart({
             <Line
               x1={coords[index].x}
               x2={coords[index].x}
-              y1={g.topY}
-              y2={g.baseY + 4}
+              y1={topY}
+              y2={baseY + 4}
               stroke={border}
               strokeDasharray="3 4"
             />
           ) : null}
-          {size === 'lg' || scrubbing ? (
-            <Circle
-              cx={coords[index].x}
-              cy={coords[index].y}
-              r={g.dotRadius}
-              fill={accent}
-              stroke={surface}
-              strokeWidth={size === 'lg' ? 2 : 1.5}
-            />
-          ) : null}
+          <Circle
+            cx={coords[index].x}
+            cy={coords[index].y}
+            r={DOT_RADIUS}
+            fill={accent}
+            stroke={surface}
+            strokeWidth={2}
+          />
         </Svg>
       </View>
     </View>

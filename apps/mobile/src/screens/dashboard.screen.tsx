@@ -465,6 +465,7 @@ function DashboardContent() {
                       value: point.value,
                     }))}
                     formatValue={(value) => formatMoney(value)}
+                    aspectRatio={3.2}
                   />
                 ) : (
                   <View className="gap-5">
@@ -554,12 +555,12 @@ function DashboardContent() {
                   <View className="flex-1 rounded-[24px] bg-cash-surface p-4">
                     <TimeSeriesChart
                       label="Total Views"
-                      size="sm"
                       points={viewsGraph.data.views.map((point) => ({
                         date: point.date,
                         value: point.value,
                       }))}
                       formatValue={(value) => String(Math.round(value))}
+                      aspectRatio={13}
                     />
                   </View>
                 </View>
