@@ -13,10 +13,11 @@ type ChartSize = 'sm' | 'lg';
 // touch-scrubbable and show a live value header (label at rest, explored
 // date while scrubbing); 'lg' adds the resting dot, base line and full
 // accessibility support, 'sm' is the compact sparkline for stat tiles.
+// The SVG renders 1:1 in the measured container width (dynamic viewBox) so
+// scrub dots and lines stay perfectly round regardless of tile width.
 const GEOMETRY: Record<
   ChartSize,
   {
-    width: number;
     height: number;
     padX: number;
     topY: number;
@@ -28,7 +29,6 @@ const GEOMETRY: Record<
   }
 > = {
   sm: {
-    width: 100,
     height: 44,
     padX: 2,
     topY: 4,
@@ -39,7 +39,6 @@ const GEOMETRY: Record<
     headerGap: 'mb-1.5',
   },
   lg: {
-    width: 320,
     height: 176,
     padX: 8,
     topY: 12,
@@ -98,8 +97,9 @@ export function TimeSeriesChart({
   const lastTime = Date.parse(valid[valid.length - 1].date);
   const low = Math.min(0, ...valid.map((p) => p.value));
   const high = Math.max(1, ...valid.map((p) => p.value));
+  const chartWidth = Math.max(1, width);
   const x = (time: number) =>
-    g.padX + ((time - startTime) / (lastTime - startTime)) * (g.width - 2 * g.padX);
+    g.padX + ((time - startTime) / (lastTime - startTime)) * (chartWidth - 2 * g.padX);
   const y = (value: number) => g.baseY - ((value - low) / (high - low)) * (g.baseY - g.topY);
   const coords = valid.map((p) => ({ x: x(Date.parse(p.date)), y: y(p.value) }));
   const path = `M${g.padX},${y(0)} ${coords.map((p) => `L${p.x},${p.y}`).join(' ')}`;
@@ -107,7 +107,7 @@ export function TimeSeriesChart({
   const point = valid[index];
   const scrubbing = selected != null;
   const selectAt = (location: number) => {
-    const scaled = (location / width) * g.width;
+    const scaled = (location / chartWidth) * chartWidth;
     const nearest = coords.reduce(
       (best, p, i) => (Math.abs(p.x - scaled) < Math.abs(coords[best].x - scaled) ? i : best),
       0,
@@ -172,7 +172,7 @@ export function TimeSeriesChart({
         <Svg
           width="100%"
           height={g.height}
-          viewBox={`0 0 ${g.width} ${g.height}`}
+          viewBox={`0 0 ${chartWidth} ${g.height}`}
           preserveAspectRatio="none"
         >
           <Defs>
@@ -182,7 +182,7 @@ export function TimeSeriesChart({
             </LinearGradient>
           </Defs>
           <Path
-            d={`${path} L${g.width - g.padX},${g.height - 2} L${g.padX},${g.height - 2}Z`}
+            d={`${path} L${chartWidth - g.padX},${g.height - 2} L${g.padX},${g.height - 2}Z`}
             fill={`url(#${gradientId})`}
           />
           <Path
