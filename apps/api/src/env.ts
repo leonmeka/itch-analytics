@@ -6,6 +6,7 @@ export const env = z.object({
   API_DATABASE_URL: z.url(),
   API_CORS_ORIGINS: z.string(),
   API_JWT_SECRET: z.string(),
+  API_TOKEN_SECRET: z.string(),
   API_JWT_EXPIRES_IN: z.string(),
   API_REFRESH_TOKEN_EXPIRES_IN: z.string(),
   API_OAUTH_ITCH_CLIENT_ID: z.string(),

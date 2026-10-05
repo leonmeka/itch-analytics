@@ -34,11 +34,8 @@ export class OauthIdentityDto {
   @ApiProperty({ format: 'uuid' })
   user_id!: string;
 
-  @ApiProperty({ example: 'itch' })
-  provider!: 'itch';
-
   @ApiProperty({ description: 'itch.io user id.' })
-  provider_user_id!: string;
+  itch_id!: string;
 
   @ApiProperty({ type: String, nullable: true })
   username!: string | null;
@@ -134,6 +131,65 @@ export class PaymentDto {
 
   @ApiProperty({ type: Number, nullable: true, description: 'Gross amount in cents.' })
   amount_cents!: number | null;
+}
+
+export class GameDto {
+  @ApiProperty({ format: 'uuid' })
+  id!: string;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  created_at!: Date;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  updated_at!: Date;
+
+  @ApiProperty({ format: 'uuid' })
+  user_id!: string;
+
+  @ApiProperty({ description: 'itch.io game id.' })
+  external_id!: string;
+
+  @ApiProperty({ format: 'url' })
+  url!: string;
+
+  @ApiProperty()
+  title!: string;
+
+  @ApiProperty({ type: String, nullable: true })
+  short_text!: string | null;
+
+  @ApiProperty({ type: String, nullable: true, format: 'url' })
+  cover_url!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  classification!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  type!: string | null;
+
+  @ApiProperty()
+  published!: boolean;
+
+  @ApiProperty({ type: String, nullable: true, format: 'date-time' })
+  published_at!: Date | null;
+
+  @ApiProperty({ type: String, nullable: true, format: 'date-time' })
+  external_created_at!: Date | null;
+
+  @ApiProperty({ type: Number, nullable: true, description: 'Minimum price in cents.' })
+  min_price!: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  views_count!: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  downloads_count!: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  purchases_count!: number | null;
+
+  @ApiProperty({ type: [String], nullable: true })
+  traits!: string[] | null;
 }
 
 export class UserWithRevenueDto {
@@ -257,6 +313,20 @@ export class PaymentsImportResultDto {
   updated!: number;
 
   @ApiProperty({ description: 'Rows already up to date (deduplicated).' })
+  skipped!: number;
+}
+
+export class GamesSyncResultDto {
+  @ApiProperty({ description: 'Games returned by the itch.io API.' })
+  total!: number;
+
+  @ApiProperty({ description: 'Newly stored games.' })
+  imported!: number;
+
+  @ApiProperty({ description: 'Games updated with changed fields.' })
+  updated!: number;
+
+  @ApiProperty({ description: 'Games already up to date (deduplicated).' })
   skipped!: number;
 }
 

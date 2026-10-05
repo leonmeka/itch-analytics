@@ -30,7 +30,18 @@ export class AuthController {
     const user = request.user as User;
 
     const access_token = await this.jwtService.signAsync({ sub: user.id, type: 'access' });
-    const refresh_token = await this.issueRefreshToken(user.id);
+
+    const jti = randomUUID();
+    const refresh_token = await this.jwtService.signAsync(
+      { sub: user.id, jti, type: 'refresh' },
+      { expiresIn: this.authConfig.refreshTokenExpiresIn },
+    );
+    const exp = this.jwtService.decode<{ exp: number }>(refresh_token).exp;
+    await this.refreshTokensService.create({
+      user_id: user.id,
+      jti,
+      expires_at: new Date(exp * 1000),
+    });
 
     response.json({
       redirect_url: this.authConfig.oauthSuccessRedirectUrl,
@@ -112,7 +123,18 @@ export class AuthController {
     await this.refreshTokensService.delete(stored.id);
 
     const access_token = await this.jwtService.signAsync({ sub: user.id, type: 'access' });
-    const next_refresh_token = await this.issueRefreshToken(user.id);
+
+    const jti = randomUUID();
+    const next_refresh_token = await this.jwtService.signAsync(
+      { sub: user.id, jti, type: 'refresh' },
+      { expiresIn: this.authConfig.refreshTokenExpiresIn },
+    );
+    const exp = this.jwtService.decode<{ exp: number }>(next_refresh_token).exp;
+    await this.refreshTokensService.create({
+      user_id: user.id,
+      jti,
+      expires_at: new Date(exp * 1000),
+    });
 
     return {
       refreshed: true,
@@ -144,24 +166,5 @@ export class AuthController {
         eq(schema.refreshTokensTable.user_id, payload.sub),
       );
     }
-  }
-
-  private async issueRefreshToken(userId: string): Promise<string> {
-    const jti = randomUUID();
-
-    const refresh_token = await this.jwtService.signAsync(
-      { sub: userId, jti, type: 'refresh' },
-      { expiresIn: this.authConfig.refreshTokenExpiresIn },
-    );
-
-    const exp = this.jwtService.decode<{ exp: number }>(refresh_token).exp;
-
-    await this.refreshTokensService.create({
-      user_id: userId,
-      jti,
-      expires_at: new Date(exp * 1000),
-    });
-
-    return refresh_token;
   }
 }

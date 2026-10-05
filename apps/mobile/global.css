@@ -65,6 +65,7 @@
       --cash-border: #e8e8e8;
       --cash-accent-soft: #fff0ef;
       --cash-link: #aa3030;
+      --cash-skeleton: #ededed;
     }
     @variant dark {
       --cash-background: #101010;
@@ -76,6 +77,7 @@
       --cash-border: #303030;
       --cash-accent-soft: #392020;
       --cash-link: #ff9691;
+      --cash-skeleton: #242424;
     }
   }
 }
@@ -91,4 +93,8 @@
   --color-cash-accent-soft: var(--cash-accent-soft);
   --color-cash-hero-foreground: var(--cash-hero-foreground);
   --color-cash-link: var(--cash-link);
+}
+
+.skeleton__root {
+  background-color: var(--cash-skeleton);
 }

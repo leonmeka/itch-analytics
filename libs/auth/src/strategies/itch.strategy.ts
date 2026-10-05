@@ -3,25 +3,28 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { Request } from 'express';
 import { Strategy as AbstractStrategy } from 'passport-strategy';
 import { firstValueFrom } from 'rxjs';
-import { OAuthIdentitiesService, OAuthProvider, schema, User, UsersService } from '@/libs/shared';
+import { ApiKeysService, OAuthIdentitiesService, schema, User, UsersService } from '@/libs/shared';
 
 import { AUTH_CONFIG_KEY } from '../auth.constants';
 import type { AuthConfig } from '../auth.types';
+import { TokenCipherService } from '../crypto/token-cipher.service';
 
 const OAUTH_STATE_TTL_MS = 10 * 60_000;
 
 @Injectable()
-export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuthProvider.Itch) {
+export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, 'itch') {
   constructor(
     @Inject(AUTH_CONFIG_KEY)
     private readonly authConfig: AuthConfig,
+    private readonly apiKeysService: ApiKeysService,
     private readonly oauthIdentitiesService: OAuthIdentitiesService,
     private readonly usersService: UsersService,
     private readonly httpService: HttpService,
+    private readonly tokenCipherService: TokenCipherService,
   ) {
     super();
   }
@@ -36,15 +39,15 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
   }
 
   async validate(
-    _accessToken: string,
+    accessToken: string,
     _refreshToken: string | undefined,
     profile: Record<string, unknown>,
   ): Promise<User> {
     const rawUser: Record<string, unknown> = (profile.user as Record<string, unknown>) ?? profile;
 
-    const providerUserId = String(rawUser.id ?? rawUser.uid ?? '');
+    const itchId = String(rawUser.id ?? rawUser.uid ?? '');
 
-    if (!providerUserId) {
+    if (!itchId) {
       throw new Error('itch.io profile is missing an id');
     }
 
@@ -55,10 +58,7 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
       typeof rawUser.cover_url === 'string' && rawUser.cover_url ? rawUser.cover_url : undefined;
 
     const existing = await this.oauthIdentitiesService.find({
-      where: and(
-        eq(schema.oauthIdentitiesTable.provider, OAuthProvider.Itch),
-        eq(schema.oauthIdentitiesTable.provider_user_id, providerUserId),
-      ),
+      where: eq(schema.oauthIdentitiesTable.itch_id, itchId),
     });
 
     const profileData = {
@@ -66,9 +66,11 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
       name: displayName || username || urlName,
       avatar_url: avatarUrl,
     };
+    const encryptedToken = this.tokenCipherService.encrypt(accessToken);
 
     if (existing) {
       await this.oauthIdentitiesService.update(existing.id, profileData);
+      await this.upsertApiKey(existing.id, encryptedToken);
 
       const user = await this.usersService.find({
         where: eq(schema.usersTable.id, existing.user_id),
@@ -83,14 +85,33 @@ export class ItchOAuth2Strategy extends PassportStrategy(AbstractStrategy, OAuth
 
     const user = await this.usersService.create({});
 
-    await this.oauthIdentitiesService.create({
+    const identity = await this.oauthIdentitiesService.create({
       user_id: user.id,
-      provider: OAuthProvider.Itch,
-      provider_user_id: providerUserId,
+      itch_id: itchId,
       ...profileData,
     });
 
+    await this.upsertApiKey(identity.id, encryptedToken);
+
     return user;
+  }
+
+  private async upsertApiKey(identityId: string, encryptedToken: string): Promise<void> {
+    const existing = await this.apiKeysService.find({
+      where: eq(schema.apiKeysTable.oauth_identity_id, identityId),
+    });
+
+    if (existing) {
+      await this.apiKeysService.update(existing.id, {
+        access_token_encrypted: encryptedToken,
+      });
+      return;
+    }
+
+    await this.apiKeysService.create({
+      oauth_identity_id: identityId,
+      access_token_encrypted: encryptedToken,
+    });
   }
 
   private begin(_request: Request): void {

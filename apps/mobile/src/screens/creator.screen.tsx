@@ -14,10 +14,12 @@ export function CreatorScreen({ userId, onBack }: { userId: string; onBack: () =
   let content: ReactNode;
   if (profile.isPending) {
     content = (
-      <View className="items-center gap-3 py-9">
-        <Skeleton className="h-20 w-20 rounded-full" />
-        <Skeleton className="h-6 w-40 rounded-lg" />
-        <Skeleton className="h-12 w-32 rounded-xl" />
+      <View className="items-center pb-8 pt-4">
+        <Skeleton className="mb-4 h-20 w-20 rounded-full" />
+        <Skeleton className="h-7 w-44 rounded-lg" />
+        <Skeleton className="mt-1 h-5 w-28 rounded-md" />
+        <Skeleton className="mt-5 h-16 w-36 rounded-xl" />
+        <Skeleton className="mt-1 h-5 w-24 rounded-md" />
       </View>
     );
   } else if (profile.isError) {
@@ -43,15 +45,20 @@ export function CreatorScreen({ userId, onBack }: { userId: string; onBack: () =
   }
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+    <View className="flex-1">
       <View className="mx-auto w-full max-w-[640px] px-5">
         <View className="flex-row items-center gap-3 py-3">
           <CashIconButton name="back" label="Back to creators" onPress={onBack} />
           <Typography className="text-[20px] font-medium text-cash-foreground">Creator</Typography>
         </View>
-        {content}
       </View>
-    </ScrollView>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
+        <View className="mx-auto w-full max-w-[640px] px-5">{content}</View>
+      </ScrollView>
+    </View>
   );
 }
 

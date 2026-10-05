@@ -1,4 +1,6 @@
 import {
+  GameDto,
+  GamesSyncResultDto,
   OauthIdentityDto,
   PaginationDto,
   PaymentDto,
@@ -16,6 +18,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  Headers,
   NotFoundException,
   Param,
   Post,
@@ -24,12 +27,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { and, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { type AuthenticatedRequest, AuthGuard } from '@/libs/auth';
-import { PaymentsImporterService } from '@/libs/itch';
+import { GamesImporterService, PaymentsImporterService } from '@/libs/itch';
 import {
+  GamesService,
   OAuthIdentitiesService,
-  OAuthProvider,
   PaymentsService,
   schema,
   UsersService,
@@ -41,7 +44,9 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly paymentsService: PaymentsService,
+    private readonly gamesService: GamesService,
     private readonly paymentsImporterService: PaymentsImporterService,
+    private readonly gamesImporterService: GamesImporterService,
     private readonly oauthIdentitiesService: OAuthIdentitiesService,
   ) {}
 
@@ -170,6 +175,39 @@ export class UsersController {
     return this.paymentsImporterService.import(userId, body.csv);
   }
 
+  @Get(':user_id/games')
+  @UseGuards(AuthGuard)
+  async games(
+    @Req() request: AuthenticatedRequest,
+    @Param('user_id') userId: string,
+    @Query() pagination: PaginationDto,
+  ): Promise<GameDto[]> {
+    if (request.user?.id !== userId) {
+      throw new ForbiddenException("Cannot access another user's resources");
+    }
+
+    return this.gamesService.findMany({
+      where: eq(schema.gamesTable.user_id, userId),
+      orderBy: asc(schema.gamesTable.title),
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+  }
+
+  @Post(':user_id/games')
+  @UseGuards(AuthGuard)
+  async syncGames(
+    @Req() request: AuthenticatedRequest,
+    @Param('user_id') userId: string,
+    @Headers('x-itch-token') itchToken: string | undefined,
+  ): Promise<GamesSyncResultDto> {
+    if (request.user?.id !== userId) {
+      throw new ForbiddenException("Cannot access another user's resources");
+    }
+
+    return this.gamesImporterService.sync(userId, itchToken);
+  }
+
   @Get(':user_id/oauth-identity')
   @UseGuards(AuthGuard)
   async oauthIdentity(
@@ -181,10 +219,7 @@ export class UsersController {
     }
 
     return await this.oauthIdentitiesService.find({
-      where: and(
-        eq(schema.oauthIdentitiesTable.user_id, userId),
-        eq(schema.oauthIdentitiesTable.provider, OAuthProvider.Itch),
-      ),
+      where: eq(schema.oauthIdentitiesTable.user_id, userId),
     });
   }
 }

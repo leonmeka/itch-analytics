@@ -90,6 +90,11 @@ Excluded from the dot rule (entry/config files): `App.tsx`, `main.ts`,
   their public methods.
 - NEVER bypass the pattern by injecting `DATABASE_KEY` into feature
   services or controllers.
+- Config values NEVER reach services through `ConfigService` directly.
+  Services inject dedicated `Symbol()` keys (e.g. `TOKEN_ENC_KEY`,
+  `JWT_SECRET_KEY`, `AUTH_CONFIG_KEY`, `DATABASE_URL_KEY`); only module-level
+  providers touch `ConfigService` via `inject: [ConfigService]` +
+  `getOrThrow` factories.
 
 ## 6. Auth & security
 
@@ -98,9 +103,14 @@ Excluded from the dot rule (entry/config files): `App.tsx`, `main.ts`,
   `AuthGuard` + `UserOwnershipGuard` (owner or admin). Guards are applied
   per METHOD (controller-level guards would leak onto routes that don't
   have the `user_id` param).
-- The itch.io access token is NEVER persisted server-side. The client sends
-  it per request under the `x-itch-token` header; it is forwarded to
-  api.itch.io for that request only.
+- The itch.io access token is persisted server-side ENCRYPTED AT REST
+  (AES-256-GCM in `TokenCipherService`, keyed by `API_TOKEN_SECRET`) in the
+  `api_keys` table, linked to its `oauth_identities` row (one key per
+  identity). It is written at login by the itch OAuth strategy and decrypted
+  server-side only for itch.io API calls — never sent to clients in
+  plaintext and never exposed through any DTO.
+- Background syncs (e.g. `GamesSyncScheduler`) use the stored token; explicit
+  per-request `x-itch-token` header (when present) always takes precedence.
 - Sessions: JWT access/refresh cookie pair + Bearer support; the mobile
   client persists the pair in SecureStore (its cookie jar does not survive
   restarts) and rotates via `/auth/refresh` transparently on 401.
@@ -108,10 +118,10 @@ Excluded from the dot rule (entry/config files): `App.tsx`, `main.ts`,
   exchange, no client secret. The passport strategy owns the flow; the
   app's `/auth/login` 302s to itch.io and itch redirects straight back to
   the app scheme (`itch-dashboard://oauth`).
-- itch.io's API does NOT expose revenue/earnings (verified empirically AND
-  against community knowledge). Revenue comes from manual CSV sync
-  (dashboard export-purchases) via the payments import endpoint. Do not
-  reintroduce API-key storage, crypto services, or payout scraping.
+- itch.io's payment-level revenue still comes from manual CSV sync
+  (dashboard export-purchases) via the payments import endpoint. The
+  `profile/games` sync does not deliver revenue/earnings values for OAuth
+  tokens — the games table intentionally has no earnings column.
 
 ## 7. React Query on mobile (STRICT)
 

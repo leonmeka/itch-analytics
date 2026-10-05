@@ -7,7 +7,7 @@ import { useCSSVariable } from 'uniwind';
 import RedLogo from '../../assets/itch-logo-red.svg';
 import { useCreators } from '../api/queries';
 import { CashIcon } from '../components/cash-icon.component';
-import { CashState, PaymentSkeletons } from '../components/cash-ui.component';
+import { CashState, CreatorsSkeletons } from '../components/cash-ui.component';
 import { PageHeader } from '../components/page-header.component';
 import { PressableFeedback } from '../components/pressable-feedback.component';
 import { Button } from '../components/ui/button';
@@ -65,7 +65,7 @@ export function CreatorsScreen({ onSelect }: { onSelect: (userId: string) => voi
   const items = useMemo(() => creators.data?.pages.flat() ?? [], [creators.data]);
 
   const state = creators.isPending ? (
-    <PaymentSkeletons />
+    <CreatorsSkeletons />
   ) : creators.isError ? (
     <CashState
       title="Couldn't load creators"

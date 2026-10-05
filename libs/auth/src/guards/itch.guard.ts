@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import passport from 'passport';
-import { OAuthProvider } from '@/libs/shared';
 
 @Injectable()
 export class ItchAuthGuard implements CanActivate {
@@ -16,7 +15,7 @@ export class ItchAuthGuard implements CanActivate {
     const response = http.getResponse<Response>();
 
     await new Promise<void>((resolve, reject) => {
-      passport.authenticate(OAuthProvider.Itch, { session: false }, (error, user) => {
+      passport.authenticate('itch', { session: false }, (error, user) => {
         if (error || !user) {
           reject(error instanceof Error ? error : new UnauthorizedException());
           return;

@@ -3,15 +3,18 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import type { JwtModuleOptions, JwtSignOptions } from '@nestjs/jwt';
 import { JwtModule } from '@nestjs/jwt';
-import { OAuthIdentitiesModule, UsersModule } from '@/libs/shared';
+import { ApiKeysModule, OAuthIdentitiesModule, UsersModule } from '@/libs/shared';
 
 import { AUTH_CONFIG_KEY } from './auth.constants';
 import type { AuthConfig } from './auth.types';
+import { CryptoModule } from './crypto/crypto.module';
 import { ItchAuthGuard } from './guards/itch.guard';
 import { ItchOAuth2Strategy } from './strategies/itch.strategy';
 
 @Module({
   imports: [
+    ApiKeysModule,
+    CryptoModule,
     OAuthIdentitiesModule,
     UsersModule,
     HttpModule,
@@ -45,7 +48,7 @@ import { ItchOAuth2Strategy } from './strategies/itch.strategy';
         ),
         itchClientID: configService.getOrThrow<string>('API_OAUTH_ITCH_CLIENT_ID'),
         itchCallbackURL: configService.getOrThrow<string>('API_OAUTH_ITCH_CALLBACK_URL'),
-        itchScope: ['profile:me'],
+        itchScope: ['profile:me', 'profile:games'],
         itchAuthorizationURL: 'https://itch.io/user/oauth',
         itchUserinfoURL: 'https://api.itch.io/profile',
       }),

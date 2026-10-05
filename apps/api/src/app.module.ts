@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '@/libs/auth';
 import { ItchModule } from '@/libs/itch';
 import {
+  ApiKeysModule,
   DatabaseModule,
+  GamesModule,
   OAuthIdentitiesModule,
   PaymentsModule,
   RefreshTokensModule,
@@ -29,12 +32,15 @@ import { env } from './env';
       isGlobal: true,
     }),
     DatabaseModule,
+    ApiKeysModule,
     UsersModule,
     OAuthIdentitiesModule,
     RefreshTokensModule,
     PaymentsModule,
+    GamesModule,
     AuthModule,
     ItchModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [HealthController, AuthController, UsersController],
   providers: [

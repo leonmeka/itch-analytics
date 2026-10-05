@@ -196,7 +196,7 @@ async function main() {
           username: f.valuesFromArray({ values: HANDLES }),
           name: f.valuesFromArray({ values: STUDIO_NAMES }),
           avatar_url: f.valuesFromArray({ values: AVATARS }),
-          provider_user_id: f.uuid(),
+          itch_id: f.uuid(),
         },
       },
       paymentsTable: {

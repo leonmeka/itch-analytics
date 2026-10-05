@@ -1,21 +1,7 @@
 import { relations } from 'drizzle-orm';
-import {
-  index,
-  type PgColumn,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-  unique,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { index, type PgColumn, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 
-import { OAuthProvider } from '../../types/oauth-identities.types';
 import { usersTable } from './users.sql';
-
-const oauthProviderValues = Object.values(OAuthProvider) as [OAuthProvider, ...OAuthProvider[]];
-
-export const oauthProviderEnum = pgEnum('oauth_provider', oauthProviderValues);
 
 export const oauthIdentitiesTable = pgTable(
   'oauth_identities',
@@ -31,14 +17,14 @@ export const oauthIdentitiesTable = pgTable(
       .notNull()
       .references((): PgColumn => usersTable.id, { onDelete: 'cascade' }),
 
-    provider: oauthProviderEnum().notNull(),
-    provider_user_id: text().notNull(),
+    itch_id: text().notNull(),
+
     username: text(),
     name: text(),
     avatar_url: text(),
   },
   (table) => [
-    unique('oauth_identities_provider_user_id_unique').on(table.provider, table.provider_user_id),
+    unique('oauth_identities_itch_id_unique').on(table.itch_id),
     index('oauth_identities_user_id_idx').on(table.user_id),
   ],
 );

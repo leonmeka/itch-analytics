@@ -1,9 +1,8 @@
 import { createHmac } from 'node:crypto';
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, inArray } from 'drizzle-orm';
-
 import { PaymentsService, schema } from '@/libs/shared';
+import { JWT_SECRET_KEY } from '../itch.constants';
 import { type ParsedPaymentsCsv, parsePaymentsCsv, toBareCents, toCents } from './payments.parser';
 
 export interface PaymentsImportSummary {
@@ -36,14 +35,14 @@ const UPDATABLE_FIELDS = [
 @Injectable()
 export class PaymentsImporterService {
   constructor(
+    @Inject(JWT_SECRET_KEY) private readonly jwtSecret: string,
     private readonly paymentsService: PaymentsService,
-    private readonly configService: ConfigService,
   ) {}
 
   private customerKey(email: string | null): string | null {
     if (!email) return null;
 
-    return createHmac('sha256', this.configService.getOrThrow<string>('API_JWT_SECRET'))
+    return createHmac('sha256', this.jwtSecret)
       .update(email.trim().toLowerCase())
       .digest('base64url');
   }

@@ -1,5 +1,5 @@
 import '../../global.css';
-import type { PaymentDto } from '@itch/protocol';
+import type { GameDto, PaymentDto } from '@itch/protocol';
 import { StatusBar } from 'expo-status-bar';
 import { Card } from 'heroui-native/card';
 import { Input } from 'heroui-native/input';
@@ -18,11 +18,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable, useUniwind } from 'uniwind';
 import RedLogo from '../../assets/itch-logo-red.svg';
 import {
+  useGames,
   useLastSynced,
   useOauthIdentity,
   usePayments,
   usePaymentsGraph,
   usePaymentsSummary,
+  useSyncGames,
 } from '../api/queries';
 import { BottomNavigation, type NavigationTab } from '../components/bottom-navigation.component';
 import { CashIcon } from '../components/cash-icon.component';
@@ -30,6 +32,8 @@ import {
   CashIconButton,
   CashSection,
   CashState,
+  GameRow,
+  GameSkeletons,
   PaymentRow,
   PaymentSkeletons,
 } from '../components/cash-ui.component';
@@ -47,6 +51,7 @@ import { useAuth } from '../providers/auth.provider';
 import { formatDate, formatMoney } from '../utils/payments.format';
 import { CreatorScreen } from './creator.screen';
 import { CreatorsScreen } from './creators.screen';
+import { GameDetailScreen } from './game-detail.screen';
 import { ItchSyncScreen } from './itch-sync.screen';
 import { PaymentDetailScreen } from './payment-detail.screen';
 import { SettingsScreen } from './settings.screen';
@@ -57,6 +62,7 @@ export function DashboardScreen() {
   const profile = useOauthIdentity(userId);
   const [tab, setTab] = useState<NavigationTab>('Home');
   const [detail, setDetail] = useState<PaymentDto | null>(null);
+  const [gameDetail, setGameDetail] = useState<GameDto | null>(null);
   const [creatorId, setCreatorId] = useState<string | null>(null);
   const [syncOpen, setSyncOpen] = useState(false);
   const [syncPhase, setSyncPhase] = useState<PaymentsSyncPhase>('idle');
@@ -71,6 +77,9 @@ export function DashboardScreen() {
   const summary = usePaymentsSummary(userId, search ? { search } : undefined);
   const graph = usePaymentsGraph(userId, search ? { search } : undefined);
   const payments = usePayments(userId, tab === 'Payments' && search ? { search } : undefined);
+  const games = useGames(userId);
+  const syncGames = useSyncGames();
+  const gameItems = useMemo(() => games.data?.pages.flat() ?? [], [games.data]);
   const items = useMemo(() => {
     const seen = new Set<string>();
     return (
@@ -84,6 +93,7 @@ export function DashboardScreen() {
   const navigate = (next: NavigationTab) => {
     setTab(next);
     setDetail(null);
+    setGameDetail(null);
     setCreatorId(null);
     setSyncOpen(false);
   };
@@ -98,6 +108,10 @@ export function DashboardScreen() {
         setDetail(null);
         return true;
       }
+      if (gameDetail) {
+        setGameDetail(null);
+        return true;
+      }
       if (creatorId) {
         setCreatorId(null);
         return true;
@@ -109,7 +123,26 @@ export function DashboardScreen() {
       return false;
     });
     return () => subscription.remove();
-  }, [creatorId, detail, tab]);
+  }, [creatorId, detail, gameDetail, tab]);
+  const gamesState = games.isPending ? (
+    <GameSkeletons />
+  ) : games.isError ? (
+    <CashState
+      title="Games couldn't load"
+      description="Check your connection and try again."
+      icon="info"
+      action="Try again"
+      onPress={() => void games.refetch()}
+    />
+  ) : (
+    <CashState
+      title="No games yet"
+      description="Sync your itch.io account to pull in your games."
+      icon="game"
+      action="Sync now"
+      onPress={() => userId && syncGames.mutate({ userId })}
+    />
+  );
   const paymentsState = payments.isPending ? (
     <PaymentSkeletons />
   ) : payments.isError ? (
@@ -146,6 +179,10 @@ export function DashboardScreen() {
         <View className="flex-1" style={{ paddingTop: insets.top }}>
           <PaymentDetailScreen payment={detail} onBack={() => setDetail(null)} />
         </View>
+      ) : gameDetail ? (
+        <View className="flex-1" style={{ paddingTop: insets.top }}>
+          <GameDetailScreen game={gameDetail} onBack={() => setGameDetail(null)} />
+        </View>
       ) : creatorId ? (
         <View className="flex-1" style={{ paddingTop: insets.top }}>
           <CreatorScreen userId={creatorId} onBack={() => setCreatorId(null)} />
@@ -156,61 +193,146 @@ export function DashboardScreen() {
         </View>
       ) : tab === 'Creators' ? (
         <CreatorsScreen onSelect={setCreatorId} />
-      ) : tab === 'Payments' ? (
-        <FlatList
-          data={items}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{
-            paddingTop: insets.top,
-            paddingBottom: 24,
-            maxWidth: 640,
-            width: '100%',
-            alignSelf: 'center',
-          }}
-          refreshControl={
-            <RefreshControl
-              refreshing={busy}
-              onRefresh={() => void refresh()}
-              tintColor={foreground}
-              colors={[foreground]}
-              progressViewOffset={insets.top}
-            />
-          }
-          ListHeaderComponent={
-            <>
-              <View className="mx-auto w-full max-w-[640px] px-5">
-                <View className="flex-row items-center gap-3 py-3">
-                  <CashIconButton
-                    name="back"
-                    label="Back to home"
-                    onPress={() => navigate('Home')}
-                  />
-                  <Typography className="flex-1 text-[20px] font-medium text-cash-foreground">
-                    Payments
-                  </Typography>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-11 rounded-full bg-cash-surface px-4"
-                    accessibilityLabel="Sync purchases"
-                    isDisabled={syncPhase === 'running'}
-                    onPress={startSync}
-                  >
-                    <CashIcon name="sync" size={17} />
-                    <Button.Label className="text-cash-foreground">
-                      {syncPhase === 'running'
-                        ? 'Syncing…'
-                        : syncPhase === 'error'
-                          ? 'Sync failed'
-                          : lastSynced.data
-                            ? `Sync · ${formatLastSynced(lastSynced.data)}`
-                            : 'Sync now'}
-                    </Button.Label>
-                  </Button>
-                </View>
+      ) : tab === 'Games' ? (
+        <View className="flex-1" style={{ paddingTop: insets.top }}>
+          <View className="mx-auto w-full max-w-[640px] px-5">
+            <View className="flex-row items-center gap-3 py-3">
+              <CashIconButton name="back" label="Back to home" onPress={() => navigate('Home')} />
+              <Typography className="flex-1 text-[20px] font-medium text-cash-foreground">
+                Games
+              </Typography>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-11 rounded-full bg-cash-surface px-4"
+                accessibilityLabel="Sync games"
+                isDisabled={syncGames.isPending}
+                onPress={() => userId && syncGames.mutate({ userId })}
+              >
+                <CashIcon name="sync" size={17} />
+                <Button.Label className="text-cash-foreground">
+                  {syncGames.isPending
+                    ? 'Syncing…'
+                    : syncGames.isError
+                      ? 'Sync failed'
+                      : 'Sync now'}
+                </Button.Label>
+              </Button>
+            </View>
+          </View>
+          <FlatList
+            data={gameItems}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingBottom: 24,
+              maxWidth: 640,
+              width: '100%',
+              alignSelf: 'center',
+            }}
+            refreshControl={
+              <RefreshControl
+                refreshing={games.isRefetching}
+                onRefresh={() => void games.refetch()}
+                tintColor={foreground}
+                colors={[foreground]}
+              />
+            }
+            renderItem={({ item, index }) => (
+              <View
+                className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-[24px]' : ''} ${index === gameItems.length - 1 ? 'rounded-b-[24px]' : ''}`}
+              >
+                <GameRow
+                  game={item}
+                  onPress={() => setGameDetail(item)}
+                  last={index === gameItems.length - 1}
+                />
               </View>
+            )}
+            ListEmptyComponent={
+              <View className="mx-5 rounded-[24px] bg-cash-surface">{gamesState}</View>
+            }
+            onEndReachedThreshold={0.4}
+            onEndReached={() => {
+              if (games.hasNextPage && !games.isFetchingNextPage) {
+                void games.fetchNextPage();
+              }
+            }}
+            ListFooterComponent={
+              games.hasNextPage ? (
+                <View className="h-16 items-center justify-center">
+                  {games.isFetchNextPageError ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="min-h-9 px-3"
+                      onPress={() => void games.fetchNextPage()}
+                    >
+                      <Button.Label className="text-[13px] text-cash-link">
+                        Couldn't load more — tap to retry
+                      </Button.Label>
+                    </Button>
+                  ) : (
+                    <ActivityIndicator color={muted} />
+                  )}
+                </View>
+              ) : gameItems.length > 0 ? (
+                <Typography type="body-xs" className="py-6 text-center text-cash-muted">
+                  You're all caught up.
+                </Typography>
+              ) : null
+            }
+          />
+        </View>
+      ) : tab === 'Payments' ? (
+        <View className="flex-1" style={{ paddingTop: insets.top }}>
+          <View className="mx-auto w-full max-w-[640px] px-5">
+            <View className="flex-row items-center gap-3 py-3">
+              <CashIconButton name="back" label="Back to home" onPress={() => navigate('Home')} />
+              <Typography className="flex-1 text-[20px] font-medium text-cash-foreground">
+                Payments
+              </Typography>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-11 rounded-full bg-cash-surface px-4"
+                accessibilityLabel="Sync purchases"
+                isDisabled={syncPhase === 'running'}
+                onPress={startSync}
+              >
+                <CashIcon name="sync" size={17} />
+                <Button.Label className="text-cash-foreground">
+                  {syncPhase === 'running'
+                    ? 'Syncing…'
+                    : syncPhase === 'error'
+                      ? 'Sync failed'
+                      : lastSynced.data
+                        ? `Sync · ${formatLastSynced(lastSynced.data)}`
+                        : 'Sync now'}
+                </Button.Label>
+              </Button>
+            </View>
+          </View>
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              paddingBottom: 24,
+              maxWidth: 640,
+              width: '100%',
+              alignSelf: 'center',
+            }}
+            refreshControl={
+              <RefreshControl
+                refreshing={busy}
+                onRefresh={() => void refresh()}
+                tintColor={foreground}
+                colors={[foreground]}
+              />
+            }
+            ListHeaderComponent={
               <View className="gap-5 px-5 pb-5">
                 {userId ? (
                   <PaymentsSync
@@ -258,53 +380,53 @@ export function DashboardScreen() {
                   </Typography>
                 </View>
               </View>
-            </>
-          }
-          renderItem={({ item, index }) => (
-            <View
-              className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-[24px]' : ''} ${index === items.length - 1 ? 'rounded-b-[24px]' : ''}`}
-            >
-              <PaymentRow
-                payment={item}
-                onPress={() => setDetail(item)}
-                last={index === items.length - 1}
-              />
-            </View>
-          )}
-          ListEmptyComponent={
-            <View className="mx-5 rounded-[24px] bg-cash-surface">{paymentsState}</View>
-          }
-          onEndReachedThreshold={0.4}
-          onEndReached={() => {
-            if (payments.hasNextPage && !payments.isFetchingNextPage) {
-              void payments.fetchNextPage();
             }
-          }}
-          ListFooterComponent={
-            payments.hasNextPage ? (
-              <View className="h-16 items-center justify-center">
-                {payments.isFetchNextPageError ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="min-h-9 px-3"
-                    onPress={() => void payments.fetchNextPage()}
-                  >
-                    <Button.Label className="text-[13px] text-cash-link">
-                      Couldn't load more — tap to retry
-                    </Button.Label>
-                  </Button>
-                ) : (
-                  <ActivityIndicator color={muted} />
-                )}
+            renderItem={({ item, index }) => (
+              <View
+                className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-[24px]' : ''} ${index === items.length - 1 ? 'rounded-b-[24px]' : ''}`}
+              >
+                <PaymentRow
+                  payment={item}
+                  onPress={() => setDetail(item)}
+                  last={index === items.length - 1}
+                />
               </View>
-            ) : items.length > 0 ? (
-              <Typography type="body-xs" className="py-6 text-center text-cash-muted">
-                You're all caught up.
-              </Typography>
-            ) : null
-          }
-        />
+            )}
+            ListEmptyComponent={
+              <View className="mx-5 rounded-[24px] bg-cash-surface">{paymentsState}</View>
+            }
+            onEndReachedThreshold={0.4}
+            onEndReached={() => {
+              if (payments.hasNextPage && !payments.isFetchingNextPage) {
+                void payments.fetchNextPage();
+              }
+            }}
+            ListFooterComponent={
+              payments.hasNextPage ? (
+                <View className="h-16 items-center justify-center">
+                  {payments.isFetchNextPageError ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="min-h-9 px-3"
+                      onPress={() => void payments.fetchNextPage()}
+                    >
+                      <Button.Label className="text-[13px] text-cash-link">
+                        Couldn't load more — tap to retry
+                      </Button.Label>
+                    </Button>
+                  ) : (
+                    <ActivityIndicator color={muted} />
+                  )}
+                </View>
+              ) : items.length > 0 ? (
+                <Typography type="body-xs" className="py-6 text-center text-cash-muted">
+                  You're all caught up.
+                </Typography>
+              ) : null
+            }
+          />
+        </View>
       ) : (
         <DashboardScrollView
           key="dashboard"
@@ -361,9 +483,12 @@ export function DashboardScreen() {
             <View className="mx-auto w-full max-w-[640px] gap-3 px-5">
               <Card className="rounded-[28px] bg-cash-surface p-5 shadow-none">
                 {graph.isPending ? (
-                  <View className="gap-4">
-                    <Skeleton className="h-14 w-52 rounded-xl" />
-                    <Skeleton className="h-[200px] w-full rounded-2xl" />
+                  <View>
+                    <Skeleton className="h-4 w-24 rounded-md" />
+                    <Skeleton className="mt-0.5 h-8 w-52 rounded-lg" />
+                    <View className="mt-3">
+                      <Skeleton className="h-[176px] w-full rounded-2xl" />
+                    </View>
                   </View>
                 ) : graph.isError ? (
                   <CashState
@@ -405,12 +530,12 @@ export function DashboardScreen() {
               {graph.isPending ? (
                 <>
                   <View className="flex-row gap-3">
-                    <Skeleton className="h-[150px] flex-1 rounded-[24px]" />
-                    <Skeleton className="h-[150px] flex-1 rounded-[24px]" />
+                    <Skeleton className="h-[128px] flex-1 rounded-[24px]" />
+                    <Skeleton className="h-[128px] flex-1 rounded-[24px]" />
                   </View>
                   <View className="flex-row gap-3">
-                    <Skeleton className="h-[150px] flex-1 rounded-[24px]" />
-                    <Skeleton className="h-[150px] flex-1 rounded-[24px]" />
+                    <Skeleton className="h-[128px] flex-1 rounded-[24px]" />
+                    <Skeleton className="h-[128px] flex-1 rounded-[24px]" />
                   </View>
                 </>
               ) : graph.isError || !graph.data ? (
@@ -451,6 +576,23 @@ export function DashboardScreen() {
                   </View>
                 </>
               )}
+              <View>
+                <CashSection title="Games" action="See all" onPress={() => navigate('Games')} />
+                <Card className="gap-0 overflow-hidden rounded-[24px] bg-cash-surface p-0 shadow-none">
+                  {gameItems.length
+                    ? gameItems
+                        .slice(0, 4)
+                        .map((game, index) => (
+                          <GameRow
+                            key={game.id}
+                            game={game}
+                            onPress={() => setGameDetail(game)}
+                            last={index === Math.min(gameItems.length, 4) - 1}
+                          />
+                        ))
+                    : gamesState}
+                </Card>
+              </View>
               <View>
                 <CashSection
                   title="Payments"

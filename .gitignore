@@ -9,3 +9,4 @@ coverage/
 libs/shared/src/db/migrations/*.sql
 !libs/shared/src/db/migrations/meta/
 !libs/shared/src/db/migrations/*.sql
+.expo

@@ -5,7 +5,6 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import { DATABASE_KEY } from '../db/db.constants';
 import { schema, TSchema } from '../db/db.inference';
-import { OAuthProvider } from '../types/oauth-identities.types';
 import { BaseRepository } from './base.repository';
 
 @Injectable()
@@ -29,10 +28,7 @@ export class UsersRepository extends BaseRepository<
       .from(schema.usersTable)
       .innerJoin(
         schema.oauthIdentitiesTable,
-        and(
-          eq(schema.oauthIdentitiesTable.user_id, schema.usersTable.id),
-          eq(schema.oauthIdentitiesTable.provider, OAuthProvider.Itch),
-        ),
+        eq(schema.oauthIdentitiesTable.user_id, schema.usersTable.id),
       )
       .leftJoin(schema.paymentsTable, eq(schema.paymentsTable.user_id, schema.usersTable.id))
       .where(
@@ -68,10 +64,7 @@ export class UsersRepository extends BaseRepository<
       .from(schema.usersTable)
       .innerJoin(
         schema.oauthIdentitiesTable,
-        and(
-          eq(schema.oauthIdentitiesTable.user_id, schema.usersTable.id),
-          eq(schema.oauthIdentitiesTable.provider, OAuthProvider.Itch),
-        ),
+        eq(schema.oauthIdentitiesTable.user_id, schema.usersTable.id),
       )
       .leftJoin(schema.paymentsTable, eq(schema.paymentsTable.user_id, schema.usersTable.id))
       .where(eq(schema.usersTable.id, userId))

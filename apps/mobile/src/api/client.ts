@@ -1,5 +1,7 @@
 import type {
   AuthTokenResponseDto,
+  GameDto,
+  GamesSyncResultDto,
   OauthIdentityDto,
   PaymentDto,
   PaymentsFilterDto,
@@ -65,6 +67,10 @@ export const apiClient = {
     ),
   payment: (userId: string, paymentId: string) =>
     authedFetch<PaymentDto>(`/users/${userId}/payments/${paymentId}`),
+  games: (userId: string, limit: number, offset: number) =>
+    authedFetch<GameDto[]>(`/users/${userId}/games?${searchParams({ limit, offset })}`),
+  syncGames: (userId: string) =>
+    authedFetch<GamesSyncResultDto>(`/users/${userId}/games`, { method: 'POST' }),
   creators: (limit: number, offset: number) =>
     authedFetch<UserWithRevenueDto[]>(`/users?${searchParams({ limit, offset })}`),
   creator: (userId: string) => authedFetch<UserProfileDto | null>(`/users/${userId}/profile`),

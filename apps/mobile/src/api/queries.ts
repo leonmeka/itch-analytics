@@ -1,4 +1,5 @@
 import type {
+  GameDto,
   OauthIdentityDto,
   PaymentDto,
   PaymentsFilterDto,
@@ -20,6 +21,7 @@ export const queryKeys = {
   payments: ['payments'] as const,
   paymentsSummary: ['payments-summary'] as const,
   paymentsGraph: ['payments-graph'] as const,
+  games: ['games'] as const,
   creators: ['creators'] as const,
   creatorProfile: ['creator-profile'] as const,
   lastSynced: ['last-synced'] as const,
@@ -27,6 +29,7 @@ export const queryKeys = {
 
 export const PAYMENTS_PAGE_SIZE = 20;
 export const CREATORS_PAGE_SIZE = 20;
+export const GAMES_PAGE_SIZE = 20;
 
 export function useHealth() {
   return useQuery({
@@ -98,6 +101,35 @@ export function usePayments(userId: string | null, filters: Partial<PaymentsFilt
     enabled: userId != null,
     staleTime: 60_000,
     retry: false,
+  });
+}
+
+export function useGames(userId: string | null) {
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.games, userId, GAMES_PAGE_SIZE] as const,
+    queryFn: ({ pageParam }) =>
+      apiClient.games(userId as string, GAMES_PAGE_SIZE, pageParam as number) as Promise<GameDto[]>,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, pages) => {
+      if (lastPage.length < GAMES_PAGE_SIZE) return undefined;
+
+      return pages.reduce((offset, page) => offset + page.length, 0);
+    },
+    enabled: userId != null,
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+export function useSyncGames() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId }: { userId: string }) => apiClient.syncGames(userId),
+    onError: (error) => console.warn('games sync failed', error),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.games });
+    },
   });
 }
 

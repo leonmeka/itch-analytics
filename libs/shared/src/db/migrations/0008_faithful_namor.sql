@@ -1,0 +1,1 @@
+ALTER TABLE "oauth_identities" ADD COLUMN "access_token_encrypted" text;
