@@ -3,6 +3,10 @@ import type { PaymentDto } from '@itch/protocol';
 export function formatMoney(cents: number): string {
   return new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' }).format(cents / 100);
 }
+export function paymentName(payment: PaymentDto): string {
+  return payment.object_name?.trim() || 'Sub product / DLC';
+}
+
 export function paymentAmount(payment: PaymentDto): string {
   return payment.amount_cents != null ? formatMoney(payment.amount_cents) : 'Amount unavailable';
 }

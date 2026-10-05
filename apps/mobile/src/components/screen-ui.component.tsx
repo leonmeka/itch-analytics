@@ -4,7 +4,7 @@ import { Typography } from 'heroui-native/text';
 import type { ReactNode } from 'react';
 import { Image, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { formatDate, paymentAmount, paymentSource } from '../utils/payments.format';
+import { formatDate, paymentAmount, paymentName } from '../utils/payments.format';
 import { Icon, type IconName } from './icon.component';
 import { PressableFeedback } from './pressable-feedback.component';
 import { Button } from './ui/button';
@@ -108,19 +108,19 @@ export function PaymentRow({
   return (
     <PressableFeedback
       accessibilityRole="button"
-      accessibilityLabel={`${payment.object_name ?? 'Payment'}, ${paymentAmount(payment)}, ${formatDate(payment.purchased_at)}. View details.`}
+      accessibilityLabel={`${paymentName(payment)}, ${paymentAmount(payment)}, ${formatDate(payment.purchased_at)}. View details.`}
       onPress={onPress}
       className={`min-h-[86px] flex-row items-center gap-3 px-4 py-4 ${last ? '' : 'border-b border-app-border'}`}
     >
       <View className="h-11 w-11 items-center justify-center rounded-full bg-app-well">
         <Icon name="receipt" size={19} />
       </View>
-      <View className="flex-1 gap-1">
+      <View className="flex-1 gap-0.5">
         <Typography numberOfLines={1} className="text-[15px] font-medium text-app-foreground">
-          {payment.object_name ?? '–'}
+          {paymentName(payment)}
         </Typography>
         <Typography numberOfLines={1} className="text-[12px] text-app-muted">
-          {formatDate(payment.purchased_at)} · {paymentSource(payment.source)}
+          {formatDate(payment.purchased_at)}
         </Typography>
       </View>
       <View className="max-w-[125px] items-end">

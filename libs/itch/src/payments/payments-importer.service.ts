@@ -95,7 +95,7 @@ export class PaymentsImporterService {
     return {
       user_id: userId,
       external_id: row.externalId,
-      object_name: row.values.object_name ?? null,
+      object_name: row.values.object_name ?? 'Sub product / DLC',
       amount_cents: row.amountCents,
       currency: row.values.currency ?? null,
       source: row.values.source ?? null,

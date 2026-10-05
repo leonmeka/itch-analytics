@@ -7,7 +7,13 @@ import { Icon } from '../components/icon.component';
 import { PageHeader } from '../components/page-header.component';
 import { DetailRow } from '../components/screen-ui.component';
 import type { RootStackParamList } from '../navigation/types';
-import { formatDate, formatMoney, paymentAmount, paymentSource } from '../utils/payments.format';
+import {
+  formatDate,
+  formatMoney,
+  paymentAmount,
+  paymentName,
+  paymentSource,
+} from '../utils/payments.format';
 
 export function PaymentDetailScreen({
   route,
@@ -37,7 +43,7 @@ export function PaymentDetailScreen({
               <Icon name="receipt" size={30} />
             </View>
             <Typography className="text-center text-[23px] font-medium tracking-[-0.5px] text-app-foreground">
-              {payment.object_name ?? '–'}
+              {paymentName(payment)}
             </Typography>
             <Typography
               adjustsFontSizeToFit

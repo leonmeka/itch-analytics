@@ -7,10 +7,12 @@ export function StatCard({
   label,
   points,
   formatValue,
+  showChange = true,
 }: {
   label: string;
   points: TimeSeriesPoint[];
   formatValue: (value: number) => string;
+  showChange?: boolean;
 }) {
   return (
     <View className="min-w-0 flex-1 overflow-hidden rounded-app-card bg-app-surface">
@@ -20,6 +22,7 @@ export function StatCard({
           label={label}
           formatValue={formatValue}
           aspectRatio={2.5}
+          showChange={showChange}
         />
       </View>
     </View>
