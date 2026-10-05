@@ -14,6 +14,7 @@ import {
 import { type CompleteLoginInput, loginURL } from '../api/client';
 import { queryKeys, useCompleteLogin, useLogout, useMe } from '../api/queries';
 import { loadSession, saveSession } from '../api/session';
+import { deleteItchToken, saveItchToken } from '../utils/sync.storage';
 
 export const OAUTH_RETURN_SCHEME = 'itch-dashboard';
 export const OAUTH_RETURN_PATH = 'oauth';
@@ -57,6 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         accessToken: result.access_token,
         refreshToken: result.refresh_token,
       });
+      await saveItchToken(input.accessToken);
 
       queryClient.setQueryData(queryKeys.me, result.user);
       void queryClient.invalidateQueries({ queryKey: queryKeys.oauthIdentity });
@@ -95,6 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [completeLogin]);
 
   const logout = useCallback(() => {
+    void deleteItchToken();
     logoutMutation.mutate();
   }, [logoutMutation]);
 

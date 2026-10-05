@@ -133,12 +133,13 @@ export function useGames(userId: string | null) {
   });
 }
 
-export function useSyncGames() {
+export function useImportGames() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId }: { userId: string }) => apiClient.syncGames(userId),
-    onError: (error) => console.warn('games sync failed', error),
+    mutationFn: ({ userId, payload }: { userId: string; payload: Record<string, unknown> }) =>
+      apiClient.importGames(userId, payload),
+    onError: (error) => console.warn('games import failed', error),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.games });
     },

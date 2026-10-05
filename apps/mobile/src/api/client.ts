@@ -71,8 +71,12 @@ export const apiClient = {
     authedFetch<PaymentDto>(`/users/${userId}/payments/${paymentId}`),
   games: (userId: string, limit: number, offset: number) =>
     authedFetch<GameDto[]>(`/users/${userId}/games?${searchParams({ limit, offset })}`),
-  syncGames: (userId: string) =>
-    authedFetch<GamesSyncResultDto>(`/users/${userId}/games`, { method: 'POST' }),
+  importGames: (userId: string, payload: Record<string, unknown>) =>
+    authedFetch<GamesSyncResultDto>(`/users/${userId}/games/import`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
   importViews: (userId: string, payload: Record<string, unknown>) =>
     authedFetch<ViewsImportResultDto>(`/users/${userId}/views`, {
       method: 'POST',

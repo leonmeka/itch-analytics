@@ -16,7 +16,6 @@ import {
   usePayments,
   usePaymentsGraph,
   usePaymentsSummary,
-  useSyncGames,
   useViewsGraph,
 } from '../api/queries';
 import { BottomNavigation, type NavigationTab } from '../components/bottom-navigation.component';
@@ -77,7 +76,6 @@ function DashboardContent() {
   const payments = usePayments(userId, tab === 'Payments' && search ? { search } : undefined);
   const games = useGames(userId);
   const viewsGraph = useViewsGraph(userId);
-  const syncGames = useSyncGames();
   const gameItems = useMemo(() => games.data?.pages.flat() ?? [], [games.data]);
   const items = useMemo(() => {
     const seen = new Set<string>();
@@ -144,7 +142,7 @@ function DashboardContent() {
       description="Sync your itch.io account to pull in your games."
       icon="game"
       action="Sync now"
-      onPress={() => userId && syncGames.mutate({ userId })}
+      onPress={startSync}
     />
   );
   const paymentsState = payments.isPending ? (

@@ -20,7 +20,6 @@ import {
   Controller,
   ForbiddenException,
   Get,
-  Headers,
   NotFoundException,
   Param,
   Post,
@@ -199,18 +198,18 @@ export class UsersController {
     });
   }
 
-  @Post(':user_id/games')
+  @Post(':user_id/games/import')
   @UseGuards(AuthGuard)
-  async syncGames(
+  async importGames(
     @Req() request: AuthenticatedRequest,
     @Param('user_id') userId: string,
-    @Headers('x-itch-token') itchToken: string | undefined,
+    @Body() body: Record<string, unknown>,
   ): Promise<GamesSyncResultDto> {
     if (request.user?.id !== userId) {
       throw new ForbiddenException("Cannot access another user's resources");
     }
 
-    return this.gamesImporterService.sync(userId, itchToken);
+    return this.gamesImporterService.ingest(userId, body);
   }
 
   @Post(':user_id/views')

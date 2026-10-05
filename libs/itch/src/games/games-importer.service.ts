@@ -79,7 +79,13 @@ export class GamesImporterService {
 
   async sync(userId: string, accessToken?: string): Promise<GamesSyncSummary> {
     const token = accessToken ?? (await this.storedToken(userId));
-    const games = await this.fetch(token);
+    const payload = await this.fetch(token);
+
+    return this.ingest(userId, payload);
+  }
+
+  async ingest(userId: string, payload: unknown): Promise<GamesSyncSummary> {
+    const games = this.parseGames(payload);
 
     const externalIds = [...new Set(games.map((game) => String(game.id)))];
 
@@ -98,16 +104,16 @@ export class GamesImporterService {
 
     for (const itchGame of games) {
       const externalId = String(itchGame.id);
-      const payload = this.mapGame(userId, itchGame);
+      const row = this.mapGame(userId, itchGame);
       const current = existingById.get(externalId);
 
       if (!current) {
-        await this.gamesService.create(payload);
+        await this.gamesService.create(row);
         imported += 1;
         continue;
       }
 
-      const changes = this.diff(current, payload);
+      const changes = this.diff(current, row);
 
       if (changes) {
         await this.gamesService.update(current.id, changes);
@@ -118,6 +124,16 @@ export class GamesImporterService {
     }
 
     return { total: games.length, imported, updated, skipped };
+  }
+
+  private parseGames(payload: unknown): ItchGame[] {
+    if (typeof payload !== 'object' || payload == null) return [];
+
+    const games = (payload as { games?: unknown }).games;
+
+    if (!Array.isArray(games)) return [];
+
+    return games.filter((game): game is ItchGame => typeof game === 'object' && game != null);
   }
 
   private async storedToken(userId: string): Promise<string> {
