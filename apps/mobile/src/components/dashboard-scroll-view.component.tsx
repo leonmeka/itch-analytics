@@ -21,7 +21,7 @@ export function DashboardScrollView({
   }));
 
   return (
-    <View className="flex-1 overflow-hidden bg-cash-background">
+    <View className="flex-1 overflow-hidden bg-app-background">
       <Animated.View
         pointerEvents="none"
         style={[

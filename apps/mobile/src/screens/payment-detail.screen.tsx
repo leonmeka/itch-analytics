@@ -3,9 +3,9 @@ import { Card } from 'heroui-native/card';
 import { Typography } from 'heroui-native/text';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CashIcon } from '../components/cash-icon.component';
-import { DetailRow } from '../components/cash-ui.component';
+import { Icon } from '../components/icon.component';
 import { PageHeader } from '../components/page-header.component';
+import { DetailRow } from '../components/screen-ui.component';
 import type { RootStackParamList } from '../navigation/types';
 import { formatDate, formatMoney, paymentAmount, paymentSource } from '../utils/payments.format';
 
@@ -25,7 +25,7 @@ export function PaymentDetailScreen({
     { label: 'Net to you', cents: payment.amount_delivered_cents },
   ];
   return (
-    <View className="flex-1 bg-cash-background" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-app-background" style={{ paddingTop: insets.top }}>
       <PageHeader title="Payment" backLabel="Back" onBack={() => navigation.goBack()} />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -33,25 +33,25 @@ export function PaymentDetailScreen({
       >
         <View className="mx-auto w-full max-w-[640px] px-5">
           <View className="items-center pb-8">
-            <View className="mb-5 h-[72px] w-[72px] items-center justify-center rounded-full bg-cash-accent-soft">
-              <CashIcon name="receipt" size={30} />
+            <View className="mb-5 h-[72px] w-[72px] items-center justify-center rounded-full bg-app-accent-soft">
+              <Icon name="receipt" size={30} />
             </View>
-            <Typography className="text-center text-[18px] font-medium text-cash-foreground">
+            <Typography className="text-center text-[23px] font-medium tracking-[-0.5px] text-app-foreground">
               {payment.object_name ?? '–'}
             </Typography>
             <Typography
               adjustsFontSizeToFit
               numberOfLines={1}
-              className="mt-3 text-[52px] font-medium leading-[64px] tracking-[-2px] text-cash-foreground"
+              className="mt-3 text-[52px] font-medium leading-[64px] tracking-[-2px] text-app-foreground"
               style={{ fontVariant: ['tabular-nums'] }}
             >
               {paymentAmount(payment)}
             </Typography>
-            <Typography type="body-sm" className="mt-1 text-cash-muted">
+            <Typography type="body-sm" className="mt-1 text-app-muted">
               Gross payment
             </Typography>
           </View>
-          <Card className="rounded-cash-card bg-cash-surface px-5 py-1 shadow-none">
+          <Card className="gap-0 rounded-app-card bg-app-surface px-5 py-1 shadow-none">
             <DetailRow label="Purchased">{formatDate(payment.purchased_at, true)}</DetailRow>
             <DetailRow label="Payment method">{paymentSource(payment.source)}</DetailRow>
             <DetailRow label="Purchase ID">{payment.external_id}</DetailRow>
@@ -61,18 +61,16 @@ export function PaymentDetailScreen({
             {payment.payout ? (
               <DetailRow label="Payout status">{payment.payout.replaceAll('_', ' ')}</DetailRow>
             ) : null}
-            <DetailRow label="Imported">{formatDate(payment.created_at)}</DetailRow>
+            <DetailRow label="Imported" last>
+              {formatDate(payment.created_at)}
+            </DetailRow>
           </Card>
-          <Typography className="mb-2 mt-6 text-[21px] font-medium tracking-[-0.6px] text-cash-foreground">
-            Revenue Breakdown
+          <Typography className="mb-2 mt-6 text-[21px] font-medium tracking-[-0.6px] text-app-foreground">
+            Revenue breakdown
           </Typography>
-          <Card className="gap-0 rounded-cash-card bg-cash-surface px-5 py-1 shadow-none">
+          <Card className="gap-0 rounded-app-card bg-app-surface px-5 py-1 shadow-none">
             {rows.map(({ label, cents }, index) => (
-              <DetailRow
-                key={label}
-                label={label}
-                last={index === rows.length - 1 || rows[index + 1]?.cents == null}
-              >
+              <DetailRow key={label} label={label} last={index === rows.length - 1}>
                 {cents != null ? formatMoney(cents) : '—'}
               </DetailRow>
             ))}

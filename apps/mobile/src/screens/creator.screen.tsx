@@ -7,8 +7,8 @@ import { Image, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RedLogo from '../../assets/itch-logo-red.svg';
 import { useCreatorProfile } from '../api/queries';
-import { CashState } from '../components/cash-ui.component';
 import { PageHeader } from '../components/page-header.component';
+import { ContentState } from '../components/screen-ui.component';
 import type { RootStackParamList } from '../navigation/types';
 import { formatMoney } from '../utils/payments.format';
 
@@ -25,15 +25,15 @@ export function CreatorScreen({
     content = (
       <View className="items-center pb-8">
         <Skeleton className="mb-4 h-20 w-20 rounded-full" />
-        <Skeleton className="h-7 w-44 rounded-cash-placeholder" />
-        <Skeleton className="mt-1 h-5 w-28 rounded-cash-placeholder" />
-        <Skeleton className="mt-5 h-16 w-36 rounded-cash-placeholder" />
-        <Skeleton className="mt-1 h-5 w-24 rounded-cash-placeholder" />
+        <Skeleton className="h-7 w-44 rounded-app-placeholder" />
+        <Skeleton className="mt-1 h-5 w-28 rounded-app-placeholder" />
+        <Skeleton className="mt-5 h-16 w-36 rounded-app-placeholder" />
+        <Skeleton className="mt-1 h-5 w-24 rounded-app-placeholder" />
       </View>
     );
   } else if (profile.isError) {
     content = (
-      <CashState
+      <ContentState
         title="Couldn't load creator"
         description="Try loading the profile again."
         icon="info"
@@ -43,7 +43,7 @@ export function CreatorScreen({
     );
   } else if (!profile.data) {
     content = (
-      <CashState
+      <ContentState
         title="Creator unavailable"
         description="This creator's profile is no longer available."
         icon="account"
@@ -54,7 +54,7 @@ export function CreatorScreen({
   }
 
   return (
-    <View className="flex-1 bg-cash-background" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-app-background" style={{ paddingTop: insets.top }}>
       <PageHeader title="Creator" backLabel="Back to creators" onBack={() => navigation.goBack()} />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -73,30 +73,30 @@ function ProfileHero({ profile }: { profile: UserProfileDto }) {
         <Image
           source={{ uri: profile.avatar_url }}
           accessibilityLabel={`@${profile.username}'s itch.io avatar`}
-          className="mb-4 h-20 w-20 rounded-full bg-cash-well"
+          className="mb-4 h-20 w-20 rounded-full bg-app-well"
         />
       ) : (
-        <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-cash-accent-soft">
+        <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-app-accent-soft">
           <RedLogo width={38} height={34} />
         </View>
       )}
-      <Typography className="text-center text-[23px] font-medium tracking-[-0.5px] text-cash-foreground">
+      <Typography className="text-center text-[23px] font-medium tracking-[-0.5px] text-app-foreground">
         {profile.username ? `@${profile.username}` : (profile.name ?? 'Creator')}
       </Typography>
       {profile.name && profile.username ? (
-        <Typography type="body-sm" className="mt-1 text-cash-muted">
+        <Typography type="body-sm" className="mt-1 text-app-muted">
           {profile.name}
         </Typography>
       ) : null}
       <Typography
         adjustsFontSizeToFit
         numberOfLines={1}
-        className="mt-5 text-[52px] font-medium leading-[64px] tracking-[-2px] text-cash-foreground"
+        className="mt-5 text-[52px] font-medium leading-[64px] tracking-[-2px] text-app-foreground"
         style={{ fontVariant: ['tabular-nums'] }}
       >
         {formatMoney(profile.revenue_cents)}
       </Typography>
-      <Typography type="body-sm" className="mt-1 text-cash-muted">
+      <Typography type="body-sm" className="mt-1 text-app-muted">
         Gross revenue
       </Typography>
     </View>

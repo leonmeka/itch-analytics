@@ -3,9 +3,9 @@ import { Card } from 'heroui-native/card';
 import { Typography } from 'heroui-native/text';
 import { Image, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CashIcon } from '../components/cash-icon.component';
-import { DetailRow } from '../components/cash-ui.component';
+import { Icon } from '../components/icon.component';
 import { PageHeader } from '../components/page-header.component';
+import { DetailRow } from '../components/screen-ui.component';
 import type { RootStackParamList } from '../navigation/types';
 import { formatDate, formatMoney } from '../utils/payments.format';
 
@@ -21,7 +21,7 @@ export function GameDetailScreen({
   const otherTraits = (game.traits ?? []).filter((trait) => !trait.startsWith('p_'));
 
   return (
-    <View className="flex-1 bg-cash-background" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-app-background" style={{ paddingTop: insets.top }}>
       <PageHeader title="Game" backLabel="Back" onBack={() => navigation.goBack()} />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -33,25 +33,27 @@ export function GameDetailScreen({
               <Image
                 source={{ uri: game.cover_url }}
                 accessibilityLabel={`${game.title} cover`}
-                className="mb-5 h-[72px] w-[72px] rounded-cash-media bg-cash-well"
+                className="mb-5 h-[72px] w-[72px] rounded-app-media bg-app-well"
               />
             ) : (
-              <View className="mb-5 h-[72px] w-[72px] items-center justify-center rounded-cash-media bg-cash-accent-soft">
-                <CashIcon name="game" size={30} />
+              <View className="mb-5 h-[72px] w-[72px] items-center justify-center rounded-app-media bg-app-accent-soft">
+                <Icon name="game" size={30} />
               </View>
             )}
-            <Typography className="text-center text-[18px] font-medium text-cash-foreground">
+            <Typography className="text-center text-[23px] font-medium tracking-[-0.5px] text-app-foreground">
               {game.title}
             </Typography>
           </View>
           {game.short_text ? (
-            <Card className="rounded-cash-card bg-cash-surface p-5 shadow-none">
-              <Typography type="body-sm" className="text-cash-foreground">
+            <Card className="rounded-app-card bg-app-surface p-5 shadow-none">
+              <Typography type="body-sm" className="text-app-foreground">
                 {game.short_text}
               </Typography>
             </Card>
           ) : null}
-          <Card className="mt-3 rounded-cash-card bg-cash-surface px-5 py-1 shadow-none">
+          <Card
+            className={`gap-0 rounded-app-card bg-app-surface px-5 py-1 shadow-none ${game.short_text ? 'mt-3' : ''}`}
+          >
             <DetailRow label="Status">
               {game.published ? `Published ${formatDate(game.published_at)}` : 'Unpublished draft'}
             </DetailRow>

@@ -4,7 +4,7 @@ import { Modal, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type FileDownload, WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { useImportPayments, useMarkSynced } from '../api/queries';
-import { CashIcon, type CashIconName } from '../components/cash-icon.component';
+import { Icon, type IconName } from '../components/icon.component';
 import { PageHeader } from '../components/page-header.component';
 import { Button } from '../components/ui/button';
 import {
@@ -30,7 +30,7 @@ const statusCopy: Record<SyncStatus, string> = {
   failed: 'Import failed. Check your connection and try again.',
 };
 
-const statusIcon: Record<SyncStatus, CashIconName> = {
+const statusIcon: Record<SyncStatus, IconName> = {
   connecting: 'download',
   verifying: 'info',
   'needs-login': 'account',
@@ -190,15 +190,15 @@ export function ItchSyncScreen({ userId, onClose }: { userId: string; onClose: (
       onRequestClose={onClose}
       onDismiss={onClose}
     >
-      <View className="flex-1 bg-cash-background" style={{ paddingTop: insets.top }}>
+      <View className="flex-1 bg-app-background" style={{ paddingTop: insets.top }}>
         <PageHeader title="Sync purchases" backLabel="Close sync" onBack={onClose} />
         {status === 'connecting' || status === 'importing' ? null : (
-          <View className="mx-5 mb-3 rounded-cash-card bg-cash-surface p-3">
+          <View className="mx-5 mb-3 rounded-app-card bg-app-surface p-3">
             <View className="flex-row items-start gap-2">
-              <CashIcon name={statusIcon[status]} size={16} />
+              <Icon name={statusIcon[status]} size={16} />
               <Typography
                 type="body-xs"
-                className="flex-1 text-cash-muted"
+                className="flex-1 text-app-muted"
                 accessibilityLiveRegion="polite"
               >
                 {statusCopy[status]}
@@ -209,20 +209,18 @@ export function ItchSyncScreen({ userId, onClose }: { userId: string; onClose: (
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-10 flex-1 rounded-full bg-cash-well"
+                  className="h-10 flex-1 rounded-full bg-app-well"
                   onPress={tryAgain}
                 >
-                  <Button.Label className="text-[13px] text-cash-foreground">
-                    Try again
-                  </Button.Label>
+                  <Button.Label className="text-[13px] text-app-foreground">Try again</Button.Label>
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-10 flex-1 rounded-full bg-cash-well"
+                  className="h-10 flex-1 rounded-full bg-app-well"
                   onPress={openExportPage}
                 >
-                  <Button.Label className="text-[13px] text-cash-foreground">
+                  <Button.Label className="text-[13px] text-app-foreground">
                     Open export page
                   </Button.Label>
                 </Button>
@@ -231,10 +229,10 @@ export function ItchSyncScreen({ userId, onClose }: { userId: string; onClose: (
             {status === 'failed' ? (
               <Button
                 size="sm"
-                className="mt-2 h-10 rounded-full bg-cash-accent"
+                className="mt-2 h-10 rounded-full bg-app-accent"
                 onPress={retryImport}
               >
-                <Button.Label className="text-cash-accent-ink">Retry import</Button.Label>
+                <Button.Label className="text-app-accent-ink">Retry import</Button.Label>
               </Button>
             ) : null}
           </View>

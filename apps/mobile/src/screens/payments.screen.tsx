@@ -7,9 +7,9 @@ import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
 import { usePayments, usePaymentsSummary } from '../api/queries';
-import { CashIcon } from '../components/cash-icon.component';
-import { CashState, PaymentRow, PaymentSkeletons } from '../components/cash-ui.component';
+import { Icon } from '../components/icon.component';
 import { PageHeader } from '../components/page-header.component';
+import { ContentState, PaymentRow, PaymentSkeletons } from '../components/screen-ui.component';
 import { Button } from '../components/ui/button';
 import type { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../providers/auth.provider';
@@ -22,7 +22,7 @@ export function PaymentsScreen() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const { startSync } = useSync();
-  const [foreground, muted] = useCSSVariable(['--cash-foreground', '--cash-muted']) as string[];
+  const [foreground, muted] = useCSSVariable(['--app-foreground', '--app-muted']) as string[];
   const insets = useSafeAreaInsets();
   const [searchDraft, setSearchDraft] = useState('');
   const [isSearchFocused, setSearchFocused] = useState(false);
@@ -43,7 +43,7 @@ export function PaymentsScreen() {
   const paymentsState = payments.isPending ? (
     <PaymentSkeletons />
   ) : payments.isError ? (
-    <CashState
+    <ContentState
       title="Payments couldn't load"
       description="Check your connection and try again."
       icon="info"
@@ -51,7 +51,7 @@ export function PaymentsScreen() {
       onPress={() => void payments.refetch()}
     />
   ) : (
-    <CashState
+    <ContentState
       title={search ? 'No matching payments' : 'Your first sale starts here'}
       description={
         search
@@ -99,13 +99,13 @@ export function PaymentsScreen() {
           <PageHeader title="Payments" onBack={() => navigation.goBack()} />
           <View className="gap-5 px-5 pb-5">
             <View
-              className={`flex-row items-center gap-2 rounded-full border bg-cash-surface pl-4 ${isSearchFocused ? 'border-cash-accent' : 'border-transparent'}`}
+              className={`flex-row items-center gap-2 rounded-full border bg-app-surface pl-4 ${isSearchFocused ? 'border-app-accent' : 'border-transparent'}`}
             >
-              <CashIcon name="search" size={19} color={muted} />
+              <Icon name="search" size={19} color={muted} />
               <Input
                 variant="secondary"
                 background={null}
-                className="h-12 flex-1 rounded-none border-0 bg-transparent px-1 text-[15px] text-cash-foreground ios:shadow-none ios:outline-0 ios:focus:outline-0 android:shadow-none android:border-0 android:focus:border-0"
+                className="h-12 flex-1 rounded-none border-0 bg-transparent px-1 text-[15px] text-app-foreground ios:shadow-none ios:outline-0 ios:focus:outline-0 android:shadow-none android:border-0 android:focus:border-0"
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
                 placeholder="Product or purchase ID"
@@ -127,11 +127,11 @@ export function PaymentsScreen() {
                 onPress={() => setSearch(searchDraft.trim())}
                 className="h-11 w-11 rounded-full"
               >
-                <CashIcon name="arrow" size={18} />
+                <Icon name="arrow" size={18} />
               </Button>
             </View>
             <View className="flex-row items-center justify-between">
-              <Typography type="body-sm" className="text-cash-muted">
+              <Typography type="body-sm" className="text-app-muted">
                 {search ? `Results for “${search}”` : `${summary.data?.total ?? '—'} items`}
               </Typography>
             </View>
@@ -140,7 +140,7 @@ export function PaymentsScreen() {
       }
       renderItem={({ item, index }) => (
         <View
-          className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-cash-card' : ''} ${index === items.length - 1 ? 'rounded-b-cash-card' : ''}`}
+          className={`mx-5 overflow-hidden bg-app-surface ${index === 0 ? 'rounded-t-app-card' : ''} ${index === items.length - 1 ? 'rounded-b-app-card' : ''}`}
         >
           <PaymentRow
             payment={item}
@@ -150,7 +150,9 @@ export function PaymentsScreen() {
         </View>
       )}
       ListEmptyComponent={
-        <View className="mx-5 rounded-cash-card bg-cash-surface">{paymentsState}</View>
+        <View className="mx-5 overflow-hidden rounded-app-card bg-app-surface">
+          {paymentsState}
+        </View>
       }
       onEndReachedThreshold={0.4}
       onEndReached={() => {
@@ -165,19 +167,19 @@ export function PaymentsScreen() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="min-h-9 px-3"
+                className="min-h-11 px-4"
                 onPress={() => void payments.fetchNextPage()}
               >
-                <Button.Label className="text-[13px] text-cash-link">
+                <Button.Label className="text-[13px] text-app-link">
                   Couldn't load more — tap to retry
                 </Button.Label>
               </Button>
-            ) : (
+            ) : payments.isFetchingNextPage ? (
               <ActivityIndicator color={muted} />
-            )}
+            ) : null}
           </View>
         ) : items.length > 0 ? (
-          <Typography type="body-xs" className="py-6 text-center text-cash-muted">
+          <Typography type="body-xs" className="py-6 text-center text-app-muted">
             You're all caught up.
           </Typography>
         ) : null

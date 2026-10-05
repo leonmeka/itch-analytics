@@ -6,8 +6,8 @@ import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
 import { useGames } from '../api/queries';
-import { CashState, GameRow, GameSkeletons } from '../components/cash-ui.component';
 import { PageHeader } from '../components/page-header.component';
+import { ContentState, GameRow, GameSkeletons } from '../components/screen-ui.component';
 import { Button } from '../components/ui/button';
 import type { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../providers/auth.provider';
@@ -20,14 +20,14 @@ export function GamesScreen() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const { startSync } = useSync();
-  const [foreground, muted] = useCSSVariable(['--cash-foreground', '--cash-muted']) as string[];
+  const [foreground, muted] = useCSSVariable(['--app-foreground', '--app-muted']) as string[];
   const insets = useSafeAreaInsets();
   const games = useGames(userId);
   const gameItems = useMemo(() => games.data?.pages.flat() ?? [], [games.data]);
   const gamesState = games.isPending ? (
     <GameSkeletons />
   ) : games.isError ? (
-    <CashState
+    <ContentState
       title="Games couldn't load"
       description="Check your connection and try again."
       icon="info"
@@ -35,7 +35,7 @@ export function GamesScreen() {
       onPress={() => void games.refetch()}
     />
   ) : (
-    <CashState
+    <ContentState
       title="No games yet"
       description="Sync your itch.io account to pull in your games."
       icon="game"
@@ -67,7 +67,7 @@ export function GamesScreen() {
       ListHeaderComponent={<PageHeader title="Games" onBack={() => navigation.goBack()} />}
       renderItem={({ item, index }) => (
         <View
-          className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-cash-card' : ''} ${index === gameItems.length - 1 ? 'rounded-b-cash-card' : ''}`}
+          className={`mx-5 overflow-hidden bg-app-surface ${index === 0 ? 'rounded-t-app-card' : ''} ${index === gameItems.length - 1 ? 'rounded-b-app-card' : ''}`}
         >
           <GameRow
             game={item}
@@ -77,7 +77,7 @@ export function GamesScreen() {
         </View>
       )}
       ListEmptyComponent={
-        <View className="mx-5 rounded-cash-card bg-cash-surface">{gamesState}</View>
+        <View className="mx-5 overflow-hidden rounded-app-card bg-app-surface">{gamesState}</View>
       }
       onEndReachedThreshold={0.4}
       onEndReached={() => {
@@ -92,19 +92,19 @@ export function GamesScreen() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="min-h-9 px-3"
+                className="min-h-11 px-4"
                 onPress={() => void games.fetchNextPage()}
               >
-                <Button.Label className="text-[13px] text-cash-link">
+                <Button.Label className="text-[13px] text-app-link">
                   Couldn't load more — tap to retry
                 </Button.Label>
               </Button>
-            ) : (
+            ) : games.isFetchingNextPage ? (
               <ActivityIndicator color={muted} />
-            )}
+            ) : null}
           </View>
         ) : gameItems.length > 0 ? (
-          <Typography type="body-xs" className="py-6 text-center text-cash-muted">
+          <Typography type="body-xs" className="py-6 text-center text-app-muted">
             You're all caught up.
           </Typography>
         ) : null

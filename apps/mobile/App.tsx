@@ -14,11 +14,11 @@ const AppRoutes = () => {
   const { user } = useAuth();
   const { theme } = useUniwind();
   const [background, surface, foreground, border, accent] = useCSSVariable([
-    '--cash-background',
-    '--cash-surface',
-    '--cash-foreground',
-    '--cash-border',
-    '--cash-accent',
+    '--app-background',
+    '--app-surface',
+    '--app-foreground',
+    '--app-border',
+    '--app-accent',
   ]) as string[];
   const baseTheme = theme === 'dark' ? DarkTheme : DefaultTheme;
   const navigationTheme = {

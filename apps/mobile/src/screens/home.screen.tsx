@@ -17,20 +17,20 @@ import {
   usePaymentsSummary,
   useViewsGraph,
 } from '../api/queries';
-import { CashIcon } from '../components/cash-icon.component';
+import { StatCard } from '../components/charts/stat-card.component';
+import { TimeSeriesChart } from '../components/charts/time-series-chart.component';
+import { DashboardScrollView } from '../components/dashboard-scroll-view.component';
+import { Icon } from '../components/icon.component';
+import { PageHeader } from '../components/page-header.component';
+import { formatLastSynced } from '../components/payments-sync.component';
 import {
-  CashSection,
-  CashState,
+  ContentState,
   GameRow,
   GameSkeletons,
   PaymentRow,
   PaymentSkeletons,
-} from '../components/cash-ui.component';
-import { StatCard } from '../components/charts/stat-card.component';
-import { TimeSeriesChart } from '../components/charts/time-series-chart.component';
-import { DashboardScrollView } from '../components/dashboard-scroll-view.component';
-import { PageHeader } from '../components/page-header.component';
-import { formatLastSynced } from '../components/payments-sync.component';
+  SectionHeader,
+} from '../components/screen-ui.component';
 import { Button } from '../components/ui/button';
 import type { RootStackParamList, TabsParamList } from '../navigation/types';
 import { useAuth } from '../providers/auth.provider';
@@ -56,7 +56,7 @@ export function HomeScreen() {
   const payments = usePayments(userId);
   const games = useGames(userId);
   const viewsGraph = useViewsGraph(userId);
-  const [foreground] = useCSSVariable(['--cash-foreground']) as string[];
+  const [foreground] = useCSSVariable(['--app-foreground']) as string[];
   const gameItems = useMemo(() => games.data?.pages.flat() ?? [], [games.data]);
   const items = useMemo(() => {
     const seen = new Set<string>();
@@ -74,14 +74,19 @@ export function HomeScreen() {
       graph.refetch(),
       payments.refetch(),
       viewsGraph.refetch(),
+      games.refetch(),
     ]);
   };
   const busy =
-    payments.isRefetching || summary.isRefetching || graph.isRefetching || viewsGraph.isRefetching;
+    payments.isRefetching ||
+    summary.isRefetching ||
+    graph.isRefetching ||
+    viewsGraph.isRefetching ||
+    games.isRefetching;
   const gamesState = games.isPending ? (
     <GameSkeletons />
   ) : games.isError ? (
-    <CashState
+    <ContentState
       title="Games couldn't load"
       description="Check your connection and try again."
       icon="info"
@@ -89,7 +94,7 @@ export function HomeScreen() {
       onPress={() => void games.refetch()}
     />
   ) : (
-    <CashState
+    <ContentState
       title="No games yet"
       description="Sync your itch.io account to pull in your games."
       icon="game"
@@ -100,7 +105,7 @@ export function HomeScreen() {
   const paymentsState = payments.isPending ? (
     <PaymentSkeletons />
   ) : payments.isError ? (
-    <CashState
+    <ContentState
       title="Payments couldn't load"
       description="Check your connection and try again."
       icon="info"
@@ -108,7 +113,7 @@ export function HomeScreen() {
       onPress={() => void payments.refetch()}
     />
   ) : (
-    <CashState
+    <ContentState
       title="Your first sale starts here"
       description="Sync your itch.io purchase history to see your revenue and payments."
       action="Sync purchases"
@@ -136,7 +141,7 @@ export function HomeScreen() {
           action={
             <Button
               variant="ghost"
-              className="h-11 min-w-[100px] shrink-0 rounded-full bg-cash-surface px-4"
+              className="h-11 min-w-[100px] shrink-0 rounded-full bg-app-surface px-4"
               accessibilityLabel={syncPhase === 'error' ? 'Retry sync' : 'Sync everything'}
               accessibilityHint={
                 lastSynced.data
@@ -147,25 +152,25 @@ export function HomeScreen() {
               isDisabled={syncing}
               onPress={startSync}
             >
-              <CashIcon name="sync" size={20} />
-              <Button.Label className="text-[14px] font-medium text-cash-foreground">
+              <Icon name="sync" size={20} />
+              <Button.Label className="text-[14px] font-medium text-app-foreground">
                 Sync
               </Button.Label>
             </Button>
           }
         />
         <View className="mx-auto w-full max-w-[640px] gap-3 px-5">
-          <Card className="rounded-cash-card bg-cash-surface p-5 shadow-none">
+          <Card className="rounded-app-card bg-app-surface p-5 shadow-none">
             {graph.isPending ? (
               <View>
-                <Skeleton className="h-4 w-24 rounded-cash-placeholder" />
-                <Skeleton className="mt-0.5 h-8 w-52 rounded-cash-placeholder" />
+                <Skeleton className="h-4 w-24 rounded-app-placeholder" />
+                <Skeleton className="mt-0.5 h-8 w-52 rounded-app-placeholder" />
                 <View className="mt-3">
-                  <Skeleton className="h-[176px] w-full rounded-cash-media" />
+                  <Skeleton className="h-[176px] w-full rounded-app-media" />
                 </View>
               </View>
             ) : graph.isError ? (
-              <CashState
+              <ContentState
                 title="Chart unavailable"
                 description="Try loading your revenue history again."
                 icon="info"
@@ -184,7 +189,7 @@ export function HomeScreen() {
               />
             ) : (
               <View className="gap-5">
-                <CashState
+                <ContentState
                   title="Your first sale starts here"
                   description="Sync your itch.io purchase history to see your revenue over time."
                   icon="receipt"
@@ -193,9 +198,9 @@ export function HomeScreen() {
                 />
                 <Button
                   onPress={() => navigation.navigate('Payments')}
-                  className="h-[50px] rounded-full bg-cash-accent"
+                  className="h-[50px] rounded-full bg-app-accent"
                 >
-                  <Button.Label className="text-[14px] font-medium text-cash-accent-ink">
+                  <Button.Label className="text-[14px] font-medium text-app-accent-ink">
                     View payments
                   </Button.Label>
                 </Button>
@@ -205,17 +210,17 @@ export function HomeScreen() {
           {graph.isPending ? (
             <>
               <View className="flex-row gap-3">
-                <Skeleton className="h-[128px] flex-1 rounded-cash-card" />
-                <Skeleton className="h-[128px] flex-1 rounded-cash-card" />
+                <Skeleton className="h-[128px] flex-1 rounded-app-card" />
+                <Skeleton className="h-[128px] flex-1 rounded-app-card" />
               </View>
               <View className="flex-row gap-3">
-                <Skeleton className="h-[128px] flex-1 rounded-cash-card" />
-                <Skeleton className="h-[128px] flex-1 rounded-cash-card" />
+                <Skeleton className="h-[128px] flex-1 rounded-app-card" />
+                <Skeleton className="h-[128px] flex-1 rounded-app-card" />
               </View>
             </>
           ) : graph.isError || !graph.data ? (
-            <Card className="rounded-cash-card bg-cash-surface shadow-none">
-              <CashState
+            <Card className="rounded-app-card bg-app-surface shadow-none">
+              <ContentState
                 title="Stats unavailable"
                 description="Try loading your revenue history again."
                 icon="info"
@@ -249,11 +254,11 @@ export function HomeScreen() {
           )}
           {viewsGraph.isPending ? (
             <View className="flex-row gap-3">
-              <Skeleton className="h-[128px] flex-1 rounded-cash-card" />
+              <Skeleton className="h-[128px] flex-1 rounded-app-card" />
             </View>
           ) : viewsGraph.isError ? (
-            <Card className="rounded-cash-card bg-cash-surface shadow-none">
-              <CashState
+            <Card className="rounded-app-card bg-app-surface shadow-none">
+              <ContentState
                 title="Views couldn't load"
                 description="Try loading your views again."
                 icon="info"
@@ -263,9 +268,9 @@ export function HomeScreen() {
             </Card>
           ) : viewsGraph.data?.views.length ? (
             <View className="flex-row gap-3">
-              <View className="flex-1 rounded-cash-card bg-cash-surface p-4">
+              <View className="flex-1 rounded-app-card bg-app-surface p-4">
                 <TimeSeriesChart
-                  label="Total Views"
+                  label="Total views"
                   points={viewsGraph.data.views.map((point) => ({
                     date: point.date,
                     value: point.value,
@@ -277,12 +282,12 @@ export function HomeScreen() {
             </View>
           ) : null}
           <View>
-            <CashSection
+            <SectionHeader
               title="Games"
               action="See all"
               onPress={() => navigation.navigate('Games')}
             />
-            <Card className="gap-0 overflow-hidden rounded-cash-card bg-cash-surface p-0 shadow-none">
+            <Card className="gap-0 overflow-hidden rounded-app-card bg-app-surface p-0 shadow-none">
               {gameItems.length
                 ? gameItems
                     .slice(0, 4)
@@ -298,12 +303,12 @@ export function HomeScreen() {
             </Card>
           </View>
           <View>
-            <CashSection
+            <SectionHeader
               title="Payments"
               action="See all"
               onPress={() => navigation.navigate('Payments')}
             />
-            <Card className="gap-0 overflow-hidden rounded-cash-card bg-cash-surface p-0 shadow-none">
+            <Card className="gap-0 overflow-hidden rounded-app-card bg-app-surface p-0 shadow-none">
               {items.length
                 ? items
                     .slice(0, 4)

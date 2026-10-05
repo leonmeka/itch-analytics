@@ -38,9 +38,12 @@ function ButtonImpl({
   return (
     <HeroButton
       feedbackVariant="scale-highlight"
-      animation={feedbackAnimation}
+      animation={{
+        ...feedbackAnimation,
+        scale: props.accessibilityRole === 'tab' ? false : { value: 0.98 },
+      }}
       {...props}
-      className={`rounded-full ${className ?? ''}`}
+      className={`overflow-hidden rounded-full ${className ?? ''}`}
       variant={variant}
       isIconOnly={isIconOnly}
       accessibilityState={{

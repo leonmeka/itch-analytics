@@ -1,7 +1,7 @@
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 
-export type CashIconName =
+export type IconName =
   | 'home'
   | 'account'
   | 'users'
@@ -18,7 +18,7 @@ export type CashIconName =
   | 'receipt'
   | 'info'
   | 'logout';
-const paths: Record<CashIconName, string> = {
+const paths: Record<IconName, string> = {
   home: 'M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z',
   account: 'M4 21v-2a8 8 0 0 1 16 0v2',
   users:
@@ -38,16 +38,16 @@ const paths: Record<CashIconName, string> = {
   info: 'M12 11v6M12 7v.1',
   logout: 'M9 3H4v18h5m-1-9h13m-4-4 4 4-4 4',
 };
-export function CashIcon({
+export function Icon({
   name,
   size = 22,
   color,
 }: {
-  name: CashIconName;
+  name: IconName;
   size?: number;
   color?: string;
 }) {
-  const foreground = useCSSVariable('--cash-foreground') as string;
+  const foreground = useCSSVariable('--app-foreground') as string;
   return (
     <Svg
       width={size}

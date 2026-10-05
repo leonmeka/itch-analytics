@@ -24,9 +24,9 @@ export function TimeSeriesChart({
   aspectRatio?: number;
 }) {
   const [accent, border, surface] = useCSSVariable([
-    '--cash-accent',
-    '--cash-border',
-    '--cash-surface',
+    '--app-accent',
+    '--app-border',
+    '--app-surface',
   ]) as string[];
   const [selected, setSelected] = useState<number | null>(null);
   const [layout, setLayout] = useState({ width: 300, height: 50 });
@@ -38,12 +38,12 @@ export function TimeSeriesChart({
     return (
       <View>
         {label ? (
-          <Typography type="body-xs" className="mb-2 text-cash-muted">
+          <Typography type="body-xs" className="mb-2 text-app-muted">
             {label}
           </Typography>
         ) : null}
         <Typography
-          className="text-[24px] font-medium leading-[30px] tracking-[-1px] text-cash-foreground"
+          className="text-[24px] font-medium leading-[30px] tracking-[-1px] text-app-foreground"
           style={{ fontVariant: ['tabular-nums'] }}
         >
           —
@@ -76,19 +76,19 @@ export function TimeSeriesChart({
     );
     setSelected(nearest);
   };
-  const gradientId = 'cash-series';
+  const gradientId = 'app-series';
 
   return (
     <View>
       {label ? (
         <View className="mb-3">
-          <Typography type="body-xs" className="text-cash-muted">
+          <Typography type="body-xs" className="text-app-muted">
             {scrubbing ? formatDate(point.date) : label}
           </Typography>
           <Typography
             adjustsFontSizeToFit
             numberOfLines={1}
-            className="mt-0.5 text-[24px] font-medium leading-[30px] tracking-[-1px] text-cash-foreground"
+            className="mt-0.5 text-[24px] font-medium leading-[30px] tracking-[-1px] text-app-foreground"
             style={{ fontVariant: ['tabular-nums'] }}
           >
             {formatValue(point.value)}
@@ -110,6 +110,7 @@ export function TimeSeriesChart({
           selectAt(event.nativeEvent.locationX)
         }
         onTouchEnd={() => setSelected(null)}
+        onTouchCancel={() => setSelected(null)}
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel={`${label ?? 'Cumulative'} chart`}

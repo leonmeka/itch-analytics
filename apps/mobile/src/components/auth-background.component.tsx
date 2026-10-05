@@ -13,7 +13,7 @@ export function AuthBackground({ bandHeight }: { bandHeight?: number } = {}) {
   const [accent, accentForeground, heroShade] = useCSSVariable([
     '--color-accent',
     '--color-accent-foreground',
-    '--cash-hero-shade',
+    '--app-hero-shade',
   ]);
 
   const frame = bandHeight

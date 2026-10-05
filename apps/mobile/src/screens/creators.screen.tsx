@@ -8,10 +8,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
 import RedLogo from '../../assets/itch-logo-red.svg';
 import { useCreators } from '../api/queries';
-import { CashIcon } from '../components/cash-icon.component';
-import { CashState, CreatorsSkeletons } from '../components/cash-ui.component';
+import { Icon } from '../components/icon.component';
 import { PageHeader } from '../components/page-header.component';
 import { PressableFeedback } from '../components/pressable-feedback.component';
+import { ContentState, CreatorsSkeletons } from '../components/screen-ui.component';
 import { Button } from '../components/ui/button';
 import type { RootStackParamList } from '../navigation/types';
 import { formatMoney } from '../utils/payments.format';
@@ -25,37 +25,39 @@ function CreatorRow({
   last: boolean;
   onPress: () => void;
 }) {
-  const muted = useCSSVariable('--cash-muted') as string;
+  const muted = useCSSVariable('--app-muted') as string;
   return (
     <PressableFeedback
       accessibilityRole="button"
       accessibilityLabel={`@${creator.username}, gross revenue ${formatMoney(creator.revenue_cents)}. View profile.`}
       onPress={onPress}
-      className={`min-h-[64px] flex-row items-center gap-3 px-4 py-3 ${last ? '' : 'border-b border-cash-border'}`}
+      className={`min-h-[64px] flex-row items-center gap-3 px-4 py-3 ${last ? '' : 'border-b border-app-border'}`}
     >
       {creator.avatar_url ? (
         <Image
           source={{ uri: creator.avatar_url }}
           accessibilityLabel={`@${creator.username}'s itch.io avatar`}
-          className="h-11 w-11 rounded-full bg-cash-well"
+          className="h-11 w-11 rounded-full bg-app-well"
         />
       ) : (
-        <View className="h-11 w-11 items-center justify-center rounded-full bg-cash-accent-soft">
+        <View className="h-11 w-11 items-center justify-center rounded-full bg-app-accent-soft">
           <RedLogo width={23} height={21} />
         </View>
       )}
-      <Typography numberOfLines={1} className="flex-1 text-[15px] font-medium text-cash-foreground">
+      <Typography numberOfLines={1} className="flex-1 text-[15px] font-medium text-app-foreground">
         @{creator.username}
       </Typography>
-      <View className="flex-row items-center gap-2">
+      <View className="max-w-[45%] flex-row items-center gap-2">
         <Typography
           numberOfLines={1}
-          className="text-[16px] font-medium text-cash-foreground"
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+          className="shrink text-[16px] font-medium text-app-foreground"
           style={{ fontVariant: ['tabular-nums'] }}
         >
           {formatMoney(creator.revenue_cents)}
         </Typography>
-        <CashIcon name="arrow" size={13} color={muted} />
+        <Icon name="arrow" size={13} color={muted} />
       </View>
     </PressableFeedback>
   );
@@ -64,14 +66,14 @@ function CreatorRow({
 export function CreatorsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
-  const [foreground, muted] = useCSSVariable(['--cash-foreground', '--cash-muted']) as string[];
+  const [foreground, muted] = useCSSVariable(['--app-foreground', '--app-muted']) as string[];
   const creators = useCreators();
   const items = useMemo(() => creators.data?.pages.flat() ?? [], [creators.data]);
 
   const state = creators.isPending ? (
     <CreatorsSkeletons />
   ) : creators.isError ? (
-    <CashState
+    <ContentState
       title="Couldn't load creators"
       description="Try loading the creator list again."
       icon="info"
@@ -79,7 +81,7 @@ export function CreatorsScreen() {
       onPress={() => void creators.refetch()}
     />
   ) : !items.length ? (
-    <CashState
+    <ContentState
       title="No creators yet"
       description="The list fills in as creators join."
       icon="account"
@@ -110,7 +112,7 @@ export function CreatorsScreen() {
       ListHeaderComponent={<PageHeader title="Creators" />}
       renderItem={({ item, index }) => (
         <View
-          className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-cash-card' : ''} ${index === items.length - 1 ? 'rounded-b-cash-card' : ''}`}
+          className={`mx-5 overflow-hidden bg-app-surface ${index === 0 ? 'rounded-t-app-card' : ''} ${index === items.length - 1 ? 'rounded-b-app-card' : ''}`}
         >
           <CreatorRow
             creator={item}
@@ -119,7 +121,9 @@ export function CreatorsScreen() {
           />
         </View>
       )}
-      ListEmptyComponent={<View className="mx-5 rounded-cash-card bg-cash-surface">{state}</View>}
+      ListEmptyComponent={
+        <View className="mx-5 overflow-hidden rounded-app-card bg-app-surface">{state}</View>
+      }
       onEndReachedThreshold={0.4}
       onEndReached={() => {
         if (creators.hasNextPage && !creators.isFetchingNextPage) {
@@ -133,19 +137,19 @@ export function CreatorsScreen() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="min-h-9 px-3"
+                className="min-h-11 px-4"
                 onPress={() => void creators.fetchNextPage()}
               >
-                <Button.Label className="text-[13px] text-cash-link">
+                <Button.Label className="text-[13px] text-app-link">
                   Couldn't load more — tap to retry
                 </Button.Label>
               </Button>
-            ) : (
+            ) : creators.isFetchingNextPage ? (
               <ActivityIndicator color={muted} />
-            )}
+            ) : null}
           </View>
         ) : items.length > 0 ? (
-          <Typography type="body-xs" className="py-6 text-center text-cash-muted">
+          <Typography type="body-xs" className="py-6 text-center text-app-muted">
             You're all caught up.
           </Typography>
         ) : null
