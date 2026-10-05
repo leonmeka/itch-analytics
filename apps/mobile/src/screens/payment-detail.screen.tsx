@@ -51,7 +51,7 @@ export function PaymentDetailScreen({
               Gross payment
             </Typography>
           </View>
-          <Card className="rounded-[24px] bg-cash-surface px-5 py-1 shadow-none">
+          <Card className="rounded-cash-card bg-cash-surface px-5 py-1 shadow-none">
             <DetailRow label="Purchased">{formatDate(payment.purchased_at, true)}</DetailRow>
             <DetailRow label="Payment method">{paymentSource(payment.source)}</DetailRow>
             <DetailRow label="Purchase ID">{payment.external_id}</DetailRow>
@@ -66,7 +66,7 @@ export function PaymentDetailScreen({
           <Typography className="mb-2 mt-6 text-[21px] font-medium tracking-[-0.6px] text-cash-foreground">
             Revenue Breakdown
           </Typography>
-          <Card className="gap-0 rounded-[24px] bg-cash-surface px-5 py-1 shadow-none">
+          <Card className="gap-0 rounded-cash-card bg-cash-surface px-5 py-1 shadow-none">
             {rows.map(({ label, cents }, index) => (
               <DetailRow
                 key={label}

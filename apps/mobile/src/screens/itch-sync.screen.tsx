@@ -193,7 +193,7 @@ export function ItchSyncScreen({ userId, onClose }: { userId: string; onClose: (
       <View className="flex-1 bg-cash-background" style={{ paddingTop: insets.top }}>
         <PageHeader title="Sync purchases" backLabel="Close sync" onBack={onClose} />
         {status === 'connecting' || status === 'importing' ? null : (
-          <View className="mx-5 mb-3 rounded-2xl bg-cash-surface p-3">
+          <View className="mx-5 mb-3 rounded-cash-card bg-cash-surface p-3">
             <View className="flex-row items-start gap-2">
               <CashIcon name={statusIcon[status]} size={16} />
               <Typography

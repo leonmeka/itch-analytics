@@ -25,6 +25,7 @@ function ButtonImpl({
   children,
   isDisabled,
   isIconOnly,
+  className,
   ...props
 }: ButtonProps) {
   const feedbackAnimation = usePressFeedbackAnimation();
@@ -39,6 +40,7 @@ function ButtonImpl({
       feedbackVariant="scale-highlight"
       animation={feedbackAnimation}
       {...props}
+      className={`rounded-full ${className ?? ''}`}
       variant={variant}
       isIconOnly={isIconOnly}
       accessibilityState={{

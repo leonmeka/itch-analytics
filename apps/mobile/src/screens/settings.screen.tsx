@@ -21,7 +21,7 @@ export function SettingsScreen() {
       <View className="mx-auto w-full max-w-[640px] gap-7 px-5">
         <View>
           <CashSection title="Appearance" />
-          <View className="flex-row gap-2 rounded-[24px] bg-cash-surface p-3">
+          <View className="flex-row gap-2 rounded-cash-card bg-cash-surface p-3">
             {(['light', 'dark', 'system'] as const).map((option) => {
               const selected =
                 option === 'system' ? hasAdaptiveThemes : !hasAdaptiveThemes && theme === option;

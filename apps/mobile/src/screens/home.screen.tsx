@@ -155,13 +155,13 @@ export function HomeScreen() {
           }
         />
         <View className="mx-auto w-full max-w-[640px] gap-3 px-5">
-          <Card className="rounded-[28px] bg-cash-surface p-5 shadow-none">
+          <Card className="rounded-cash-card bg-cash-surface p-5 shadow-none">
             {graph.isPending ? (
               <View>
-                <Skeleton className="h-4 w-24 rounded-md" />
-                <Skeleton className="mt-0.5 h-8 w-52 rounded-lg" />
+                <Skeleton className="h-4 w-24 rounded-cash-placeholder" />
+                <Skeleton className="mt-0.5 h-8 w-52 rounded-cash-placeholder" />
                 <View className="mt-3">
-                  <Skeleton className="h-[176px] w-full rounded-2xl" />
+                  <Skeleton className="h-[176px] w-full rounded-cash-media" />
                 </View>
               </View>
             ) : graph.isError ? (
@@ -205,16 +205,16 @@ export function HomeScreen() {
           {graph.isPending ? (
             <>
               <View className="flex-row gap-3">
-                <Skeleton className="h-[128px] flex-1 rounded-[24px]" />
-                <Skeleton className="h-[128px] flex-1 rounded-[24px]" />
+                <Skeleton className="h-[128px] flex-1 rounded-cash-card" />
+                <Skeleton className="h-[128px] flex-1 rounded-cash-card" />
               </View>
               <View className="flex-row gap-3">
-                <Skeleton className="h-[128px] flex-1 rounded-[24px]" />
-                <Skeleton className="h-[128px] flex-1 rounded-[24px]" />
+                <Skeleton className="h-[128px] flex-1 rounded-cash-card" />
+                <Skeleton className="h-[128px] flex-1 rounded-cash-card" />
               </View>
             </>
           ) : graph.isError || !graph.data ? (
-            <Card className="rounded-[24px] bg-cash-surface shadow-none">
+            <Card className="rounded-cash-card bg-cash-surface shadow-none">
               <CashState
                 title="Stats unavailable"
                 description="Try loading your revenue history again."
@@ -249,10 +249,10 @@ export function HomeScreen() {
           )}
           {viewsGraph.isPending ? (
             <View className="flex-row gap-3">
-              <Skeleton className="h-[128px] flex-1 rounded-[24px]" />
+              <Skeleton className="h-[128px] flex-1 rounded-cash-card" />
             </View>
           ) : viewsGraph.isError ? (
-            <Card className="rounded-[24px] bg-cash-surface shadow-none">
+            <Card className="rounded-cash-card bg-cash-surface shadow-none">
               <CashState
                 title="Views couldn't load"
                 description="Try loading your views again."
@@ -263,7 +263,7 @@ export function HomeScreen() {
             </Card>
           ) : viewsGraph.data?.views.length ? (
             <View className="flex-row gap-3">
-              <View className="flex-1 rounded-[24px] bg-cash-surface p-4">
+              <View className="flex-1 rounded-cash-card bg-cash-surface p-4">
                 <TimeSeriesChart
                   label="Total Views"
                   points={viewsGraph.data.views.map((point) => ({
@@ -282,7 +282,7 @@ export function HomeScreen() {
               action="See all"
               onPress={() => navigation.navigate('Games')}
             />
-            <Card className="gap-0 overflow-hidden rounded-[24px] bg-cash-surface p-0 shadow-none">
+            <Card className="gap-0 overflow-hidden rounded-cash-card bg-cash-surface p-0 shadow-none">
               {gameItems.length
                 ? gameItems
                     .slice(0, 4)
@@ -303,7 +303,7 @@ export function HomeScreen() {
               action="See all"
               onPress={() => navigation.navigate('Payments')}
             />
-            <Card className="gap-0 overflow-hidden rounded-[24px] bg-cash-surface p-0 shadow-none">
+            <Card className="gap-0 overflow-hidden rounded-cash-card bg-cash-surface p-0 shadow-none">
               {items.length
                 ? items
                     .slice(0, 4)

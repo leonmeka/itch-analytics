@@ -140,7 +140,7 @@ export function PaymentsScreen() {
       }
       renderItem={({ item, index }) => (
         <View
-          className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-[24px]' : ''} ${index === items.length - 1 ? 'rounded-b-[24px]' : ''}`}
+          className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-cash-card' : ''} ${index === items.length - 1 ? 'rounded-b-cash-card' : ''}`}
         >
           <PaymentRow
             payment={item}
@@ -150,7 +150,7 @@ export function PaymentsScreen() {
         </View>
       )}
       ListEmptyComponent={
-        <View className="mx-5 rounded-[24px] bg-cash-surface">{paymentsState}</View>
+        <View className="mx-5 rounded-cash-card bg-cash-surface">{paymentsState}</View>
       }
       onEndReachedThreshold={0.4}
       onEndReached={() => {

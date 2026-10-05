@@ -153,10 +153,10 @@ export function GameRow({
         <Image
           source={{ uri: game.cover_url }}
           accessibilityLabel={`${game.title} cover`}
-          className="h-12 w-12 rounded-xl bg-cash-well"
+          className="h-12 w-12 rounded-cash-media bg-cash-well"
         />
       ) : (
-        <View className="h-12 w-12 items-center justify-center rounded-xl bg-cash-well">
+        <View className="h-12 w-12 items-center justify-center rounded-cash-media bg-cash-well">
           <CashIcon name="game" size={20} />
         </View>
       )}
@@ -193,10 +193,10 @@ export function PaymentSkeletons() {
         >
           <Skeleton className="h-11 w-11 rounded-full" />
           <View className="flex-1 gap-1">
-            <Skeleton className="h-4 w-36 rounded-md" />
-            <Skeleton className="h-3 w-24 rounded-md" />
+            <Skeleton className="h-4 w-36 rounded-cash-placeholder" />
+            <Skeleton className="h-3 w-24 rounded-cash-placeholder" />
           </View>
-          <Skeleton className="h-5 w-16 rounded-md" />
+          <Skeleton className="h-5 w-16 rounded-cash-placeholder" />
         </View>
       ))}
     </View>
@@ -210,12 +210,12 @@ export function GameSkeletons() {
           key={row}
           className={`flex-row items-center gap-3 px-4 py-4 ${row < 2 ? 'border-b border-cash-border' : ''}`}
         >
-          <Skeleton className="h-12 w-12 rounded-xl" />
+          <Skeleton className="h-12 w-12 rounded-cash-media" />
           <View className="flex-1 gap-1">
-            <Skeleton className="h-4 w-36 rounded-md" />
-            <Skeleton className="h-5 w-28 rounded-md" />
+            <Skeleton className="h-4 w-36 rounded-cash-placeholder" />
+            <Skeleton className="h-5 w-28 rounded-cash-placeholder" />
           </View>
-          <Skeleton className="h-4 w-10 rounded-md" />
+          <Skeleton className="h-4 w-10 rounded-cash-placeholder" />
         </View>
       ))}
     </View>
@@ -230,8 +230,8 @@ export function CreatorsSkeletons() {
           className={`flex-row items-center gap-3 px-4 py-3 ${row < 2 ? 'border-b border-cash-border' : ''}`}
         >
           <Skeleton className="h-11 w-11 rounded-full" />
-          <Skeleton className="h-4 flex-1 rounded-md" />
-          <Skeleton className="h-5 w-16 rounded-md" />
+          <Skeleton className="h-4 flex-1 rounded-cash-placeholder" />
+          <Skeleton className="h-5 w-16 rounded-cash-placeholder" />
         </View>
       ))}
     </View>

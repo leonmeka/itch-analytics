@@ -98,3 +98,10 @@
 .skeleton__root {
   background-color: var(--cash-skeleton);
 }
+
+@theme {
+  --radius-cash-card: 24px;
+  --radius-cash-media: 16px;
+  --radius-cash-control: 12px;
+  --radius-cash-placeholder: 6px;
+}

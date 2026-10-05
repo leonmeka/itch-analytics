@@ -67,7 +67,7 @@ export function GamesScreen() {
       ListHeaderComponent={<PageHeader title="Games" onBack={() => navigation.goBack()} />}
       renderItem={({ item, index }) => (
         <View
-          className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-[24px]' : ''} ${index === gameItems.length - 1 ? 'rounded-b-[24px]' : ''}`}
+          className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-cash-card' : ''} ${index === gameItems.length - 1 ? 'rounded-b-cash-card' : ''}`}
         >
           <GameRow
             game={item}
@@ -76,7 +76,9 @@ export function GamesScreen() {
           />
         </View>
       )}
-      ListEmptyComponent={<View className="mx-5 rounded-[24px] bg-cash-surface">{gamesState}</View>}
+      ListEmptyComponent={
+        <View className="mx-5 rounded-cash-card bg-cash-surface">{gamesState}</View>
+      }
       onEndReachedThreshold={0.4}
       onEndReached={() => {
         if (games.hasNextPage && !games.isFetchingNextPage) {

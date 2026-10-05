@@ -38,7 +38,7 @@ export function BottomNavigation({
               accessibilityLabel={tab.label}
               accessibilityState={{ selected }}
               onPress={() => onSelect(tab.label)}
-              className={`h-auto min-h-12 flex-1 flex-col gap-0.5 rounded-xl px-1.5 py-1.5 ${selected ? 'bg-cash-well' : ''}`}
+              className={`h-auto min-h-12 flex-1 flex-col gap-0.5 rounded-cash-control px-1.5 py-1.5 ${selected ? 'bg-cash-well' : ''}`}
             >
               <CashIcon name={tab.icon} size={20} color={selected ? foreground : muted} />
               <Button.Label

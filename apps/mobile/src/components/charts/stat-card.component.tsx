@@ -13,7 +13,7 @@ export function StatCard({
   formatValue: (value: number) => string;
 }) {
   return (
-    <View className="flex-1 rounded-[24px] bg-cash-surface p-4">
+    <View className="flex-1 rounded-cash-card bg-cash-surface p-4">
       <TimeSeriesChart points={points} label={label} formatValue={formatValue} aspectRatio={2.5} />
     </View>
   );

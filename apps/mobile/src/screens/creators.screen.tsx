@@ -110,7 +110,7 @@ export function CreatorsScreen() {
       ListHeaderComponent={<PageHeader title="Creators" />}
       renderItem={({ item, index }) => (
         <View
-          className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-[24px]' : ''} ${index === items.length - 1 ? 'rounded-b-[24px]' : ''}`}
+          className={`mx-5 overflow-hidden bg-cash-surface ${index === 0 ? 'rounded-t-cash-card' : ''} ${index === items.length - 1 ? 'rounded-b-cash-card' : ''}`}
         >
           <CreatorRow
             creator={item}
@@ -119,7 +119,7 @@ export function CreatorsScreen() {
           />
         </View>
       )}
-      ListEmptyComponent={<View className="mx-5 rounded-[24px] bg-cash-surface">{state}</View>}
+      ListEmptyComponent={<View className="mx-5 rounded-cash-card bg-cash-surface">{state}</View>}
       onEndReachedThreshold={0.4}
       onEndReached={() => {
         if (creators.hasNextPage && !creators.isFetchingNextPage) {

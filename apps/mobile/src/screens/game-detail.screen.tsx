@@ -33,10 +33,10 @@ export function GameDetailScreen({
               <Image
                 source={{ uri: game.cover_url }}
                 accessibilityLabel={`${game.title} cover`}
-                className="mb-5 h-[72px] w-[72px] rounded-2xl bg-cash-well"
+                className="mb-5 h-[72px] w-[72px] rounded-cash-media bg-cash-well"
               />
             ) : (
-              <View className="mb-5 h-[72px] w-[72px] items-center justify-center rounded-2xl bg-cash-accent-soft">
+              <View className="mb-5 h-[72px] w-[72px] items-center justify-center rounded-cash-media bg-cash-accent-soft">
                 <CashIcon name="game" size={30} />
               </View>
             )}
@@ -45,13 +45,13 @@ export function GameDetailScreen({
             </Typography>
           </View>
           {game.short_text ? (
-            <Card className="rounded-[24px] bg-cash-surface p-5 shadow-none">
+            <Card className="rounded-cash-card bg-cash-surface p-5 shadow-none">
               <Typography type="body-sm" className="text-cash-foreground">
                 {game.short_text}
               </Typography>
             </Card>
           ) : null}
-          <Card className="mt-3 rounded-[24px] bg-cash-surface px-5 py-1 shadow-none">
+          <Card className="mt-3 rounded-cash-card bg-cash-surface px-5 py-1 shadow-none">
             <DetailRow label="Status">
               {game.published ? `Published ${formatDate(game.published_at)}` : 'Unpublished draft'}
             </DetailRow>

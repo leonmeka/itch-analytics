@@ -25,10 +25,10 @@ export function CreatorScreen({
     content = (
       <View className="items-center pb-8">
         <Skeleton className="mb-4 h-20 w-20 rounded-full" />
-        <Skeleton className="h-7 w-44 rounded-lg" />
-        <Skeleton className="mt-1 h-5 w-28 rounded-md" />
-        <Skeleton className="mt-5 h-16 w-36 rounded-xl" />
-        <Skeleton className="mt-1 h-5 w-24 rounded-md" />
+        <Skeleton className="h-7 w-44 rounded-cash-placeholder" />
+        <Skeleton className="mt-1 h-5 w-28 rounded-cash-placeholder" />
+        <Skeleton className="mt-5 h-16 w-36 rounded-cash-placeholder" />
+        <Skeleton className="mt-1 h-5 w-24 rounded-cash-placeholder" />
       </View>
     );
   } else if (profile.isError) {
