@@ -7,6 +7,7 @@ import type {
   PaymentsSummaryDto,
   UserProfileDto,
   UserWithRevenueDto,
+  ViewsGraphsDto,
 } from '@itch/protocol';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { loadLastSynced, saveLastSynced } from '../utils/sync.storage';
@@ -21,6 +22,7 @@ export const queryKeys = {
   payments: ['payments'] as const,
   paymentsSummary: ['payments-summary'] as const,
   paymentsGraph: ['payments-graph'] as const,
+  viewsGraph: ['views-graph'] as const,
   games: ['games'] as const,
   creators: ['creators'] as const,
   creatorProfile: ['creator-profile'] as const,
@@ -104,6 +106,16 @@ export function usePayments(userId: string | null, filters: Partial<PaymentsFilt
   });
 }
 
+export function useViewsGraph(userId: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.viewsGraph, userId] as const,
+    queryFn: () => apiClient.viewsGraph(userId as string) as Promise<ViewsGraphsDto>,
+    enabled: userId != null,
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
 export function useGames(userId: string | null) {
   return useInfiniteQuery({
     queryKey: [...queryKeys.games, userId, GAMES_PAGE_SIZE] as const,
@@ -172,6 +184,19 @@ export function useImportPayments() {
         queryClient.invalidateQueries({ queryKey: queryKeys.paymentsSummary }),
         queryClient.invalidateQueries({ queryKey: queryKeys.paymentsGraph }),
       ]);
+    },
+  });
+}
+
+export function useImportViews() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, payload }: { userId: string; payload: Record<string, unknown> }) =>
+      apiClient.importViews(userId, payload),
+    onError: (error) => console.warn('views import failed', error),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.viewsGraph });
     },
   });
 }

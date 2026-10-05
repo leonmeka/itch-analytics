@@ -5,18 +5,10 @@ import { Card } from 'heroui-native/card';
 import { Input } from 'heroui-native/input';
 import { Skeleton } from 'heroui-native/skeleton';
 import { Typography } from 'heroui-native/text';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  BackHandler,
-  FlatList,
-  Image,
-  RefreshControl,
-  View,
-} from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, BackHandler, FlatList, RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable, useUniwind } from 'uniwind';
-import RedLogo from '../../assets/itch-logo-red.svg';
 import {
   useGames,
   useLastSynced,
@@ -25,6 +17,7 @@ import {
   usePaymentsGraph,
   usePaymentsSummary,
   useSyncGames,
+  useViewsGraph,
 } from '../api/queries';
 import { BottomNavigation, type NavigationTab } from '../components/bottom-navigation.component';
 import { CashIcon } from '../components/cash-icon.component';
@@ -40,33 +33,38 @@ import {
 import { StatCard } from '../components/charts/stat-card.component';
 import { TimeSeriesChart } from '../components/charts/time-series-chart.component';
 import { DashboardScrollView } from '../components/dashboard-scroll-view.component';
-import {
-  formatLastSynced,
-  PaymentsSync,
-  type PaymentsSyncHandle,
-  type PaymentsSyncPhase,
-} from '../components/payments-sync.component';
+import { formatLastSynced } from '../components/payments-sync.component';
 import { Button } from '../components/ui/button';
 import { useAuth } from '../providers/auth.provider';
+import { SyncProvider, useSync } from '../providers/sync.provider';
 import { formatDate, formatMoney } from '../utils/payments.format';
 import { CreatorScreen } from './creator.screen';
 import { CreatorsScreen } from './creators.screen';
 import { GameDetailScreen } from './game-detail.screen';
-import { ItchSyncScreen } from './itch-sync.screen';
 import { PaymentDetailScreen } from './payment-detail.screen';
 import { SettingsScreen } from './settings.screen';
 
 export function DashboardScreen() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
+
+  return (
+    <SyncProvider userId={userId}>
+      <DashboardContent />
+    </SyncProvider>
+  );
+}
+
+function DashboardContent() {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+  const { startSync, closeSync, phase: syncPhase, gamesSyncing } = useSync();
+  const syncing = syncPhase !== 'idle' || gamesSyncing;
   const profile = useOauthIdentity(userId);
   const [tab, setTab] = useState<NavigationTab>('Home');
   const [detail, setDetail] = useState<PaymentDto | null>(null);
   const [gameDetail, setGameDetail] = useState<GameDto | null>(null);
   const [creatorId, setCreatorId] = useState<string | null>(null);
-  const [syncOpen, setSyncOpen] = useState(false);
-  const [syncPhase, setSyncPhase] = useState<PaymentsSyncPhase>('idle');
-  const syncRef = useRef<PaymentsSyncHandle>(null);
   const [searchDraft, setSearchDraft] = useState('');
   const [isSearchFocused, setSearchFocused] = useState(false);
   const [search, setSearch] = useState('');
@@ -78,6 +76,7 @@ export function DashboardScreen() {
   const graph = usePaymentsGraph(userId, search ? { search } : undefined);
   const payments = usePayments(userId, tab === 'Payments' && search ? { search } : undefined);
   const games = useGames(userId);
+  const viewsGraph = useViewsGraph(userId);
   const syncGames = useSyncGames();
   const gameItems = useMemo(() => games.data?.pages.flat() ?? [], [games.data]);
   const items = useMemo(() => {
@@ -95,13 +94,18 @@ export function DashboardScreen() {
     setDetail(null);
     setGameDetail(null);
     setCreatorId(null);
-    setSyncOpen(false);
+    closeSync();
   };
-  const startSync = () => syncRef.current?.start();
   const refresh = async () => {
-    await Promise.all([summary.refetch(), graph.refetch(), payments.refetch()]);
+    await Promise.all([
+      summary.refetch(),
+      graph.refetch(),
+      payments.refetch(),
+      viewsGraph.refetch(),
+    ]);
   };
-  const busy = payments.isRefetching || summary.isRefetching || graph.isRefetching;
+  const busy =
+    payments.isRefetching || summary.isRefetching || graph.isRefetching || viewsGraph.isRefetching;
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       if (detail) {
@@ -201,23 +205,6 @@ export function DashboardScreen() {
               <Typography className="flex-1 text-[20px] font-medium text-cash-foreground">
                 Games
               </Typography>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-11 rounded-full bg-cash-surface px-4"
-                accessibilityLabel="Sync games"
-                isDisabled={syncGames.isPending}
-                onPress={() => userId && syncGames.mutate({ userId })}
-              >
-                <CashIcon name="sync" size={17} />
-                <Button.Label className="text-cash-foreground">
-                  {syncGames.isPending
-                    ? 'Syncing…'
-                    : syncGames.isError
-                      ? 'Sync failed'
-                      : 'Sync now'}
-                </Button.Label>
-              </Button>
             </View>
           </View>
           <FlatList
@@ -292,25 +279,6 @@ export function DashboardScreen() {
               <Typography className="flex-1 text-[20px] font-medium text-cash-foreground">
                 Payments
               </Typography>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-11 rounded-full bg-cash-surface px-4"
-                accessibilityLabel="Sync purchases"
-                isDisabled={syncPhase === 'running'}
-                onPress={startSync}
-              >
-                <CashIcon name="sync" size={17} />
-                <Button.Label className="text-cash-foreground">
-                  {syncPhase === 'running'
-                    ? 'Syncing…'
-                    : syncPhase === 'error'
-                      ? 'Sync failed'
-                      : lastSynced.data
-                        ? `Sync · ${formatLastSynced(lastSynced.data)}`
-                        : 'Sync now'}
-                </Button.Label>
-              </Button>
             </View>
           </View>
           <FlatList
@@ -334,14 +302,6 @@ export function DashboardScreen() {
             }
             ListHeaderComponent={
               <View className="gap-5 px-5 pb-5">
-                {userId ? (
-                  <PaymentsSync
-                    ref={syncRef}
-                    userId={userId}
-                    onNeedsVisible={() => setSyncOpen(true)}
-                    onPhaseChange={setSyncPhase}
-                  />
-                ) : null}
                 <View
                   className={`flex-row items-center gap-2 rounded-full border bg-cash-surface pl-4 ${isSearchFocused ? 'border-cash-accent' : 'border-transparent'}`}
                 >
@@ -461,22 +421,23 @@ export function DashboardScreen() {
                   </Typography>
                 </View>
                 <Button
-                  isIconOnly
+                  size="sm"
                   variant="ghost"
-                  className="h-11 w-11 rounded-full bg-cash-surface p-0"
-                  accessibilityLabel="Open your creator profile"
-                  onPress={() => {
-                    if (userId) setCreatorId(userId);
-                  }}
+                  className="h-11 rounded-full bg-cash-surface px-4"
+                  accessibilityLabel="Sync everything"
+                  isDisabled={syncing}
+                  onPress={startSync}
                 >
-                  {profile.data?.avatar_url ? (
-                    <Image
-                      source={{ uri: profile.data.avatar_url }}
-                      className="h-11 w-11 rounded-full"
-                    />
-                  ) : (
-                    <RedLogo width={23} height={21} />
-                  )}
+                  <CashIcon name="sync" size={17} />
+                  <Button.Label className="text-cash-foreground">
+                    {syncPhase === 'error'
+                      ? 'Sync failed'
+                      : syncing
+                        ? 'Syncing…'
+                        : lastSynced.data
+                          ? `Sync · ${formatLastSynced(lastSynced.data)}`
+                          : 'Sync now'}
+                  </Button.Label>
                 </Button>
               </View>
             </View>
@@ -576,6 +537,35 @@ export function DashboardScreen() {
                   </View>
                 </>
               )}
+              {viewsGraph.isPending ? (
+                <View className="flex-row gap-3">
+                  <Skeleton className="h-[128px] flex-1 rounded-[24px]" />
+                </View>
+              ) : viewsGraph.isError ? (
+                <Card className="rounded-[24px] bg-cash-surface shadow-none">
+                  <CashState
+                    title="Views couldn't load"
+                    description="Try loading your views again."
+                    icon="info"
+                    action="Retry"
+                    onPress={() => void viewsGraph.refetch()}
+                  />
+                </Card>
+              ) : viewsGraph.data?.views.length ? (
+                <View className="flex-row gap-3">
+                  <View className="flex-1 rounded-[24px] bg-cash-surface p-4">
+                    <TimeSeriesChart
+                      label="Total Views"
+                      size="sm"
+                      points={viewsGraph.data.views.map((point) => ({
+                        date: point.date,
+                        value: point.value,
+                      }))}
+                      formatValue={(value) => String(Math.round(value))}
+                    />
+                  </View>
+                </View>
+              ) : null}
               <View>
                 <CashSection title="Games" action="See all" onPress={() => navigate('Games')} />
                 <Card className="gap-0 overflow-hidden rounded-[24px] bg-cash-surface p-0 shadow-none">
@@ -619,9 +609,6 @@ export function DashboardScreen() {
         </DashboardScrollView>
       )}
       <BottomNavigation selectedTab={tab} onSelect={navigate} />
-      {syncOpen && userId ? (
-        <ItchSyncScreen userId={userId} onClose={() => setSyncOpen(false)} />
-      ) : null}
     </View>
   );
 }

@@ -11,6 +11,7 @@ import {
   PaymentsModule,
   RefreshTokensModule,
   UsersModule,
+  ViewsModule,
 } from '@/libs/shared';
 import { PORT_KEY } from './config.constants';
 import { AuthController } from './controllers/auth.controller';
@@ -38,6 +39,7 @@ import { env } from './env';
     RefreshTokensModule,
     PaymentsModule,
     GamesModule,
+    ViewsModule,
     AuthModule,
     ItchModule,
     ScheduleModule.forRoot(),

@@ -12,6 +12,7 @@ import * as oauthIdentities from './schemas/oauth-identities.sql';
 import * as payments from './schemas/payments.sql';
 import * as refreshTokens from './schemas/refresh-tokens.sql';
 import * as users from './schemas/users.sql';
+import * as views from './schemas/views.sql';
 
 export const schema = {
   ...apiKeys,
@@ -20,6 +21,7 @@ export const schema = {
   ...payments,
   ...refreshTokens,
   ...users,
+  ...views,
 };
 
 export type TSchema = typeof schema;

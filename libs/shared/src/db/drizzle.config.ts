@@ -20,6 +20,7 @@ const config: Config = defineConfig({
     './src/db/schemas/payments.sql.ts',
     './src/db/schemas/refresh-tokens.sql.ts',
     './src/db/schemas/users.sql.ts',
+    './src/db/schemas/views.sql.ts',
   ],
   out: './src/db/migrations',
   dbCredentials: {

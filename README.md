@@ -1,6 +1,6 @@
 # itch
 
-The analytics dashboard for itch.io creators.
+The social analytics app for itch.io creators.
 
 ## Layout
 

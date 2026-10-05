@@ -3,11 +3,18 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { CryptoModule } from '@/libs/auth';
-import { ApiKeysModule, GamesModule, OAuthIdentitiesModule, PaymentsModule } from '@/libs/shared';
+import {
+  ApiKeysModule,
+  GamesModule,
+  OAuthIdentitiesModule,
+  PaymentsModule,
+  ViewsModule,
+} from '@/libs/shared';
 import { GamesImporterService } from './games/games-importer.service';
 import { GamesSyncScheduler } from './games/games-sync.scheduler';
 import { JWT_SECRET_KEY } from './itch.constants';
 import { PaymentsImporterService } from './payments/payments-importer.service';
+import { ViewsImporterService } from './views/views-importer.service';
 
 @Module({
   imports: [
@@ -16,6 +23,7 @@ import { PaymentsImporterService } from './payments/payments-importer.service';
     GamesModule,
     OAuthIdentitiesModule,
     PaymentsModule,
+    ViewsModule,
     HttpModule,
   ],
   providers: [
@@ -28,7 +36,8 @@ import { PaymentsImporterService } from './payments/payments-importer.service';
     GamesImporterService,
     GamesSyncScheduler,
     PaymentsImporterService,
+    ViewsImporterService,
   ],
-  exports: [GamesImporterService, PaymentsImporterService],
+  exports: [GamesImporterService, PaymentsImporterService, ViewsImporterService],
 })
 export class ItchModule {}

@@ -1,12 +1,14 @@
 import { type Ref, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
-import { useImportPayments, useMarkSynced } from '../api/queries';
+import { useImportPayments, useImportViews, useMarkSynced } from '../api/queries';
 import {
+  analyticsUrl,
   CHALLENGE_FALLBACK_MS,
   DASHBOARD_URL,
   detectScript,
   EXPORT_URL,
+  fetchJsonScript,
   fetchScript,
   MAX_REPROBES,
   REPROBE_DELAY_MS,
@@ -46,6 +48,7 @@ export function PaymentsSync({
   onPhaseChange?: (phase: PaymentsSyncPhase) => void;
 }) {
   const importer = useImportPayments();
+  const viewsImporter = useImportViews();
   const markSynced = useMarkSynced();
   const [phase, setPhase] = useState<SyncPhase>('idle');
   const phaseChangeRef = useRef(onPhaseChange);
@@ -56,6 +59,7 @@ export function PaymentsSync({
   }, [phase]);
   const webviewRef = useRef<WebView>(null);
   const urlRef = useRef(DASHBOARD_URL);
+  const targetRef = useRef<'payments' | 'views'>('payments');
   const reprobeCountRef = useRef(0);
   const reprobeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,18 +87,28 @@ export function PaymentsSync({
   );
 
   const fetchExport = () => {
+    targetRef.current = 'payments';
     webviewRef.current?.injectJavaScript(fetchScript(EXPORT_URL));
+  };
+
+  const fetchViews = () => {
+    targetRef.current = 'views';
+    webviewRef.current?.injectJavaScript(fetchJsonScript(analyticsUrl()));
   };
 
   const scheduleReprobe = () => {
     if (reprobeCountRef.current >= MAX_REPROBES) {
+      syncingRef.current = false;
       clearTimers();
       setPhase('error');
       return;
     }
     reprobeCountRef.current += 1;
     if (reprobeTimerRef.current) clearTimeout(reprobeTimerRef.current);
-    reprobeTimerRef.current = setTimeout(fetchExport, REPROBE_DELAY_MS);
+    reprobeTimerRef.current = setTimeout(() => {
+      if (targetRef.current === 'views') fetchViews();
+      else fetchExport();
+    }, REPROBE_DELAY_MS);
   };
 
   // The hidden WebView can't show an interactive challenge; give it a short
@@ -116,6 +130,25 @@ export function PaymentsSync({
     try {
       await importer.mutateAsync({ userId, csv });
       await markSynced();
+      // Hand the re-entry guard back before the views fetch — syncViews
+      // checks the same flag.
+      syncingRef.current = false;
+      fetchViews();
+    } catch {
+      syncingRef.current = false;
+      setPhase('error');
+    }
+  };
+
+  const syncViews = async (payload: string) => {
+    if (syncingRef.current) return;
+    syncingRef.current = true;
+    clearTimers();
+    try {
+      await viewsImporter.mutateAsync({
+        userId,
+        payload: JSON.parse(payload) as Record<string, unknown>,
+      });
       setPhase('idle');
     } catch {
       setPhase('error');
@@ -139,6 +172,10 @@ export function PaymentsSync({
         resolvedRef.current = true;
         void syncCsv(message.csv);
         break;
+      case 'analytics':
+        resolvedRef.current = true;
+        void syncViews(message.payload);
+        break;
       case 'challenge':
         resolvedRef.current = false;
         scheduleVisibleFallback();
@@ -157,7 +194,7 @@ export function PaymentsSync({
         fetchExport();
         break;
       case 'page':
-        if (message.url.includes('/login')) {
+        if (message.url?.includes('/login')) {
           onNeedsVisible();
           setPhase('idle');
         } else {

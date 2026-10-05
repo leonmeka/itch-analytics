@@ -10,6 +10,8 @@ import type {
   PaymentsSummaryDto,
   UserProfileDto,
   UserWithRevenueDto,
+  ViewsGraphsDto,
+  ViewsImportResultDto,
 } from '@itch/protocol';
 import { env } from '../env';
 import { fetchBase } from './fetch-base';
@@ -71,6 +73,13 @@ export const apiClient = {
     authedFetch<GameDto[]>(`/users/${userId}/games?${searchParams({ limit, offset })}`),
   syncGames: (userId: string) =>
     authedFetch<GamesSyncResultDto>(`/users/${userId}/games`, { method: 'POST' }),
+  importViews: (userId: string, payload: Record<string, unknown>) =>
+    authedFetch<ViewsImportResultDto>(`/users/${userId}/views`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+  viewsGraph: (userId: string) => authedFetch<ViewsGraphsDto>(`/users/${userId}/views/graph`),
   creators: (limit: number, offset: number) =>
     authedFetch<UserWithRevenueDto[]>(`/users?${searchParams({ limit, offset })}`),
   creator: (userId: string) => authedFetch<UserProfileDto | null>(`/users/${userId}/profile`),

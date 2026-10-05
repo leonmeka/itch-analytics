@@ -11,6 +11,8 @@ import {
   UserDto,
   UserProfileDto,
   UserWithRevenueDto,
+  ViewsGraphsDto,
+  ViewsImportResultDto,
 } from '@itch/protocol';
 import {
   BadRequestException,
@@ -29,13 +31,14 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { and, asc, eq } from 'drizzle-orm';
 import { type AuthenticatedRequest, AuthGuard } from '@/libs/auth';
-import { GamesImporterService, PaymentsImporterService } from '@/libs/itch';
+import { GamesImporterService, PaymentsImporterService, ViewsImporterService } from '@/libs/itch';
 import {
   GamesService,
   OAuthIdentitiesService,
   PaymentsService,
   schema,
   UsersService,
+  ViewsService,
 } from '@/libs/shared';
 
 @ApiTags('users')
@@ -45,8 +48,10 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly paymentsService: PaymentsService,
     private readonly gamesService: GamesService,
+    private readonly viewsService: ViewsService,
     private readonly paymentsImporterService: PaymentsImporterService,
     private readonly gamesImporterService: GamesImporterService,
+    private readonly viewsImporterService: ViewsImporterService,
     private readonly oauthIdentitiesService: OAuthIdentitiesService,
   ) {}
 
@@ -206,6 +211,33 @@ export class UsersController {
     }
 
     return this.gamesImporterService.sync(userId, itchToken);
+  }
+
+  @Post(':user_id/views')
+  @UseGuards(AuthGuard)
+  async importViews(
+    @Req() request: AuthenticatedRequest,
+    @Param('user_id') userId: string,
+    @Body() body: Record<string, unknown>,
+  ): Promise<ViewsImportResultDto> {
+    if (request.user?.id !== userId) {
+      throw new ForbiddenException("Cannot access another user's resources");
+    }
+
+    return this.viewsImporterService.import(userId, body);
+  }
+
+  @Get(':user_id/views/graph')
+  @UseGuards(AuthGuard)
+  async viewsGraph(
+    @Req() request: AuthenticatedRequest,
+    @Param('user_id') userId: string,
+  ): Promise<ViewsGraphsDto> {
+    if (request.user?.id !== userId) {
+      throw new ForbiddenException("Cannot access another user's resources");
+    }
+
+    return this.viewsService.getGraph(userId);
   }
 
   @Get(':user_id/oauth-identity')

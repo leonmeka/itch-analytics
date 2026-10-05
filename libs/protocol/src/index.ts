@@ -330,6 +330,33 @@ export class GamesSyncResultDto {
   skipped!: number;
 }
 
+export class ViewsGraphPointDto {
+  @ApiProperty({ example: '2026-09-26' })
+  date!: string;
+
+  @ApiProperty({ description: 'Cumulative views at this date.' })
+  value!: number;
+}
+
+export class ViewsGraphsDto {
+  @ApiProperty({ type: [ViewsGraphPointDto], description: 'Cumulative views per day.' })
+  views!: ViewsGraphPointDto[];
+}
+
+export class ViewsImportResultDto {
+  @ApiProperty({ description: 'Per-game per-day view rows detected in the payload.' })
+  total!: number;
+
+  @ApiProperty({ description: 'Newly stored view rows.' })
+  imported!: number;
+
+  @ApiProperty({ description: 'View rows updated with changed counts.' })
+  updated!: number;
+
+  @ApiProperty({ description: 'Rows already up to date, plus malformed entries.' })
+  skipped!: number;
+}
+
 export class PaymentsFilterDto {
   @ApiPropertyOptional({ description: 'Product name or purchase ID.' })
   @IsOptional()
