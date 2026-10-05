@@ -12,11 +12,9 @@ export function Landing() {
           data-design="brand"
           className="flex items-center gap-3 text-[22px] font-[750] tracking-[-0.7px] [-webkit-tap-highlight-color:transparent] focus-visible:outline-3 focus-visible:outline-offset-5 focus-visible:outline-ink mobile:gap-2 mobile:text-[18px]"
           href="/"
-          aria-label="itch dashboard home"
+          aria-label="Scratch home"
         >
-          <span>
-            itch<span className="font-[450]"> dashboard</span>
-          </span>
+          <span>Scratch</span>
         </a>
         <span className="text-[13px] font-medium tablet:hidden">Your creative work, closer.</span>
       </header>
@@ -82,7 +80,7 @@ export function Landing() {
               <div className="relative h-full overflow-hidden bg-[#101010] [border-radius:13%/6%]">
                 <Image
                   src="/creators.screen.png"
-                  alt="The itch dashboard Creators tab showing creator profiles and revenue"
+                  alt="The Scratch Creators tab showing creator profiles and revenue"
                   width={1206}
                   height={2622}
                   className="h-full w-full object-cover"
@@ -95,7 +93,7 @@ export function Landing() {
               <div className="relative h-full overflow-hidden bg-[#101010] [border-radius:13%/6%]">
                 <Image
                   src="/dashboard.screen.png"
-                  alt="The itch dashboard Home tab showing revenue, payments, and customer statistics"
+                  alt="The Scratch Home tab showing revenue, payments, and customer statistics"
                   width={1206}
                   height={2622}
                   className="h-full w-full object-cover"
@@ -109,9 +107,8 @@ export function Landing() {
       </main>
       <footer className="flex flex-col items-center gap-2 pt-4 text-[11px] leading-[1.5] tracking-[0.1px] opacity-80 contrast-more:opacity-100 mobile:pt-3 mobile:text-[9px]">
         <span className="max-w-[720px] text-center">
-          itch dashboard is an independent project and is not affiliated with, endorsed by, or
-          sponsored by itch.io or Itch Corp. The itch.io name and logo are the property of Itch
-          Corp.
+          Scratch is an independent project and is not affiliated with, endorsed by, or sponsored by
+          itch.io or Itch Corp. The itch.io name and logo are the property of Itch Corp.
         </span>
         <nav aria-label="Legal" className="flex gap-4">
           <Link href="/legal/terms" className="underline underline-offset-4">

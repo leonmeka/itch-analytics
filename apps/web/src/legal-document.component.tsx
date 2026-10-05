@@ -9,7 +9,7 @@ export function LegalDocument({ document }: { document: keyof typeof legalDocume
         href="/"
         className="text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
       >
-        ← Back to itch dashboard
+        ← Back to Scratch
       </Link>
       <article className="mt-12">
         <h1 className="text-[clamp(36px,6vw,58px)] font-semibold leading-[1.08] tracking-[-0.045em]">

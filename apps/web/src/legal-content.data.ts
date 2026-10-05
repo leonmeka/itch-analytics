@@ -2,11 +2,11 @@ export const legalDocuments = {
   terms: {
     title: 'Terms and Conditions',
     intro:
-      'These terms cover the itch dashboard website and companion app. By using the service, you agree to these terms. If you do not agree, stop using the service.',
+      'These terms cover the Scratch website at getscratch.app and companion app. By using the service, you agree to these terms. If you do not agree, stop using the service.',
     sections: [
       [
         'The companion app',
-        'itch dashboard helps you view your itch.io sales, games, and creator activity. It is an independent project and is not affiliated with, endorsed by, or sponsored by itch.io or Itch Corp. itch.io and its logo belong to their respective owner.',
+        'Scratch helps you view your itch.io sales, games, and creator activity. It is an independent project and is not affiliated with, endorsed by, or sponsored by itch.io or Itch Corp. itch.io and its logo belong to their respective owner.',
       ],
       [
         'Your account',
@@ -45,11 +45,11 @@ export const legalDocuments = {
   privacy: {
     title: 'Privacy Policy',
     intro:
-      'This policy describes how the itch dashboard website and companion app handle information. It covers sign-in, synchronization, and dashboard data.',
+      'This policy describes how the Scratch website at getscratch.app and companion app handle information. It covers sign-in, synchronization, and dashboard data.',
     sections: [
       [
         'Who is responsible',
-        'The operator of itch dashboard is responsible for the processing described here.',
+        'The operator of Scratch is responsible for the processing described here.',
       ],
       [
         'Account and sign-in data',
