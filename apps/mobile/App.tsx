@@ -48,7 +48,7 @@ const App = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <HeroUINativeProvider>
+        <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
           <QueryProvider>
             <AuthProvider>
               <AppRoutes />

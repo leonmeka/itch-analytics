@@ -1,3 +1,4 @@
+import { Skeleton } from 'heroui-native/skeleton';
 import { Typography } from 'heroui-native/text';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -17,11 +18,13 @@ export function TimeSeriesChart({
   formatValue,
   label,
   aspectRatio = 3,
+  isLoading = false,
 }: {
   points: TimeSeriesPoint[];
   formatValue: (value: number) => string;
   label?: string;
   aspectRatio?: number;
+  isLoading?: boolean;
 }) {
   const [accent, border, surface] = useCSSVariable([
     '--app-accent',
@@ -34,21 +37,31 @@ export function TimeSeriesChart({
     (p) => Number.isFinite(Date.parse(p.date)) && Number.isFinite(p.value),
   );
 
-  if (!valid.length) {
+  if (isLoading || !valid.length) {
     return (
       <View className="min-w-0 self-stretch">
         {label ? (
-          <Typography type="body-xs" className="mb-2 text-app-muted">
-            {label}
-          </Typography>
+          <View className="mb-3">
+            <Typography type="body-xs" className="text-app-muted">
+              {label}
+            </Typography>
+            <View className="mt-0.5">
+              {isLoading ? (
+                <Skeleton className="h-[30px] w-3/5 rounded-app-placeholder" />
+              ) : (
+                <Typography className="text-[24px] font-medium leading-[30px] tracking-[-1px] text-app-foreground">
+                  —
+                </Typography>
+              )}
+            </View>
+          </View>
         ) : null}
-        <Typography
-          className="text-[24px] font-medium leading-[30px] tracking-[-1px] text-app-foreground"
-          style={{ fontVariant: ['tabular-nums'] }}
+        <View
+          style={{ alignSelf: 'stretch', height: Math.max(64, layout.width / aspectRatio) }}
+          onLayout={({ nativeEvent }) => setLayout(nativeEvent.layout)}
         >
-          —
-        </Typography>
-        <View className="h-10" />
+          {isLoading ? <Skeleton className="h-full w-full rounded-app-media" /> : null}
+        </View>
       </View>
     );
   }

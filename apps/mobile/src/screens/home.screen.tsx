@@ -3,7 +3,6 @@ import type { CompositeNavigationProp } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Card } from 'heroui-native/card';
-import { Skeleton } from 'heroui-native/skeleton';
 import { useMemo } from 'react';
 import { RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -162,13 +161,13 @@ export function HomeScreen() {
         <View className="mx-auto w-full max-w-[640px] gap-3 px-5">
           <Card className="overflow-hidden rounded-app-card bg-app-surface p-4 shadow-none">
             {graph.isPending ? (
-              <View>
-                <Skeleton className="h-4 w-24 rounded-app-placeholder" />
-                <Skeleton className="mt-0.5 h-8 w-52 rounded-app-placeholder" />
-                <View className="mt-3">
-                  <Skeleton className="h-[176px] w-full rounded-app-media" />
-                </View>
-              </View>
+              <TimeSeriesChart
+                isLoading
+                label="Gross revenue"
+                points={[]}
+                formatValue={formatMoney}
+                aspectRatio={2.5}
+              />
             ) : graph.isError ? (
               <ContentState
                 title="Chart unavailable"
@@ -210,12 +209,12 @@ export function HomeScreen() {
           {graph.isPending ? (
             <>
               <View className="flex-row gap-3">
-                <Skeleton className="h-[128px] flex-1 rounded-app-card" />
-                <Skeleton className="h-[128px] flex-1 rounded-app-card" />
+                <StatCard isLoading label="Total payments" points={[]} formatValue={formatMoney} />
+                <StatCard isLoading label="Total customers" points={[]} formatValue={formatMoney} />
               </View>
               <View className="flex-row gap-3">
-                <Skeleton className="h-[128px] flex-1 rounded-app-card" />
-                <Skeleton className="h-[128px] flex-1 rounded-app-card" />
+                <StatCard isLoading label="Average payment" points={[]} formatValue={formatMoney} />
+                <StatCard isLoading label="Tip revenue" points={[]} formatValue={formatMoney} />
               </View>
             </>
           ) : graph.isError || !graph.data ? (
@@ -254,7 +253,15 @@ export function HomeScreen() {
           )}
           {viewsGraph.isPending ? (
             <View className="flex-row gap-3">
-              <Skeleton className="h-[128px] flex-1 rounded-app-card" />
+              <View className="min-w-0 flex-1 overflow-hidden rounded-app-card bg-app-surface p-4">
+                <TimeSeriesChart
+                  isLoading
+                  label="Total views"
+                  points={[]}
+                  formatValue={String}
+                  aspectRatio={5}
+                />
+              </View>
             </View>
           ) : viewsGraph.isError ? (
             <Card className="rounded-app-card bg-app-surface shadow-none">

@@ -195,14 +195,15 @@ export function PaymentSkeletons() {
       {[0, 1, 2].map((row) => (
         <View
           key={row}
-          className={`flex-row items-center gap-3 px-4 py-4 ${row < 2 ? 'border-b border-app-border' : ''}`}
+          className={`min-h-[86px] flex-row items-center gap-3 px-4 py-4 ${row < 2 ? 'border-b border-app-border' : ''}`}
         >
           <Skeleton className="h-11 w-11 rounded-full" />
-          <View className="flex-1 gap-1">
-            <Skeleton className="h-4 w-36 rounded-app-placeholder" />
-            <Skeleton className="h-3 w-24 rounded-app-placeholder" />
+          <View className="min-w-0 flex-1 gap-0.5">
+            <Skeleton className="h-7 w-full max-w-36 rounded-app-placeholder" />
+            <Skeleton className="h-7 w-full max-w-24 rounded-app-placeholder" />
           </View>
-          <Skeleton className="h-5 w-16 rounded-app-placeholder" />
+          <Skeleton className="h-7 w-16 rounded-app-placeholder" />
+          <View className="h-[13px] w-[13px]" />
         </View>
       ))}
     </View>
@@ -214,14 +215,14 @@ export function GameSkeletons() {
       {[0, 1, 2].map((row) => (
         <View
           key={row}
-          className={`flex-row items-center gap-3 px-4 py-4 ${row < 2 ? 'border-b border-app-border' : ''}`}
+          className={`min-h-[86px] flex-row items-center gap-3 px-4 py-4 ${row < 2 ? 'border-b border-app-border' : ''}`}
         >
           <Skeleton className="h-12 w-12 overflow-hidden rounded-full" />
-          <View className="flex-1 gap-1">
-            <Skeleton className="h-4 w-36 rounded-app-placeholder" />
-            <Skeleton className="h-5 w-28 rounded-app-placeholder" />
+          <View className="min-w-0 flex-1 gap-1">
+            <Skeleton className="h-7 w-full max-w-36 rounded-app-placeholder" />
+            <Skeleton className="h-5 w-full max-w-28 rounded-app-placeholder" />
           </View>
-          <Skeleton className="h-4 w-10 rounded-app-placeholder" />
+          <Skeleton className="h-[13px] w-[13px] rounded-app-placeholder" />
         </View>
       ))}
     </View>
@@ -233,11 +234,14 @@ export function CreatorsSkeletons() {
       {[0, 1, 2].map((row) => (
         <View
           key={row}
-          className={`flex-row items-center gap-3 px-4 py-3 ${row < 2 ? 'border-b border-app-border' : ''}`}
+          className={`min-h-[64px] flex-row items-center gap-3 px-4 py-3 ${row < 2 ? 'border-b border-app-border' : ''}`}
         >
           <Skeleton className="h-11 w-11 rounded-full" />
-          <Skeleton className="h-4 flex-1 rounded-app-placeholder" />
-          <Skeleton className="h-5 w-16 rounded-app-placeholder" />
+          <Skeleton className="h-7 flex-1 rounded-app-placeholder" />
+          <View className="flex-row items-center gap-2">
+            <Skeleton className="h-7 w-16 rounded-app-placeholder" />
+            <View className="h-[13px] w-[13px]" />
+          </View>
         </View>
       ))}
     </View>
