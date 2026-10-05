@@ -96,7 +96,7 @@ export function TimeSeriesChart({
         </View>
       ) : null}
       <View
-        style={{ alignSelf: 'stretch', aspectRatio, minHeight: 64 }}
+        style={{ alignSelf: 'stretch', height: Math.max(64, layout.width / aspectRatio) }}
         onLayout={(event: { nativeEvent: { layout: { width: number; height: number } } }) =>
           setLayout({
             width: event.nativeEvent.layout.width,
