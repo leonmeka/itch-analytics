@@ -1,4 +1,4 @@
-import type { PaymentDto } from '@itch/protocol';
+import type { PaymentDto } from '@scratch/protocol';
 
 export function formatMoney(cents: number): string {
   return new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' }).format(cents / 100);

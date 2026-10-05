@@ -1,12 +1,12 @@
-import { useThemeColor } from 'heroui-native/hooks';
 import {
   PressableFeedback as HeroPressableFeedback,
   type PressableFeedbackHighlightProps,
   type PressableFeedbackProps,
 } from 'heroui-native/pressable-feedback';
+import { useCSSVariable } from 'uniwind';
 
 export function usePressFeedbackAnimation() {
-  const accent = useThemeColor('accent');
+  const accent = useCSSVariable('--app-accent') as string;
   const highlight: PressableFeedbackHighlightProps['animation'] = {
     backgroundColor: { value: accent },
     opacity: { value: [0, 0.1] },

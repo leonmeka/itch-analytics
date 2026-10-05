@@ -1,6 +1,6 @@
-import type { UserWithRevenueDto } from '@itch/protocol';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { UserWithRevenueDto } from '@scratch/protocol';
 import { Typography } from 'heroui-native/text';
 import { useMemo } from 'react';
 import { ActivityIndicator, FlatList, Image, RefreshControl, View } from 'react-native';

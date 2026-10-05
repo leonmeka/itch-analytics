@@ -1,4 +1,4 @@
-import type { GameDto, PaymentDto } from '@itch/protocol';
+import type { GameDto, PaymentDto } from '@scratch/protocol';
 import { Skeleton } from 'heroui-native/skeleton';
 import { Typography } from 'heroui-native/text';
 import type { ReactNode } from 'react';

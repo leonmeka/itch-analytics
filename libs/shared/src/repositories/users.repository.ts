@@ -1,5 +1,5 @@
-import type { UserProfileDto, UserWithRevenueDto } from '@itch/protocol';
 import { Inject, Injectable } from '@nestjs/common';
+import type { UserProfileDto, UserWithRevenueDto } from '@scratch/protocol';
 import { and, asc, desc, eq, isNotNull, ne, sql } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 

@@ -1,5 +1,5 @@
-import type { UserProfileDto } from '@itch/protocol';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { UserProfileDto } from '@scratch/protocol';
 import { Skeleton } from 'heroui-native/skeleton';
 import { Typography } from 'heroui-native/text';
 import type { ReactNode } from 'react';

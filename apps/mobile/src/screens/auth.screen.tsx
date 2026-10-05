@@ -45,7 +45,7 @@ export function AuthScreen() {
               onPress={openBrowser(TERMS_OF_SERVICE_URL)}
               className="text-white/80 underline"
             >
-              Terms of Service
+              Terms and Conditions
             </Typography>{' '}
             and{' '}
             <Typography

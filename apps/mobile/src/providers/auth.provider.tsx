@@ -1,4 +1,4 @@
-import type { UserDto } from '@itch/protocol';
+import type { UserDto } from '@scratch/protocol';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
@@ -16,7 +16,7 @@ import { queryKeys, useCompleteLogin, useLogout, useMe } from '../api/queries';
 import { loadSession, saveSession } from '../api/session';
 import { deleteItchToken, saveItchToken } from '../utils/sync.storage';
 
-export const OAUTH_RETURN_SCHEME = 'itch-dashboard';
+export const OAUTH_RETURN_SCHEME = 'scratch';
 export const OAUTH_RETURN_PATH = 'oauth';
 
 interface AuthContextValue {

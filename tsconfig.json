@@ -19,7 +19,7 @@
     "resolveJsonModule": true,
     "paths": {
       "@/api/*": ["./apps/api/src/*"],
-      "@itch/protocol": ["./libs/protocol/src"],
+      "@scratch/protocol": ["./libs/protocol/src"],
       "@/libs/auth": ["./libs/auth/src"],
       "@/libs/auth/*": ["./libs/auth/src/*"],
       "@/libs/itch": ["./libs/itch/src"],

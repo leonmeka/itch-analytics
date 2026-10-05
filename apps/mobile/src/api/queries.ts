@@ -8,7 +8,7 @@ import type {
   UserProfileDto,
   UserWithRevenueDto,
   ViewsGraphsDto,
-} from '@itch/protocol';
+} from '@scratch/protocol';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { loadLastSynced, saveLastSynced } from '../utils/sync.storage';
 import type { CompleteLoginInput } from './client';

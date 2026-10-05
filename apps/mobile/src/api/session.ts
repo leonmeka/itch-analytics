@@ -1,9 +1,11 @@
-import type { UserDto } from '@itch/protocol';
+import type { UserDto } from '@scratch/protocol';
 import * as SecureStore from 'expo-secure-store';
+import { loadMigratedValue } from '../utils/secure-storage.utils';
 import { API_URL_BASE } from './client';
 import { ApiError, fetchBase } from './fetch-base';
 
-const SESSION_KEY = 'itch.session.v1';
+const SESSION_KEY = 'scratch.session.v1';
+const PREVIOUS_SESSION_KEY = 'itch.session.v1';
 
 export type StoredSession = {
   accessToken: string;
@@ -12,7 +14,7 @@ export type StoredSession = {
 
 export async function loadSession(): Promise<StoredSession | null> {
   try {
-    const raw = await SecureStore.getItemAsync(SESSION_KEY);
+    const raw = await loadMigratedValue(SESSION_KEY, PREVIOUS_SESSION_KEY);
 
     return raw ? (JSON.parse(raw) as StoredSession) : null;
   } catch {
@@ -26,6 +28,7 @@ export async function saveSession(session: StoredSession): Promise<void> {
 
 export async function clearSession(): Promise<void> {
   await SecureStore.deleteItemAsync(SESSION_KEY);
+  await SecureStore.deleteItemAsync(PREVIOUS_SESSION_KEY);
 }
 
 async function refreshSession(refreshToken: string): Promise<StoredSession | null> {

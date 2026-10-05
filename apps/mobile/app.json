@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "itch",
-    "slug": "itch",
-    "scheme": "itch-dashboard",
+    "name": "Scratch",
+    "slug": "scratch",
+    "scheme": "scratch",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.itch"
+      "bundleIdentifier": "app.getscratch"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +18,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.anonymous.itch"
+      "package": "app.getscratch"
     }
   }
 }

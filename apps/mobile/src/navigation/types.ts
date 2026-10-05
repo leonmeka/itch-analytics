@@ -1,5 +1,5 @@
-import type { GameDto, PaymentDto } from '@itch/protocol';
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { GameDto, PaymentDto } from '@scratch/protocol';
 
 export type TabsParamList = {
   Home: undefined;

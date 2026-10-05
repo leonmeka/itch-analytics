@@ -16,7 +16,6 @@ export function Landing() {
         >
           <span>Scratch</span>
         </a>
-        <span className="text-[13px] font-medium tablet:hidden">Your creative work, closer.</span>
       </header>
       <main
         data-design="hero"

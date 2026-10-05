@@ -1,6 +1,6 @@
-# itch
+# Scratch
 
-The social analytics app for itch.io creators.
+The social analytics companion for itch.io creators. Website: https://getscratch.app.
 
 ## Layout
 
@@ -35,3 +35,9 @@ pnpm db:migrate  # generate migrations from schemas
 pnpm db:apply    # apply migrations
 pnpm db:studio   # drizzle studio
 ```
+
+## App identity
+
+The mobile app is Scratch (`app.getscratch`). Its OAuth callback is `scratch://oauth`; configure the same URL in the itch.io OAuth application and `API_OAUTH_ITCH_CALLBACK_URL`. Rebuild the native app after changing its identifiers.
+
+The local database and role are `scratch`; Docker stores its data in `scratch_pg`. Device storage migrates to Scratch keys on first access. The itch.io integration remains in `libs/itch`; internal workspace packages use `@scratch/*`.

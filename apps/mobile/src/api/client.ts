@@ -12,7 +12,7 @@ import type {
   UserWithRevenueDto,
   ViewsGraphsDto,
   ViewsImportResultDto,
-} from '@itch/protocol';
+} from '@scratch/protocol';
 import { env } from '../env';
 import { fetchBase } from './fetch-base';
 import { authedFetch } from './session';

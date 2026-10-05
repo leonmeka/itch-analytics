@@ -63,8 +63,8 @@ async function bootstrap(): Promise<void> {
 
   // OpenAPI docs
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('itch API')
-    .setDescription('REST API powering the itch analytics dashboard (auth, itch.io games).')
+    .setTitle('Scratch API')
+    .setDescription('REST API powering the Scratch companion app (auth, itch.io games).')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);

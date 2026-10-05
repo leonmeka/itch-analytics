@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import type { UserDto } from '@itch/protocol';
 import { Body, Controller, Get, HttpCode, Inject, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ApiTags } from '@nestjs/swagger';
+import type { UserDto } from '@scratch/protocol';
 import { eq } from 'drizzle-orm';
 import type { Request, Response } from 'express';
 import { AUTH_CONFIG_KEY, type AuthConfig, ItchAuthGuard } from '@/libs/auth';

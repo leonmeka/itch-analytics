@@ -1,3 +1,4 @@
+import { Inject, Injectable } from '@nestjs/common';
 import type {
   PaymentCountryDto,
   PaymentGraphPointDto,
@@ -5,8 +6,7 @@ import type {
   PaymentsFilterDto,
   PaymentsGraphsDto,
   PaymentsSummaryDto,
-} from '@itch/protocol';
-import { Inject, Injectable } from '@nestjs/common';
+} from '@scratch/protocol';
 import { sql } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 

@@ -1,3 +1,4 @@
+import * as WebBrowser from 'expo-web-browser';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Uniwind, useUniwind } from 'uniwind';
@@ -5,6 +6,7 @@ import { Icon } from '../components/icon.component';
 import { PageHeader } from '../components/page-header.component';
 import { SectionHeader } from '../components/screen-ui.component';
 import { Button } from '../components/ui/button';
+import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../constants';
 import { useAuth } from '../providers/auth.provider';
 
 export function SettingsScreen() {
@@ -40,6 +42,25 @@ export function SettingsScreen() {
                 </Button>
               );
             })}
+          </View>
+        </View>
+        <View>
+          <SectionHeader title="Legal" />
+          <View className="gap-2">
+            {[
+              ['Terms and Conditions', TERMS_OF_SERVICE_URL],
+              ['Privacy Policy', PRIVACY_POLICY_URL],
+            ].map(([label, url]) => (
+              <Button
+                key={url}
+                variant="ghost"
+                className="h-[52px] rounded-full bg-app-surface"
+                accessibilityRole="link"
+                onPress={() => void WebBrowser.openBrowserAsync(url)}
+              >
+                <Button.Label className="text-app-foreground underline">{label}</Button.Label>
+              </Button>
+            ))}
           </View>
         </View>
         <Button variant="ghost" className="h-[52px] rounded-full bg-app-surface" onPress={logout}>

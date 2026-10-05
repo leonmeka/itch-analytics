@@ -1,5 +1,5 @@
 {
-  "name": "itch",
+  "name": "scratch",
   "packageManager": "pnpm@11.17.0",
   "engines": {
     "node": ">=20.0.0",
@@ -9,13 +9,13 @@
     "dev": "docker compose up --build --wait",
     "start": "dotenv -e .env -- nest start api --watch",
     "build": "nest build api",
-    "db:migrate": "pnpm --filter @itch/shared run migrate",
-    "db:apply": "pnpm --filter @itch/shared run apply",
-    "db:seed": "pnpm --filter @itch/shared run seed",
-    "db:studio": "pnpm --filter @itch/shared run studio",
-    "mobile": "dotenv -e .env -- pnpm --filter @itch/mobile run start",
-    "mobile:ios": "dotenv -e .env -- pnpm --filter @itch/mobile run run:ios",
-    "mobile:android": "dotenv -e .env -- pnpm --filter @itch/mobile run run:android",
+    "db:migrate": "pnpm --filter @scratch/shared run migrate",
+    "db:apply": "pnpm --filter @scratch/shared run apply",
+    "db:seed": "pnpm --filter @scratch/shared run seed",
+    "db:studio": "pnpm --filter @scratch/shared run studio",
+    "mobile": "dotenv -e .env -- pnpm --filter @scratch/mobile run start",
+    "mobile:ios": "dotenv -e .env -- pnpm --filter @scratch/mobile run run:ios",
+    "mobile:android": "dotenv -e .env -- pnpm --filter @scratch/mobile run run:android",
     "lint": "biome lint --write apps libs",
     "format": "biome format --write apps libs"
   },

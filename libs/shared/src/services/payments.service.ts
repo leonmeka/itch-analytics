@@ -1,5 +1,5 @@
-import type { PaymentsFilterDto } from '@itch/protocol';
 import { Injectable } from '@nestjs/common';
+import type { PaymentsFilterDto } from '@scratch/protocol';
 
 import { PaymentsRepository } from '../repositories/payments.repository';
 import type { CreatePayment, Payment, UpdatePayment } from '../types/payments.types';

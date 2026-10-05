@@ -1,5 +1,5 @@
-import type { ViewsGraphPointDto, ViewsGraphsDto } from '@itch/protocol';
 import { Inject, Injectable } from '@nestjs/common';
+import type { ViewsGraphPointDto, ViewsGraphsDto } from '@scratch/protocol';
 import { asc, eq, sql } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 

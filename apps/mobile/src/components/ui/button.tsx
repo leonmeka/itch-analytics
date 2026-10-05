@@ -3,6 +3,7 @@ import { Button as HeroButton } from 'heroui-native/button';
 import { type ThemeColor, useThemeColor } from 'heroui-native/hooks';
 import { Children, isValidElement } from 'react';
 import { ActivityIndicator } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 import { usePressFeedbackAnimation } from '../pressable-feedback.component';
 
 type ButtonProps = Omit<ButtonRootProps, 'animation' | 'feedbackVariant'> & {
@@ -29,7 +30,11 @@ function ButtonImpl({
   ...props
 }: ButtonProps) {
   const feedbackAnimation = usePressFeedbackAnimation();
-  const spinnerColor = useThemeColor(VARIANT_SPINNER_TOKEN[variant]);
+  const variantColor = useThemeColor(VARIANT_SPINNER_TOKEN[variant]);
+  const fallbackColor = useCSSVariable(
+    variant === 'primary' || variant === 'danger' ? '--app-hero-foreground' : '--app-foreground',
+  ) as string;
+  const spinnerColor = variantColor === 'invalid' ? fallbackColor : variantColor;
 
   const labels = Children.toArray(children).filter(
     (child) => isValidElement(child) && child.type === HeroButton.Label,

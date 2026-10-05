@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-itch font-sans leading-[normal] text-cream [font-synthesis:none]">
+      <body className="bg-scratch font-sans leading-[normal] text-cream [font-synthesis:none]">
         {children}
       </body>
     </html>

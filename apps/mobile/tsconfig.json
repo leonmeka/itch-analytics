@@ -5,7 +5,7 @@
     "resolveJsonModule": true,
     "types": ["uniwind/types", "node"],
     "paths": {
-      "@itch/protocol": ["../../libs/protocol/src"]
+      "@scratch/protocol": ["../../libs/protocol/src"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "uniwind-types.d.ts"]

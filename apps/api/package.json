@@ -1,5 +1,5 @@
 {
-  "name": "@itch/api",
+  "name": "@scratch/api",
   "scripts": {
     "dev": "cd ../.. && nest start api --watch",
     "build": "cd ../.. && nest build api"

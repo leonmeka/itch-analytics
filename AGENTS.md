@@ -1,4 +1,4 @@
-# itch — Agent Ruleset
+# Scratch — Agent Ruleset
 
 Non-negotiable rules for ANY agent working in this repo. Read this file fully
 before touching code. If a change would violate a rule here, stop and follow
@@ -117,7 +117,7 @@ Excluded from the dot rule (entry/config files): `App.tsx`, `main.ts`,
 - itch.io OAuth = implicit flow only (`response_type=token`): no code
   exchange, no client secret. The passport strategy owns the flow; the
   app's `/auth/login` 302s to itch.io and itch redirects straight back to
-  the app scheme (`itch-dashboard://oauth`).
+  the app scheme (`scratch://oauth`).
 - itch.io's payment-level revenue still comes from manual CSV sync
   (dashboard export-purchases) via the payments import endpoint. The
   `profile/games` sync does not deliver revenue/earnings values for OAuth
@@ -135,7 +135,7 @@ Excluded from the dot rule (entry/config files): `App.tsx`, `main.ts`,
 - Env vars are validated with zod at module import (`src/env.ts`) — same
   pattern as the API's `env.ts`. No `??` fallbacks for required vars.
 - Wire types come EXCLUSIVELY from `libs/protocol` via type-only imports
-  (`import type { PaymentDto } from '@itch/protocol'`, tsconfig paths
+  (`import type { PaymentDto } from '@scratch/protocol'`, tsconfig paths
   alias + `experimentalDecorators`). NEVER mirror DTOs in local
   `src/api/types.ts` files, NEVER hand-type endpoint response shapes.
 

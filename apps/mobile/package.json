@@ -1,5 +1,5 @@
 {
-  "name": "@itch/mobile",
+  "name": "@scratch/mobile",
   "main": "App.tsx",
   "scripts": {
     "start": "expo start",

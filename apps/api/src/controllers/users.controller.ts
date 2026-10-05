@@ -1,4 +1,18 @@
 import {
+  BadRequestException,
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import {
   GameDto,
   GamesImportResultDto,
   OauthIdentityDto,
@@ -13,21 +27,7 @@ import {
   UserWithRevenueDto,
   ViewsGraphsDto,
   ViewsImportResultDto,
-} from '@itch/protocol';
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  ForbiddenException,
-  Get,
-  NotFoundException,
-  Param,
-  Post,
-  Query,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+} from '@scratch/protocol';
 import { and, asc, eq } from 'drizzle-orm';
 import { type AuthenticatedRequest, AuthGuard } from '@/libs/auth';
 import { GamesImporterService, PaymentsImporterService, ViewsImporterService } from '@/libs/itch';
