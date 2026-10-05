@@ -56,7 +56,7 @@ export function SyncProvider({ userId, children }: { userId: string | null; chil
   };
 
   const startSync = () => {
-    if (!userId || phase !== 'idle' || gamesRunningRef.current) return;
+    if (!userId || phase === 'running' || gamesRunningRef.current) return;
 
     syncRef.current?.start();
 

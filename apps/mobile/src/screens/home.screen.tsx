@@ -48,7 +48,7 @@ export function HomeScreen() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const { startSync, phase: syncPhase, gamesSyncing } = useSync();
-  const syncing = syncPhase !== 'idle' || gamesSyncing;
+  const syncing = syncPhase === 'running' || gamesSyncing;
   const profile = useOauthIdentity(userId);
   const lastSynced = useLastSynced();
   const summary = usePaymentsSummary(userId);
@@ -135,9 +135,8 @@ export function HomeScreen() {
           }
           action={
             <Button
-              isIconOnly
               variant="ghost"
-              className="h-11 w-11 rounded-full bg-cash-surface"
+              className="h-11 min-w-[100px] shrink-0 rounded-full bg-cash-surface px-4"
               accessibilityLabel={syncPhase === 'error' ? 'Retry sync' : 'Sync everything'}
               accessibilityHint={
                 lastSynced.data
@@ -149,6 +148,9 @@ export function HomeScreen() {
               onPress={startSync}
             >
               <CashIcon name="sync" size={20} />
+              <Button.Label className="text-[14px] font-medium text-cash-foreground">
+                Sync
+              </Button.Label>
             </Button>
           }
         />

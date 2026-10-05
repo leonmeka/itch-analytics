@@ -1,15 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { and, eq, inArray } from 'drizzle-orm';
-
 import { GamesService, schema, ViewsService } from '@/libs/shared';
+import type { ImportSummary } from '../imports/import.types';
+import { diffImportRow } from '../imports/import.utils';
 import { type ParsedViewRow, parseViewsPayload } from './views.parser';
-
-export interface ViewsImportSummary {
-  total: number;
-  imported: number;
-  updated: number;
-  skipped: number;
-}
 
 @Injectable()
 export class ViewsImporterService {
@@ -18,7 +12,7 @@ export class ViewsImporterService {
     private readonly viewsService: ViewsService,
   ) {}
 
-  async import(userId: string, payload: unknown): Promise<ViewsImportSummary> {
+  async import(userId: string, payload: unknown): Promise<ImportSummary> {
     const { rows: parsed, malformed } = parseViewsPayload(payload);
 
     const deduped = new Map<string, ParsedViewRow>();
@@ -46,6 +40,9 @@ export class ViewsImporterService {
 
     const gameIds = [...new Set(resolved.map((row) => row.gameId))];
     const dates = [...new Set(resolved.map((row) => row.date))];
+
+    if (resolved.length === 0)
+      return { total: 0, imported: 0, updated: 0, skipped: unresolved + malformed };
 
     const existing = await this.viewsService.findMany({
       where: and(
@@ -76,12 +73,13 @@ export class ViewsImporterService {
         continue;
       }
 
-      if (current.count === row.count) {
+      const changes = diffImportRow(current, { count: row.count }, ['count']);
+      if (!changes) {
         skipped += 1;
         continue;
       }
 
-      await this.viewsService.update(current.id, { count: row.count });
+      await this.viewsService.update(current.id, changes);
       updated += 1;
     }
 

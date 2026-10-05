@@ -2,15 +2,10 @@ import { createHmac } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, inArray } from 'drizzle-orm';
 import { PaymentsService, schema } from '@/libs/shared';
+import type { ImportSummary } from '../imports/import.types';
+import { diffImportRow } from '../imports/import.utils';
 import { JWT_SECRET_KEY } from '../itch.constants';
-import { type ParsedPaymentsCsv, parsePaymentsCsv, toBareCents, toCents } from './payments.parser';
-
-export interface PaymentsImportSummary {
-  total: number;
-  imported: number;
-  updated: number;
-  skipped: number;
-}
+import { type ParsedPaymentRow, parsePaymentsCsv, toBareCents, toCents } from './payments.parser';
 
 const UPDATABLE_FIELDS = [
   'object_name',
@@ -47,16 +42,17 @@ export class PaymentsImporterService {
       .digest('base64url');
   }
 
-  async import(userId: string, csv: string): Promise<PaymentsImportSummary> {
+  async import(userId: string, csv: string): Promise<ImportSummary> {
     const { rows, malformed } = parsePaymentsCsv(csv);
 
-    const valid = rows.filter((row) => row.externalId != null);
-    const externalIds = [...new Set(valid.map((row) => row.externalId as string))];
+    const valid = [...new Map(rows.map((row) => [row.externalId, row])).values()];
+    if (valid.length === 0) return { total: 0, imported: 0, updated: 0, skipped: malformed };
+    const externalIds = [...new Set(valid.map((row) => row.externalId))];
 
     const existing = await this.paymentsService.findMany({
       where: and(
         eq(schema.paymentsTable.user_id, userId),
-        externalIds.length > 0 ? inArray(schema.paymentsTable.external_id, externalIds) : undefined,
+        inArray(schema.paymentsTable.external_id, externalIds),
       ),
     });
 
@@ -67,7 +63,7 @@ export class PaymentsImporterService {
     let skipped = 0;
 
     for (const row of valid) {
-      const externalId = row.externalId as string;
+      const externalId = row.externalId;
       const payload = this.mapRow(userId, row);
       const current = existingById.get(externalId);
 
@@ -77,7 +73,7 @@ export class PaymentsImporterService {
         continue;
       }
 
-      const changes = this.diff(current, payload);
+      const changes = diffImportRow(current, payload, UPDATABLE_FIELDS);
 
       if (changes) {
         await this.paymentsService.update(current.id, changes);
@@ -95,33 +91,10 @@ export class PaymentsImporterService {
     };
   }
 
-  private diff(
-    current: { [key: string]: unknown },
-    payload: { [key: string]: unknown },
-  ): Record<string, unknown> | null {
-    const changes: Record<string, unknown> = {};
-
-    for (const field of UPDATABLE_FIELDS) {
-      const before = current[field];
-      const after = payload[field];
-
-      const unchanged =
-        before instanceof Date && after instanceof Date
-          ? before.getTime() === after.getTime()
-          : (before ?? null) === (after ?? null);
-
-      if (!unchanged) {
-        changes[field] = after;
-      }
-    }
-
-    return Object.keys(changes).length > 0 ? changes : null;
-  }
-
-  private mapRow(userId: string, row: ParsedPaymentsCsv['rows'][number]) {
+  private mapRow(userId: string, row: ParsedPaymentRow) {
     return {
       user_id: userId,
-      external_id: row.externalId as string,
+      external_id: row.externalId,
       object_name: row.values.object_name ?? null,
       amount_cents: row.amountCents,
       currency: row.values.currency ?? null,

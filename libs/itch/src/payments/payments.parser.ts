@@ -1,15 +1,9 @@
+import type { ParsedImport } from '../imports/import.types';
 export interface ParsedPaymentRow {
-  externalId: string | null;
-  createdAtCsv: string | null;
+  externalId: string;
   purchasedAt: Date | null;
   amountCents: number | null;
   values: Record<string, string | null>;
-}
-
-export interface ParsedPaymentsCsv {
-  header: string[];
-  rows: ParsedPaymentRow[];
-  malformed: number;
 }
 
 const CSV_FIELDS = [
@@ -117,12 +111,12 @@ const toTimestamp = (value: string | null): Date | null => {
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
-export function parsePaymentsCsv(csv: string): ParsedPaymentsCsv {
+export function parsePaymentsCsv(csv: string): ParsedImport<ParsedPaymentRow> {
   const matrix = splitCsv(csv.replace(/^\uFEFF/, ''));
-  const malformed = matrix.filter((row) => row.length < 2).length;
+  let malformed = 0;
 
   if (matrix.length === 0) {
-    return { header: [], rows: [], malformed };
+    return { rows: [], malformed };
   }
 
   const [header, ...dataRows] = matrix;
@@ -138,17 +132,22 @@ export function parsePaymentsCsv(csv: string): ParsedPaymentsCsv {
     return raw === '' ? null : raw;
   };
 
-  const rows = dataRows.map((row): ParsedPaymentRow => {
+  const rows: ParsedPaymentRow[] = [];
+  for (const row of dataRows) {
+    const externalId = row[indexBy.get('id') ?? -1]?.trim();
+    if (row.length < 2 || !externalId) {
+      malformed += 1;
+      continue;
+    }
     const createdAtCsv = value(row, 'created_at');
 
-    return {
-      externalId: row[indexBy.get('id') ?? -1]?.trim() || null,
-      createdAtCsv,
+    rows.push({
+      externalId,
       purchasedAt: toTimestamp(createdAtCsv),
       amountCents: toCents(value(row, 'amount')),
       values: Object.fromEntries(CSV_FIELDS.map((name) => [name, value(row, name)])),
-    };
-  });
+    });
+  }
 
-  return { header, rows, malformed };
+  return { rows, malformed };
 }

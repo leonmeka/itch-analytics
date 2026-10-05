@@ -1,12 +1,8 @@
+import type { ParsedImport } from '../imports/import.types';
 export interface ParsedViewRow {
   gameId: string;
   date: string;
   count: number;
-}
-
-export interface ParsedViewsPayload {
-  rows: ParsedViewRow[];
-  malformed: number;
 }
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -23,7 +19,7 @@ const toGameId = (value: unknown): string | null => {
   return null;
 };
 
-export function parseViewsPayload(payload: unknown): ParsedViewsPayload {
+export function parseViewsPayload(payload: unknown): ParsedImport<ParsedViewRow> {
   if (typeof payload !== 'object' || payload == null) {
     return { rows: [], malformed: 0 };
   }
