@@ -12,16 +12,11 @@ const DOT_RADIUS = 3.5;
 const PAD_X = 8;
 const PAD_Y = 8;
 
-// The one cumulative area-line chart used everywhere. The consumer defines the
-// plot area's aspectRatio (width ÷ height); the SVG renders 1:1 in the
-// measured box so scrub dots and lines stay perfectly round at any size.
-// Always shows a resting dot, scrubs with a dashed indicator and exposes
-// accessibility actions.
 export function TimeSeriesChart({
   points,
   formatValue,
   label,
-  aspectRatio = 6,
+  aspectRatio = 3,
 }: {
   points: TimeSeriesPoint[];
   formatValue: (value: number) => string;
@@ -86,7 +81,7 @@ export function TimeSeriesChart({
   return (
     <View>
       {label ? (
-        <View className="mb-2">
+        <View className="mb-3">
           <Typography type="body-xs" className="text-cash-muted">
             {scrubbing ? formatDate(point.date) : label}
           </Typography>
@@ -101,6 +96,7 @@ export function TimeSeriesChart({
         </View>
       ) : null}
       <View
+        style={{ width: '100%', aspectRatio, minHeight: 64 }}
         onLayout={(event: { nativeEvent: { layout: { width: number; height: number } } }) =>
           setLayout({
             width: event.nativeEvent.layout.width,
@@ -135,7 +131,6 @@ export function TimeSeriesChart({
             ),
           )
         }
-        style={{ aspectRatio }}
       >
         <Svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
           <Defs>

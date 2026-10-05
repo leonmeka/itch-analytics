@@ -316,8 +316,8 @@ export class PaymentsImportResultDto {
   skipped!: number;
 }
 
-export class GamesSyncResultDto {
-  @ApiProperty({ description: 'Games returned by the itch.io API.' })
+export class GamesImportResultDto {
+  @ApiProperty({ description: 'Games submitted for import.' })
   total!: number;
 
   @ApiProperty({ description: 'Newly stored games.' })

@@ -1,6 +1,6 @@
 import {
   GameDto,
-  GamesSyncResultDto,
+  GamesImportResultDto,
   OauthIdentityDto,
   PaginationDto,
   PaymentDto,
@@ -198,18 +198,18 @@ export class UsersController {
     });
   }
 
-  @Post(':user_id/games/import')
+  @Post(':user_id/games')
   @UseGuards(AuthGuard)
   async importGames(
     @Req() request: AuthenticatedRequest,
     @Param('user_id') userId: string,
     @Body() body: Record<string, unknown>,
-  ): Promise<GamesSyncResultDto> {
+  ): Promise<GamesImportResultDto> {
     if (request.user?.id !== userId) {
       throw new ForbiddenException("Cannot access another user's resources");
     }
 
-    return this.gamesImporterService.ingest(userId, body);
+    return this.gamesImporterService.import(userId, body);
   }
 
   @Post(':user_id/views')

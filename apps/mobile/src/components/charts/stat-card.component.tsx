@@ -14,7 +14,7 @@ export function StatCard({
 }) {
   return (
     <View className="flex-1 rounded-[24px] bg-cash-surface p-4">
-      <TimeSeriesChart points={points} label={label} formatValue={formatValue} aspectRatio={6} />
+      <TimeSeriesChart points={points} label={label} formatValue={formatValue} aspectRatio={2.5} />
     </View>
   );
 }

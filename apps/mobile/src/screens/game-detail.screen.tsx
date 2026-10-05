@@ -28,7 +28,7 @@ export function GameDetailScreen({
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
       >
         <View className="mx-auto w-full max-w-[640px] px-5">
-          <View className="items-center pb-8 pt-7">
+          <View className="items-center pb-8">
             {game.cover_url ? (
               <Image
                 source={{ uri: game.cover_url }}

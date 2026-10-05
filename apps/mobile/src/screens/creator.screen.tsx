@@ -23,7 +23,7 @@ export function CreatorScreen({
   let content: ReactNode;
   if (profile.isPending) {
     content = (
-      <View className="items-center pb-8 pt-4">
+      <View className="items-center pb-8">
         <Skeleton className="mb-4 h-20 w-20 rounded-full" />
         <Skeleton className="h-7 w-44 rounded-lg" />
         <Skeleton className="mt-1 h-5 w-28 rounded-md" />
@@ -68,7 +68,7 @@ export function CreatorScreen({
 
 function ProfileHero({ profile }: { profile: UserProfileDto }) {
   return (
-    <View className="items-center pb-8 pt-4">
+    <View className="items-center pb-8">
       {profile.avatar_url ? (
         <Image
           source={{ uri: profile.avatar_url }}

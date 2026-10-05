@@ -1,7 +1,7 @@
 import type {
   AuthTokenResponseDto,
   GameDto,
-  GamesSyncResultDto,
+  GamesImportResultDto,
   OauthIdentityDto,
   PaymentDto,
   PaymentsFilterDto,
@@ -72,7 +72,7 @@ export const apiClient = {
   games: (userId: string, limit: number, offset: number) =>
     authedFetch<GameDto[]>(`/users/${userId}/games?${searchParams({ limit, offset })}`),
   importGames: (userId: string, payload: Record<string, unknown>) =>
-    authedFetch<GamesSyncResultDto>(`/users/${userId}/games/import`, {
+    authedFetch<GamesImportResultDto>(`/users/${userId}/games`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

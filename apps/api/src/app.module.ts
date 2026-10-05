@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '@/libs/auth';
 import { ItchModule } from '@/libs/itch';
 import {
@@ -42,7 +41,6 @@ import { env } from './env';
     ViewsModule,
     AuthModule,
     ItchModule,
-    ScheduleModule.forRoot(),
   ],
   controllers: [HealthController, AuthController, UsersController],
   providers: [

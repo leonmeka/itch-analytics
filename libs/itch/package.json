@@ -1,8 +1,6 @@
 {
   "name": "@itch/itch",
   "dependencies": {
-    "@nestjs/axios": "^4.0.1",
-    "@nestjs/common": "^11.2.5",
-    "rxjs": "^7.8.2"
+    "@nestjs/common": "^11.2.5"
   }
 }

@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Card } from 'heroui-native/card';
 import { Skeleton } from 'heroui-native/skeleton';
-import { Typography } from 'heroui-native/text';
 import { useMemo } from 'react';
 import { RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,7 +35,7 @@ import { Button } from '../components/ui/button';
 import type { RootStackParamList, TabsParamList } from '../navigation/types';
 import { useAuth } from '../providers/auth.provider';
 import { useSync } from '../providers/sync.provider';
-import { formatDate, formatMoney } from '../utils/payments.format';
+import { formatMoney } from '../utils/payments.format';
 
 type HomeNavigation = CompositeNavigationProp<
   BottomTabNavigationProp<TabsParamList>,
@@ -134,32 +133,25 @@ export function HomeScreen() {
           title={
             profile.data?.username ? `@${profile.data.username}` : (profile.data?.name ?? 'Welcome')
           }
-        >
-          <View className="mt-4 flex-row items-center justify-between gap-3">
-            <Typography type="body-xs" className="text-cash-hero-foreground">
-              {formatDate(new Date())}
-            </Typography>
+          action={
             <Button
-              size="sm"
+              isIconOnly
               variant="ghost"
-              className="h-11 rounded-full bg-cash-surface px-4"
-              accessibilityLabel="Sync everything"
+              className="h-11 w-11 rounded-full bg-cash-surface"
+              accessibilityLabel={syncPhase === 'error' ? 'Retry sync' : 'Sync everything'}
+              accessibilityHint={
+                lastSynced.data
+                  ? `Last synced ${formatLastSynced(lastSynced.data)}`
+                  : 'Sync your account data'
+              }
+              isLoading={syncing}
               isDisabled={syncing}
               onPress={startSync}
             >
-              <CashIcon name="sync" size={17} />
-              <Button.Label className="text-cash-foreground">
-                {syncPhase === 'error'
-                  ? 'Sync failed'
-                  : syncing
-                    ? 'Syncing…'
-                    : lastSynced.data
-                      ? `Sync · ${formatLastSynced(lastSynced.data)}`
-                      : 'Sync now'}
-              </Button.Label>
+              <CashIcon name="sync" size={20} />
             </Button>
-          </View>
-        </PageHeader>
+          }
+        />
         <View className="mx-auto w-full max-w-[640px] gap-3 px-5">
           <Card className="rounded-[28px] bg-cash-surface p-5 shadow-none">
             {graph.isPending ? (
@@ -186,7 +178,7 @@ export function HomeScreen() {
                   value: point.value,
                 }))}
                 formatValue={(value) => formatMoney(value)}
-                aspectRatio={3.2}
+                aspectRatio={2.5}
               />
             ) : (
               <View className="gap-5">
@@ -277,7 +269,7 @@ export function HomeScreen() {
                     value: point.value,
                   }))}
                   formatValue={(value) => String(Math.round(value))}
-                  aspectRatio={13}
+                  aspectRatio={5}
                 />
               </View>
             </View>

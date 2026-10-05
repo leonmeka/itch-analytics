@@ -1,18 +1,8 @@
-import { HttpService } from '@nestjs/axios';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { and, eq, inArray } from 'drizzle-orm';
-import { firstValueFrom } from 'rxjs';
-import { TokenCipherService } from '@/libs/auth';
+import { type CreateGame, GamesService, schema } from '@/libs/shared';
 
-import {
-  ApiKeysService,
-  type CreateGame,
-  GamesService,
-  OAuthIdentitiesService,
-  schema,
-} from '@/libs/shared';
-
-export interface GamesSyncSummary {
+export interface GamesImportSummary {
   total: number;
   imported: number;
   updated: number;
@@ -54,8 +44,6 @@ const UPDATABLE_FIELDS = [
   'traits',
 ] as const;
 
-const GAMES_URL = 'https://api.itch.io/profile/games';
-
 const str = (value: unknown): string | null =>
   typeof value === 'string' && value.length > 0 ? value : null;
 const strOrEmpty = (value: unknown): string => str(value) ?? '';
@@ -69,22 +57,9 @@ const num = (value: unknown): number | null =>
 
 @Injectable()
 export class GamesImporterService {
-  constructor(
-    private readonly apiKeysService: ApiKeysService,
-    private readonly gamesService: GamesService,
-    private readonly httpService: HttpService,
-    private readonly oauthIdentitiesService: OAuthIdentitiesService,
-    private readonly tokenCipherService: TokenCipherService,
-  ) {}
+  constructor(private readonly gamesService: GamesService) {}
 
-  async sync(userId: string, accessToken?: string): Promise<GamesSyncSummary> {
-    const token = accessToken ?? (await this.storedToken(userId));
-    const payload = await this.fetch(token);
-
-    return this.ingest(userId, payload);
-  }
-
-  async ingest(userId: string, payload: unknown): Promise<GamesSyncSummary> {
+  async import(userId: string, payload: unknown): Promise<GamesImportSummary> {
     const games = this.parseGames(payload);
 
     const externalIds = [...new Set(games.map((game) => String(game.id)))];
@@ -134,39 +109,6 @@ export class GamesImporterService {
     if (!Array.isArray(games)) return [];
 
     return games.filter((game): game is ItchGame => typeof game === 'object' && game != null);
-  }
-
-  private async storedToken(userId: string): Promise<string> {
-    const identity = await this.oauthIdentitiesService.find({
-      where: eq(schema.oauthIdentitiesTable.user_id, userId),
-    });
-
-    if (!identity) {
-      throw new UnauthorizedException('No itch.io identity linked to this user');
-    }
-
-    const apiKey = await this.apiKeysService.find({
-      where: eq(schema.apiKeysTable.oauth_identity_id, identity.id),
-    });
-
-    if (!apiKey) {
-      throw new UnauthorizedException('No itch.io access token available for this user');
-    }
-
-    return this.tokenCipherService.decrypt(apiKey.access_token_encrypted);
-  }
-
-  private async fetch(accessToken: string): Promise<ItchGame[]> {
-    const { data } = await firstValueFrom(
-      this.httpService.get<{ games?: ItchGame[] }>(GAMES_URL, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: 'application/json',
-        },
-      }),
-    );
-
-    return data.games ?? [];
   }
 
   private diff(

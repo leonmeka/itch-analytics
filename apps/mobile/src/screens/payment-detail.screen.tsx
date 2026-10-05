@@ -32,7 +32,7 @@ export function PaymentDetailScreen({
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
       >
         <View className="mx-auto w-full max-w-[640px] px-5">
-          <View className="items-center pb-8 pt-7">
+          <View className="items-center pb-8">
             <View className="mb-5 h-[72px] w-[72px] items-center justify-center rounded-full bg-cash-accent-soft">
               <CashIcon name="receipt" size={30} />
             </View>
