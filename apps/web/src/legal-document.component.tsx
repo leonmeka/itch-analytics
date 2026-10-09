@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { legalDocuments } from './legal-content.data';
 
@@ -7,9 +8,10 @@ export function LegalDocument({ document }: { document: keyof typeof legalDocume
     <main className="mx-auto min-h-svh max-w-[760px] px-6 py-10 sm:px-10 sm:py-16">
       <Link
         href="/"
-        className="text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
+        className="inline-flex items-center gap-2 text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
       >
-        ← Back to Scratch
+        <Image src="/scratch-white.logo.svg" alt="" width={28} height={28} />
+        Back to Scratch
       </Link>
       <article className="mt-12">
         <h1 className="text-[clamp(36px,6vw,58px)] font-semibold leading-[1.08] tracking-[-0.045em]">

@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Scratch: Your itch.io companion.',
   description:
     'Your itch.io companion for iOS and Android. Keep up with your sales and the creators around you, wherever you take your phone.',
-  icons: { icon: '/itch-logo.svg' },
+  icons: { icon: '/scratch.logo.svg', apple: '/apple-touch-icon.png' },
 };
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

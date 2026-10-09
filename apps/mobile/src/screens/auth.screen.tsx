@@ -5,7 +5,6 @@ import { Typography } from 'heroui-native/text';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RedLogo from '../../assets/itch-logo-red.svg';
-import WhiteLogo from '../../assets/itch-logo-white.svg';
 import { AuthBackground } from '../components/auth-background.component';
 import { Button } from '../components/ui/button';
 import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../constants';
@@ -20,10 +19,6 @@ export function AuthScreen() {
   return (
     <View className="flex-1 bg-accent">
       <AuthBackground />
-
-      <View className="flex-1 items-center justify-center px-8">
-        <WhiteLogo width={72} height={65} />
-      </View>
 
       <View className="absolute inset-x-0 px-6" style={{ bottom: insets.bottom }}>
         <Button

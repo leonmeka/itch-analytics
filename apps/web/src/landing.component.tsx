@@ -14,6 +14,7 @@ export function Landing() {
           href="/"
           aria-label="Scratch home"
         >
+          <Image src="/scratch-white.logo.svg" alt="" width={38} height={38} />
           <span>Scratch</span>
         </a>
       </header>
