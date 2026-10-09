@@ -1,6 +1,5 @@
 import type { UserDto } from '@scratch/protocol';
 import { useQueryClient } from '@tanstack/react-query';
-import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import {
   createContext,
@@ -69,14 +68,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = useCallback(async () => {
     setRedirecting(true);
     try {
-      await WebBrowser.dismissBrowser().catch(() => undefined);
+      try {
+        await WebBrowser.dismissBrowser();
+      } catch {}
 
       const result = await WebBrowser.openAuthSessionAsync(
         loginURL,
-        Linking.createURL(`/${OAUTH_RETURN_PATH}`),
+        `${OAUTH_RETURN_SCHEME}://${OAUTH_RETURN_PATH}`,
       );
-
-      if (__DEV__) console.log('auth session returned:', JSON.stringify(result));
 
       let params = null;
 
@@ -85,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (params) {
-        completeLogin({ accessToken: params.accessToken, state: params.state });
+        await completeLogin({ accessToken: params.accessToken, state: params.state });
       } else {
         console.warn(`auth session closed without params (type=${result.type})`);
       }

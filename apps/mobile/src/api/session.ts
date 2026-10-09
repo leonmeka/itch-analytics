@@ -1,7 +1,7 @@
 import type { UserDto } from '@scratch/protocol';
 import * as SecureStore from 'expo-secure-store';
+import { env } from '../env';
 import { loadMigratedValue } from '../utils/secure-storage.utils';
-import { API_URL_BASE } from './client';
 import { ApiError, fetchBase } from './fetch-base';
 
 const SESSION_KEY = 'scratch.session.v1';
@@ -37,7 +37,7 @@ async function refreshSession(refreshToken: string): Promise<StoredSession | nul
       refreshed: boolean;
       access_token?: string;
       refresh_token?: string;
-    }>(API_URL_BASE, '/auth/refresh', {
+    }>(env.EXPO_PUBLIC_API_URL, '/auth/refresh', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken }),
@@ -74,7 +74,7 @@ export async function authedFetch<TResponse>(
   if (session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;
 
   const doFetch = (bearer: string | undefined) =>
-    fetch(`${API_URL_BASE}${path}`, {
+    fetch(`${env.EXPO_PUBLIC_API_URL}${path}`, {
       ...init,
       headers: bearer ? { ...headers, Authorization: `Bearer ${bearer}` } : headers,
     });

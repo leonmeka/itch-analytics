@@ -31,7 +31,7 @@ export type CompleteLoginResult = {
   refresh_token: string;
 };
 
-export const API_URL_BASE = env.EXPO_PUBLIC_API_URL;
+const API_URL_BASE = env.EXPO_PUBLIC_API_URL;
 
 export const loginURL = `${API_URL_BASE}/auth/login`;
 

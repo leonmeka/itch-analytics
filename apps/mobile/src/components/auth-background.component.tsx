@@ -1,6 +1,6 @@
 import Svg, { Defs, G, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
-import ScratchLogo from '../../assets/scratch-logo-white.svg';
+import ScratchWatermark from '../../assets/scratch-logo-watermark.svg';
 
 // Full-screen accent wash with a giant logo watermark. With `bandHeight`,
 // renders as a top band that fades into the page background (hero sections).
@@ -19,8 +19,8 @@ export function AuthBackground({ bandHeight }: { bandHeight?: number } = {}) {
         viewBox="0 0 1080 1920"
       >
         <Rect fill={accent as string} height="1920" width="1080" x="0" y="0" />
-        <G opacity={0.1} transform="translate(0 -200) scale(8) rotate(20)">
-          <ScratchLogo width={256} height={256} />
+        <G transform="translate(0 -200) scale(8) rotate(20)">
+          <ScratchWatermark width={256} height={256} />
         </G>
       </Svg>
       <Svg pointerEvents="none" style={{ position: 'absolute', ...frame }}>
